@@ -25,6 +25,10 @@ class MainFrame(wx.Frame):
 	def __init__(self):
 		wx.Frame.__init__(self, None, size=(480, 800))
 		self.Bind(wx.EVT_CLOSE, self.onClose)
+		
+		icon = wx.Icon()
+		icon.CopyFromBitmap(wx.Bitmap("trainmaster.ico", wx.BITMAP_TYPE_ANY))
+		self.SetIcon(icon)
 
 		self.CreateStatusBar()
 		menuBar = wx.MenuBar()
