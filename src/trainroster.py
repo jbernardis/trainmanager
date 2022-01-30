@@ -4,9 +4,7 @@ class TrainRoster:
 	def __init__(self, fn):
 		self.filename = fn
 		with open(fn, "r") as fp:	
-			tr = json.load(fp)
-			
-		self.trains = tr["trains"]
+			self.trains = json.load(fp)
 			
 		for tid in self.trains:
 			trn = self.trains[tid]

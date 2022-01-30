@@ -1,331 +1,329 @@
 {
-	"trains": {
-		"91": {
-			"desc": "Express Passenger",
-			"dir": "West",
-			"steps": [
-				["", "Harpers Ferry"],
-				["", "Rocky Hill"],
-				["NASSAU", "Wilson City (N31 or N32)"],
-				["PORT", "Southport"]
-			]
-		},
-		"17": {
-			"desc": "Express Passenger",
-			"dir": "West",
-			"steps": [
-				["CLIFF", ""],
-				["BANK", ""],
-				["NASSAU", "Wilson City (N31 or N32)"],
-				["PORT", ""],
-				["YARD", "Koehlstadt (Y50)"]
-			]
-		},
-		"18": {
-			"desc": "Express Passenger",
-			"dir": "East",
-			"steps": [
-				["YARD", "Koehlstadt (Y50)"],
-				["PORT", ""],
-				["NASSAU", "Wilson City (N41 or N42)"],
-				["BANK", ""],
-				["CLIFF", "Green Mountain"]
-			]
-		},
-		"21": {
-			"desc": "Local Passenger",
-			"dir": "West",
-			"steps": [
-				["NASSAU", "From Coard Yard to"],
-				["", "Wilson City (N31 or N32)"],
-				["SHORE", "Bortell"],
-				["DELL", "Loland"],
-				["", "LaPorte"],
-				["LATHAM", "Carlton"],
-				["PORT", "Southport (P2)"]
-			]
-		},
-		"96": {
-			"desc": "Local Passenger",
-			"dir": "East",
-			"steps": [
-				["YARD", "Koehlstadt"],
-				["LATHAM", "Carlton"],
-				["DELL", "LaPorte"],
-				["", "Loland"],
-				["SHORE", "Bortell"],
-				["NASSAU", "Wilson City (N41 or N42)"],
-				["", "Rocky Hill"],
-				["", "Harpers Ferry"]
-			]
-		},
-		"HEX": {
-			"desc": "Empty Coal Hoppers",
-			"dir": "East",
-			"steps": [
-				["HYDE", ""],
-				["DELL", ""],
-				["SHORE", ""],
-				["HYDE", ""]
-			]
-		},
-		"71": {
-			"desc": "Express Passenger",
-			"dir": "West",
-			"steps": [
-				["HYDE", ""],
-				["SHORE", ""],
-				["DELL", ""],
-				["LATHAM", ""],
-				["PORT", "Southport"]
-			]
-		},
-		"64": {
-			"desc": "Express Passenger (RDC)",
-			"dir": "East",
-			"steps": [
-				["YARD", "Koehlstadt"],
-				["PORT", "Southport"]
-			]
-		},
-		"HYYD": {
-			"desc": "Unit Freight",
-			"dir": "West",
-			"steps": [
-				["HYDE", ""],
-				["SHORE", ""],
-				["DELL", ""],
-				["LATHAM", ""],
-				["YARD", ""]
-			]
-		},
-		"61": {
-			"desc": "Local Passenger (RDC)",
-			"dir": "West",
-			"steps": [
-				["NASSAU", "From Coach Yard to"],
-				["", "Wilson City (N31 or N32)"],
-				["", "Richards"],
-				["", "Radstock"],
-				["PORT", "Southport"]
-			]
-		},
-		"43": {
-			"desc": "Local Passenger",
-			"dir": "West",
-			"steps": [
-				["CLIFF", "Green Mountain"],
-				["", "Clivedon"],
-				["", "Spikes Peak"],
-				["BANK", "Martinsville"],
-				["NASSAU", "Wilson City (N31 or N32)"],
-				["", "To Coach Yard"]
-			]
-		},
-		"73": {
-			"desc": "Loop Passenger",
-			"dir": "West",
-			"steps": [
-				["HYDE", ""],
-				["SHORE", ""],
-				["DELL", ""],
-				["HYDE", ""]
-			]
-		},
-		"44": {
-			"desc": "Local Passenger",
-			"dir": "East",
-			"steps": [
-				["NASSAU", "From Coach Yard to"],
-				["", "Wilson City (N41 or N42)"],
-				["BANK", "Martinsville"],
-				["CLIFF", "Spikes Peak"],
-				["", "Clivedon"],
-				["", "Green Mountain"]
-			]
-		},
-		"81": {
-			"desc": "Express Passenger",
-			"dir": "West",
-			"steps": [
-				["CLIFF", ""],
-				["BANK", ""],
-				["NASSAU", "Wilson City (N31 or N32)"],
-				["SHORE", ""],
-				["DELL", ""],
-				["HYDE", ""]
-			]
-		},
-		"CFHY": {
-			"desc": "Unit Freight",
-			"dir": "West",
-			"steps": [
-				["CLIFF", ""],
-				["BANK", ""],
-				["NASSAU", ""],
-				["SHORE", ""],
-				["DELL", ""],
-				["HYDE", ""]
-			]
-		},
-		"82": {
-			"desc": "Express Passenger",
-			"dir": "East",
-			"steps": [
-				["HYDE", ""],
-				["DELL", ""],
-				["SHORE", ""],
-				["NASSAU", "Wilson City (N41 or N42)"],
-				["BANK", ""],
-				["CLIFF", "Green Mountain"]
-			]
-		},
-		"11": {
-			"desc": "Express Passenger",
-			"dir": "West",
-			"steps": [
-				["CLIFF", "Green Mountain"],
-				["BANK", ""],
-				["NASSAU", "Wilson City (N31 or N32)"],
-				["SHORE", ""],
-				["DELL", ""],
-				["LATHAM", ""],
-				["YARD", "Koehlstadt"]
-			]
-		},
-		"12": {
-			"desc": "Express Passenger",
-			"dir": "East",
-			"steps": [
-				["YARD", "Koehlstadt"],
-				["LATHAM", ""],
-				["DELL", ""],
-				["SHORE", ""],
-				["NASSAU", "Wilson City (N41 or N42)"],
-				["BANK", ""],
-				["CLIFF", ""]
-			]
-		},
-		"HYCF": {
-			"desc": "Unit Freight",
-			"dir": "East",
-			"steps": [
-				["HYDE", ""],
-				["DELL", ""],
-				["SHORE", ""],
-				["NASSAU", ""],
-				["BANK", ""],
-				["CLIFF", ""]
-			]
-		},
-		"22": {
-			"desc": "Local Passenger",
-			"dir": "East",
-			"steps": [
-				["PORT", "Southport"],
-				["LATHAM", "Carlton"],
-				["DELL", "Laporte"],
-				["", "Loland"],
-				["SHORE", "Bortell"],
-				["NASSAU", "Wilson City (N41 or N42)"],
-				["", "To Coach Yard"]
-			]
-		},
-		"95": {
-			"desc": "Local Passenger",
-			"dir": "West",
-			"steps": [
-				["", "Harpers Ferry"],
-				["", "Rocky Hill"],
-				["NASSAU", "Wilson City (N31 or N32)"],
-				["SHORE", "Bortell"],
-				["DELL", "Laporte"],
-				["", "Loland"],
-				["LATHAM", "Carlton"],
-				["YARD", "Koehlstadt"]
-			]
-		},
-		"84": {
-			"desc": "Loop Passenger",
-			"dir": "East",
-			"steps": [
-				["HYDE", ""],
-				["DELL", ""],
-				["SHORE", ""],
-				["HYDE", ""]
-			]
-		},
-		"72": {
-			"desc": "Express Passenger",
-			"dir": "East",
-			"steps": [
-				["PORT", "Southport"],
-				["LATHAM", ""],
-				["DELL", ""],
-				["SHORE", ""],
-				["HYDE", ""]
-			]
-		},
-		"63": {
-			"desc": "Local Passenger (RDC)",
-			"dir": "West",
-			"steps": [
-				["PORT", "Southport"],
-				["YARD", "Koehlstadt"]
-			]
-		},
-		"YDHY": {
-			"desc": "Unit Freight",
-			"dir": "East",
-			"steps": [
-				["YARD", ""],
-				["LATHAM", ""],
-				["DELL", ""],
-				["SHORE", ""],
-				["HYDE", ""]
-			]
-		},
-		"HWX": {
-			"desc": "Loaded Coal Hoppers",
-			"dir": "West",
-			"steps": [
-				["HYDE", ""],
-				["SHORE", ""],
-				["DELL", ""],
-				["HYDE", ""]
-			]
-		},
-		"92": {
-			"desc": "Express Passenger",
-			"dir": "East",
-			"steps": [
-				["PORT", "Southport"],
-				["NASSAU", "Wilson City (N41 or N42)"],
-				["", "Rocky Hill"],
-				["", "Harpers Ferry"]
-			]
-		},
-		"62": {
-			"desc": "Local Passenger",
-			"dir": "East",
-			"steps": [
-				["PORT", "Southport"],
-				["", "Radstock"],
-				["", "Richards"],
-				["NASSAU", "Wilson City (N41 or N42)"],
-				["", "To Coach Yard"]
-			]
-		},
-		"PBCX": {
-			"desc": "Pate Brothers Circus",
-			"dir": "West",
-			"steps": [
-				["HYDE", ""],
-				["SHORE", ""],
-				["DELL", ""],
-				["HYDE", ""]
-			]
-		}
+	"91": {
+		"desc": "Express Passenger",
+		"dir": "West",
+		"steps": [
+			["", "Harpers Ferry"],
+			["", "Rocky Hill"],
+			["NASSAU", "Wilson City (N31 or N32)"],
+			["PORT", "Southport"]
+		]
+	},
+	"17": {
+		"desc": "Express Passenger",
+		"dir": "West",
+		"steps": [
+			["CLIFF", ""],
+			["BANK", ""],
+			["NASSAU", "Wilson City (N31 or N32)"],
+			["PORT", ""],
+			["YARD", "Koehlstadt (Y50)"]
+		]
+	},
+	"18": {
+		"desc": "Express Passenger",
+		"dir": "East",
+		"steps": [
+			["YARD", "Koehlstadt (Y50)"],
+			["PORT", ""],
+			["NASSAU", "Wilson City (N41 or N42)"],
+			["BANK", ""],
+			["CLIFF", "Green Mountain"]
+		]
+	},
+	"21": {
+		"desc": "Local Passenger",
+		"dir": "West",
+		"steps": [
+			["NASSAU", "From Coard Yard to"],
+			["", "Wilson City (N31 or N32)"],
+			["SHORE", "Bortell"],
+			["DELL", "Loland"],
+			["", "LaPorte"],
+			["LATHAM", "Carlton"],
+			["PORT", "Southport (P2)"]
+		]
+	},
+	"96": {
+		"desc": "Local Passenger",
+		"dir": "East",
+		"steps": [
+			["YARD", "Koehlstadt"],
+			["LATHAM", "Carlton"],
+			["DELL", "LaPorte"],
+			["", "Loland"],
+			["SHORE", "Bortell"],
+			["NASSAU", "Wilson City (N41 or N42)"],
+			["", "Rocky Hill"],
+			["", "Harpers Ferry"]
+		]
+	},
+	"HEX": {
+		"desc": "Empty Coal Hoppers",
+		"dir": "East",
+		"steps": [
+			["HYDE", ""],
+			["DELL", ""],
+			["SHORE", ""],
+			["HYDE", ""]
+		]
+	},
+	"71": {
+		"desc": "Express Passenger",
+		"dir": "West",
+		"steps": [
+			["HYDE", ""],
+			["SHORE", ""],
+			["DELL", ""],
+			["LATHAM", ""],
+			["PORT", "Southport"]
+		]
+	},
+	"64": {
+		"desc": "Express Passenger (RDC)",
+		"dir": "East",
+		"steps": [
+			["YARD", "Koehlstadt"],
+			["PORT", "Southport"]
+		]
+	},
+	"HYYD": {
+		"desc": "Unit Freight",
+		"dir": "West",
+		"steps": [
+			["HYDE", ""],
+			["SHORE", ""],
+			["DELL", ""],
+			["LATHAM", ""],
+			["YARD", ""]
+		]
+	},
+	"61": {
+		"desc": "Local Passenger (RDC)",
+		"dir": "West",
+		"steps": [
+			["NASSAU", "From Coach Yard to"],
+			["", "Wilson City (N31 or N32)"],
+			["", "Richards"],
+			["", "Radstock"],
+			["PORT", "Southport"]
+		]
+	},
+	"43": {
+		"desc": "Local Passenger",
+		"dir": "West",
+		"steps": [
+			["CLIFF", "Green Mountain"],
+			["", "Clivedon"],
+			["", "Spikes Peak"],
+			["BANK", "Martinsville"],
+			["NASSAU", "Wilson City (N31 or N32)"],
+			["", "To Coach Yard"]
+		]
+	},
+	"73": {
+		"desc": "Loop Passenger",
+		"dir": "West",
+		"steps": [
+			["HYDE", ""],
+			["SHORE", ""],
+			["DELL", ""],
+			["HYDE", ""]
+		]
+	},
+	"44": {
+		"desc": "Local Passenger",
+		"dir": "East",
+		"steps": [
+			["NASSAU", "From Coach Yard to"],
+			["", "Wilson City (N41 or N42)"],
+			["BANK", "Martinsville"],
+			["CLIFF", "Spikes Peak"],
+			["", "Clivedon"],
+			["", "Green Mountain"]
+		]
+	},
+	"81": {
+		"desc": "Express Passenger",
+		"dir": "West",
+		"steps": [
+			["CLIFF", ""],
+			["BANK", ""],
+			["NASSAU", "Wilson City (N31 or N32)"],
+			["SHORE", ""],
+			["DELL", ""],
+			["HYDE", ""]
+		]
+	},
+	"CFHY": {
+		"desc": "Unit Freight",
+		"dir": "West",
+		"steps": [
+			["CLIFF", ""],
+			["BANK", ""],
+			["NASSAU", ""],
+			["SHORE", ""],
+			["DELL", ""],
+			["HYDE", ""]
+		]
+	},
+	"82": {
+		"desc": "Express Passenger",
+		"dir": "East",
+		"steps": [
+			["HYDE", ""],
+			["DELL", ""],
+			["SHORE", ""],
+			["NASSAU", "Wilson City (N41 or N42)"],
+			["BANK", ""],
+			["CLIFF", "Green Mountain"]
+		]
+	},
+	"11": {
+		"desc": "Express Passenger",
+		"dir": "West",
+		"steps": [
+			["CLIFF", "Green Mountain"],
+			["BANK", ""],
+			["NASSAU", "Wilson City (N31 or N32)"],
+			["SHORE", ""],
+			["DELL", ""],
+			["LATHAM", ""],
+			["YARD", "Koehlstadt"]
+		]
+	},
+	"12": {
+		"desc": "Express Passenger",
+		"dir": "East",
+		"steps": [
+			["YARD", "Koehlstadt"],
+			["LATHAM", ""],
+			["DELL", ""],
+			["SHORE", ""],
+			["NASSAU", "Wilson City (N41 or N42)"],
+			["BANK", ""],
+			["CLIFF", ""]
+		]
+	},
+	"HYCF": {
+		"desc": "Unit Freight",
+		"dir": "East",
+		"steps": [
+			["HYDE", ""],
+			["DELL", ""],
+			["SHORE", ""],
+			["NASSAU", ""],
+			["BANK", ""],
+			["CLIFF", ""]
+		]
+	},
+	"22": {
+		"desc": "Local Passenger",
+		"dir": "East",
+		"steps": [
+			["PORT", "Southport"],
+			["LATHAM", "Carlton"],
+			["DELL", "Laporte"],
+			["", "Loland"],
+			["SHORE", "Bortell"],
+			["NASSAU", "Wilson City (N41 or N42)"],
+			["", "To Coach Yard"]
+		]
+	},
+	"95": {
+		"desc": "Local Passenger",
+		"dir": "West",
+		"steps": [
+			["", "Harpers Ferry"],
+			["", "Rocky Hill"],
+			["NASSAU", "Wilson City (N31 or N32)"],
+			["SHORE", "Bortell"],
+			["DELL", "Laporte"],
+			["", "Loland"],
+			["LATHAM", "Carlton"],
+			["YARD", "Koehlstadt"]
+		]
+	},
+	"84": {
+		"desc": "Loop Passenger",
+		"dir": "East",
+		"steps": [
+			["HYDE", ""],
+			["DELL", ""],
+			["SHORE", ""],
+			["HYDE", ""]
+		]
+	},
+	"72": {
+		"desc": "Express Passenger",
+		"dir": "East",
+		"steps": [
+			["PORT", "Southport"],
+			["LATHAM", ""],
+			["DELL", ""],
+			["SHORE", ""],
+			["HYDE", ""]
+		]
+	},
+	"63": {
+		"desc": "Local Passenger (RDC)",
+		"dir": "West",
+		"steps": [
+			["PORT", "Southport"],
+			["YARD", "Koehlstadt"]
+		]
+	},
+	"YDHY": {
+		"desc": "Unit Freight",
+		"dir": "East",
+		"steps": [
+			["YARD", ""],
+			["LATHAM", ""],
+			["DELL", ""],
+			["SHORE", ""],
+			["HYDE", ""]
+		]
+	},
+	"HWX": {
+		"desc": "Loaded Coal Hoppers",
+		"dir": "West",
+		"steps": [
+			["HYDE", ""],
+			["SHORE", ""],
+			["DELL", ""],
+			["HYDE", ""]
+		]
+	},
+	"92": {
+		"desc": "Express Passenger",
+		"dir": "East",
+		"steps": [
+			["PORT", "Southport"],
+			["NASSAU", "Wilson City (N41 or N42)"],
+			["", "Rocky Hill"],
+			["", "Harpers Ferry"]
+		]
+	},
+	"62": {
+		"desc": "Local Passenger",
+		"dir": "East",
+		"steps": [
+			["PORT", "Southport"],
+			["", "Radstock"],
+			["", "Richards"],
+			["NASSAU", "Wilson City (N41 or N42)"],
+			["", "To Coach Yard"]
+		]
+	},
+	"PBCX": {
+		"desc": "Pate Brothers Circus",
+		"dir": "West",
+		"steps": [
+			["HYDE", ""],
+			["SHORE", ""],
+			["DELL", ""],
+			["HYDE", ""]
+		]
 	}
 }
 			
