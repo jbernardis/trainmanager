@@ -3,17 +3,22 @@ import wx
 
 from trainroster import TrainRoster
 from engineers import Engineers
+from order import Order
 from activetrainlist import ActiveTrainList
 from manageengineers import ManageEngineersDlg
+from settings import Settings
 
 BTNSZ = (90, 46)
 
-MENU_FILE_OPEN = 100
-MENU_FILE_RELOAD = 101
-MENU_FILE_EXIT = 102
+MENU_FILE_LOAD_TRAIN = 100
+MENU_FILE_LOAD_ENG  = 101
+MENU_FILE_LOAD_ORDER = 103
+MENU_FILE_EXIT = 199
 MENU_MANAGE_ENGINEERS = 200
 
 wildcard = "JSON file (*.json)|*.json|"	 \
+		   "All files (*.*)|*.*"
+wildcardTxt = "TXT file (*.txt)|*.txt|"	 \
 		   "All files (*.*)|*.*"
 
 class MainFrame(wx.Frame):
@@ -25,13 +30,14 @@ class MainFrame(wx.Frame):
 		menuBar = wx.MenuBar()
 
 		self.menuFile = wx.Menu()		
-		self.menuFile.Append(MENU_FILE_OPEN, "&Open", "Open Train List")
-		self.menuFile.Append(MENU_FILE_RELOAD, "&Reload", "Reload Train List")
+		self.menuFile.Append(MENU_FILE_LOAD_TRAIN, "&Load Train Roster", "Load Train Roster")
+		self.menuFile.Append(MENU_FILE_LOAD_ORDER, "&Load Train Order", "Load Train Order List")
+		self.menuFile.Append(MENU_FILE_LOAD_ENG, "&Load Engineer list", "Load Engineer List")
 		self.menuFile.AppendSeparator()
 		self.menuFile.Append(MENU_FILE_EXIT, "&Exit", "Exit Program")
 		
 		self.menuManage = wx.Menu()
-		self.menuManage.Append(MENU_MANAGE_ENGINEERS, "&Manage Engineers", "Manage the active engineers list")
+		self.menuManage.Append(MENU_MANAGE_ENGINEERS, "&Manage Engineers", "Manage the content and ordering of active engineers list")
 		
 		menuBar.Append(self.menuFile, "&File")
 		menuBar.Append(self.menuManage, "&Manage")
@@ -43,8 +49,9 @@ class MainFrame(wx.Frame):
 		self.panel = TrainMasterPanel(self)
 		sizer.Add(self.panel)
 		
-		self.Bind(wx.EVT_MENU, self.panel.onOpen, id=MENU_FILE_OPEN)
-		self.Bind(wx.EVT_MENU, self.panel.onReload, id=MENU_FILE_RELOAD)
+		self.Bind(wx.EVT_MENU, self.panel.onOpenTrain, id=MENU_FILE_LOAD_TRAIN)
+		self.Bind(wx.EVT_MENU, self.panel.onOpenEngineer, id=MENU_FILE_LOAD_ENG)
+		self.Bind(wx.EVT_MENU, self.panel.onOpenOrder, id=MENU_FILE_LOAD_ORDER)
 		self.Bind(wx.EVT_MENU, self.onClose, id=MENU_FILE_EXIT)
 		self.Bind(wx.EVT_MENU, self.panel.onManageEngineers, id=MENU_MANAGE_ENGINEERS)
 		
@@ -52,8 +59,11 @@ class MainFrame(wx.Frame):
 		self.Layout()
 		self.Fit();
 		
-	def setTitle(self, fn):
-		self.SetTitle("Train Master - %s" % fn)
+	def setTitle(self, fn=None):
+		title = "Train Master"
+		if fn is not None:
+			title += " - %s" % fn
+		self.SetTitle(title)
 	
 	def onClose(self, _):
 		self.panel.onClose(None)
@@ -63,41 +73,43 @@ class TrainMasterPanel(wx.Panel):
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent, wx.ID_ANY, style=wx.TAB_TRAVERSAL)
 		self.Bind(wx.EVT_CLOSE, self.onClose)
-		self.trainFileName = "trains.json"
 		self.parent = parent
 		
-		self.parent.setTitle(self.trainFileName)
-		
-		self.roster = TrainRoster(self.trainFileName)
-		self.activeTrains = [tid for tid in self.roster.getTrainOrder()]
-		
-		self.engineers = Engineers()
-		self.activeEngineers = [] #e for e in self.engineers]
+		self.parent.setTitle()
+			
+		self.pendingTrains = []
+		self.activeEngineers = [] 
 		self.allPresentEngineers = [x for x in self.activeEngineers]
 		
 		vsizerl = wx.BoxSizer(wx.VERTICAL)
 		vsizerl.Add(wx.StaticText(self, wx.ID_ANY, "", size=(200, -1)))
 		vsizerl.AddSpacer(20)
 		
-		self.trainId = wx.Choice(self, wx.ID_ANY, choices=self.activeTrains)
-		self.trainId.SetSelection(0)
-		self.Bind(wx.EVT_CHOICE, self.onChoiceTID, self.trainId)
+		self.chTrain = wx.Choice(self, wx.ID_ANY, choices=self.pendingTrains)
+		self.chTrain.SetSelection(0)
+		self.Bind(wx.EVT_CHOICE, self.onChoiceTID, self.chTrain)
+
+		font = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
-		sz.Add(wx.StaticText(self, wx.ID_ANY, "Next Train: ", size=(100, -1)))
-		sz.Add(self.trainId)
+		st = wx.StaticText(self, wx.ID_ANY, "Next Train: ", size=(100, -1))
+		st.SetFont(font)
+		sz.Add(st, 1, wx.TOP, 4)
+		sz.Add(self.chTrain)
 		vsizerl.Add(sz)
 		
 		vsizerl.AddSpacer(10)
 		
-		self.engineer = wx.Choice(self, wx.ID_ANY, choices=self.activeEngineers)
-		self.engineer.SetSelection(0)
-		self.selectedEngineer = self.engineer.GetString(0)
-		self.Bind(wx.EVT_CHOICE, self.onChoiceEngineer, self.engineer)
+		self.chEngineer = wx.Choice(self, wx.ID_ANY, choices=self.activeEngineers)
+		self.chEngineer.SetSelection(0)
+		self.selectedEngineer = self.chEngineer.GetString(0)
+		self.Bind(wx.EVT_CHOICE, self.onChoiceEngineer, self.chEngineer)
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
-		sz.Add(wx.StaticText(self, wx.ID_ANY, "Engineer: ", size=(100, -1)))
-		sz.Add(self.engineer)
+		st = wx.StaticText(self, wx.ID_ANY, "Engineer: ", size=(100, -1))
+		st.SetFont(font)
+		sz.Add(st, 1, wx.TOP, 4)
+		sz.Add(self.chEngineer)
 		vsizerl.Add(sz)
 		
 		vsizerl.AddSpacer(10)
@@ -117,6 +129,7 @@ class TrainMasterPanel(wx.Panel):
 		
 		font = wx.Font(wx.Font(12, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.NORMAL, faceName="Monospace"))
 		fontb = wx.Font(wx.Font(14, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD, faceName="Monospace"))
+
 		self.stDescription = wx.StaticText(self, wx.ID_ANY, "", size=(400, -1))
 		self.stDescription.SetFont(fontb)
 		vsizerr.Add(self.stDescription)
@@ -147,7 +160,7 @@ class TrainMasterPanel(wx.Panel):
 		self.bAssign = wx.Button(self, wx.ID_ANY, "Assign\nTrain/Engineer", size=BTNSZ)
 		self.Bind(wx.EVT_BUTTON, self.bAssignPressed, self.bAssign)
 		btnsizer.Add(self.bAssign)
-		self.bAssign.Enable(len(self.activeEngineers) != 0 and len(self.activeTrains) != 0)
+		self.bAssign.Enable(len(self.activeEngineers) != 0 and len(self.pendingTrains) != 0)
 		
 		btnsizer.AddSpacer(30)
 		
@@ -177,27 +190,22 @@ class TrainMasterPanel(wx.Panel):
 		
 		wsizer.AddSpacer(20)
 
-		
-		self.setSelectedTrain(self.trainId.GetString(0))
-		self.selectedEngineer = self.engineer.GetString(0)
-		
 		self.SetSizer(wsizer)
 		self.Layout()
 		self.Fit()
 		
-	def onReload(self, _):
-		if self.activeTrainList.count() > 0:
-			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
-	                               'Data will be lost',
-	                               wx.YES_NO | wx.ICON_WARNING)
-			rc = dlg.ShowModal()
-			dlg.Destroy()
-			if rc != wx.ID_YES:
-				return
-			
-		self.loadTrainFile()
+		wx.CallAfter(self.initialize)
 		
-	def onOpen(self, _):
+	def initialize(self):
+		self.settings = Settings(os.getcwd())
+		
+		self.loadEngineerFile(os.path.join(self.settings.engineerdir, self.settings.engineerfile))
+
+		self.loadTrainFile(os.path.join(self.settings.traindir, self.settings.trainfile))
+		
+		self.loadOrderFile(os.path.join(self.settings.orderdir, self.settings.orderfile))
+		
+	def onOpenTrain(self, _):
 		if self.activeTrainList.count() > 0:
 			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
 	                               'Data will be lost',
@@ -209,7 +217,7 @@ class TrainMasterPanel(wx.Panel):
 
 		dlg = wx.FileDialog(
 			self, message="Choose a Train roster file",
-			defaultDir=os.getcwd(),
+			defaultDir=self.settings.traindir,
 			defaultFile="",
 			wildcard=wildcard,
 			style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_PREVIEW)
@@ -217,46 +225,220 @@ class TrainMasterPanel(wx.Panel):
 			dlg.Destroy()
 			return 
 
-		self.trainFileName = dlg.GetPath()
+		path = dlg.GetPath()
 		dlg.Destroy()
 		
-		self.parent.setTitle(os.path.basename(self.trainFileName))
-		self.loadTrainFile()
+		self.settings.traindir, self.settings.trainfile = os.path.split(path)
+		self.settings.setModified()
 		
-	def loadTrainFile(self):
-		self.roster = TrainRoster(self.trainFileName)
-		self.activeTrains = [tid for tid in self.roster.getTrainOrder()]
-		self.trainId.SetItems(self.activeTrains)
-		if len(self.activeTrains) > 0:
-			self.trainId.SetSelection(0)
-		self.trainId.Enable(len(self.activeTrains) > 0)
+		self.loadTrainFile(path)
+		
+	def loadTrainFile(self, fn):
+		self.parent.setTitle(os.path.basename(fn))
+
+		try:
+			self.roster = TrainRoster(fn)
+		except FileNotFoundError:
+			dlg = wx.MessageDialog(self, 'Unable to open Train roster file %s' % fn,
+                   'File Not Found',
+                   wx.OK | wx.ICON_ERROR)
+			dlg.ShowModal()
+			dlg.Destroy()
+
+			self.roster = None
 
 		engRunning = self.activeTrainList.getEngineers()
 		self.activeEngineers += engRunning
 		self.allPresentEngineers = [x for x in self.activeEngineers]
-		self.engineer.SetItems(self.activeEngineers)
+		self.chEngineer.SetItems(self.activeEngineers)
 		if len(self.activeEngineers) > 0:
-			self.engineer.SetSelection(0)
-		self.engineer.Enable(len(self.activeEngineers) > 0)
+			self.chEngineer.SetSelection(0)
+		self.chEngineer.Enable(len(self.activeEngineers) > 0)
 		
-		self.bAssign.Enable(len(self.activeTrains) > 0 and len(self.activeEngineers) > 0)
-		self.bSkip.Enable(len(self.activeTrains) > 0)
+		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.activeEngineers) > 0)
+		self.bSkip.Enable(len(self.pendingTrains) > 0)
 		self.bRemove.Enable(False)
 		self.bReassign.Enable(False)
 
 		self.activeTrainList.clear()
 		self.cbATC.SetValue(False)
+		if len(self.pendingTrains) > 0 and self.roster is not None:
+			self.checkOrderTrains()
+
+		self.chTrain.SetItems(self.pendingTrains)
+		self.chTrain.Enable(len(self.pendingTrains) > 0)
+		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.activeEngineers) > 0)
 		
+		if len(self.pendingTrains) > 0:
+			self.chTrain.SetSelection(0)
+			tid = self.chTrain.GetString(0)
+		else:
+			self.chTrain.SetSelection(wx.NOT_FOUND)
+			tid = None
+			
+		self.setSelectedTrain(tid)
+		
+	def checkOrderTrains(self):
+		msg = None
+		missingTrains = []
+		if self.roster is None:
+			msg = "The train roster is empty"
+		else:	
+			for tid in self.pendingTrains:
+				if self.roster.getTrain(tid) is None:
+					missingTrains.append(tid)
+		if len(missingTrains) == 1:
+			msg = "Train %s is missing from the roster" % missingTrains[0]
+		elif len(missingTrains) > 0:
+			msg = "The following trains are missing from the rocter:\n%s\n" % ", ".join(missingTrains)
+			
+		if msg is None:
+			return True
+		
+		dlg = wx.MessageDialog(self, msg,
+               'Referenced Trains missing from roster',
+               wx.OK | wx.ICON_ERROR)
+		dlg.ShowModal()
+		dlg.Destroy()
+		
+		if len(missingTrains) == 0:
+			self.pendingTrains = []
+		else:
+			for tid in missingTrains:
+				self.pendingTrains.remove(tid)
+				
+		return False
+
+	def onOpenEngineer(self, _):
+		if self.activeTrainList.count() > 0:
+			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
+	                               'Data will be lost',
+	                               wx.YES_NO | wx.ICON_WARNING)
+			rc = dlg.ShowModal()
+			dlg.Destroy()
+			if rc != wx.ID_YES:
+				return
+
+		dlg = wx.FileDialog(
+			self, message="Choose an engineer file",
+			defaultDir=self.settings.engineerdir,
+			defaultFile="",
+			wildcard=wildcardTxt,
+			style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_PREVIEW)
+		if dlg.ShowModal() != wx.ID_OK:
+			dlg.Destroy()
+			return 
+
+		path = dlg.GetPath()
+		dlg.Destroy()
+		
+		self.settings.engineerdir, self.settings.engineerfile = os.path.split(path)
+		self.settings.setModified()
+		
+		self.loadEngineerFile(path)
+
+	def loadEngineerFile(self, fn):
+		try:
+			self.engineers = Engineers(fn)
+		except FileNotFoundError:
+			dlg = wx.MessageDialog(self, 'Unable to open Engineer file %s' % fn,
+                   'File Not Found',
+                   wx.OK | wx.ICON_ERROR)
+			dlg.ShowModal()
+			dlg.Destroy()
+
+			self.engineers = None
+			
+		self.activeEngineers = []
+		self.allPresentEngineers = [x for x in self.activeEngineers]
+		self.chEngineer.SetItems(self.activeEngineers)
+		self.chEngineer.Enable(len(self.activeEngineers) > 0)
+
+		self.activeTrainList.clear()
+		self.cbATC.SetValue(False)
+		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.activeEngineers) > 0)
+		self.bRemove.Enable(False)
+		self.bReassign.Enable(False)
+		
+		if len(self.activeEngineers) > 0:
+			self.chEngineer.SetSelection(0)
+			self.selectedEngineer = self.chEngineer.GetString(0)
+		else:
+			self.chEngineer.SetSelection(wx.NOT_FOUND)
+			self.selectedEngineer = None
+			
+	def onOpenOrder(self, _):
+		if self.activeTrainList.count() > 0:
+			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
+	                               'Data will be lost',
+	                               wx.YES_NO | wx.ICON_WARNING)
+			rc = dlg.ShowModal()
+			dlg.Destroy()
+			if rc != wx.ID_YES:
+				return
+			
+		dlg = wx.FileDialog(
+			self, message="Choose an order file",
+			defaultDir=self.settings.orderdir,
+			defaultFile="",
+			wildcard=wildcardTxt,
+			style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_PREVIEW)
+		if dlg.ShowModal() != wx.ID_OK:
+			dlg.Destroy()
+			return 
+
+		path = dlg.GetPath()
+		dlg.Destroy()
+		
+		self.settings.orderdir, self.settings.orderfile = os.path.split(path)
+		self.settings.setModified()
+		
+		self.loadOrderFile(path)
+		
+	def loadOrderFile(self, fn):
+		try:
+			self.pendingTrains = [x for x in Order(fn)]
+		except FileNotFoundError:
+			dlg = wx.MessageDialog(self, 'Unable to open Order file %s' % fn,
+                   'File Not Found',
+                   wx.OK | wx.ICON_ERROR)
+			dlg.ShowModal()
+			dlg.Destroy()
+			
+			self.pendingTrains = []
+			
+		if len(self.pendingTrains) > 0:
+			self.setSelectedTrain(self.chTrain.GetString(0))
+			self.checkOrderTrains()
+			
+		self.chTrain.SetItems(self.pendingTrains)
+		self.chTrain.Enable(len(self.pendingTrains) > 0)
+		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.activeEngineers) > 0)
+
+		self.activeTrainList.clear()
+		self.cbATC.SetValue(False)
+		self.bRemove.Enable(False)
+		self.bReassign.Enable(False)
+		
+		if len(self.pendingTrains) > 0:
+			self.chTrain.SetSelection(0)
+			tid = self.chTrain.GetString(0)
+		else:
+			self.chTrain.SetSelection(wx.NOT_FOUND)
+			tid = None
+			
+		self.setSelectedTrain(tid)
+
 		
 	def onCbATC(self, _):
-		if len(self.activeTrains) == 0:
+		if len(self.pendingTrains) == 0:
 			return
 		
 		if len(self.activeEngineers) == 0:
 			self.bAssign.Enable(self.cbATC.IsChecked())
 		
 	def bAssignPressed(self, _):
-		tInfo = self.roster.getTrain(self.chosenTrain)
+		tInfo = self.roster.getTrain(self.selectedTrain)
 		if tInfo is None:
 			return
 		
@@ -266,37 +448,37 @@ class TrainMasterPanel(wx.Panel):
 			eng = self.selectedEngineer
 		
 		acttr = {
-			"tid": self.chosenTrain,
+			"tid": self.selectedTrain,
 			"dir": tInfo["dir"],
 			"origin": tInfo["origin"],
 			"terminus": tInfo["terminus"],
 			"engineer": eng}
 		self.activeTrainList.addTrain(acttr)
 		
-		self.activeTrains.remove(self.chosenTrain)
-		self.trainId.SetItems(self.activeTrains)
-		if len(self.activeTrains) == 0:
-			self.trainId.Enable(False)
+		self.pendingTrains.remove(self.selectedTrain)
+		self.chTrain.SetItems(self.pendingTrains)
+		if len(self.pendingTrains) == 0:
+			self.chTrain.Enable(False)
 			self.bAssign.Enable(False)
 			self.bSkip.Enable(False)
 			self.showInfo(None)
 		else:
-			self.trainId.SetSelection(0)
-			self.setSelectedTrain(self.trainId.GetString(0))
+			self.chTrain.SetSelection(0)
+			self.setSelectedTrain(self.chTrain.GetString(0))
 		
 		if not self.cbATC.IsChecked():
 			self.activeEngineers.remove(self.selectedEngineer)
-			self.engineer.SetItems(self.activeEngineers)
+			self.chEngineer.SetItems(self.activeEngineers)
 			if len(self.activeEngineers) == 0:
-				self.engineer.Enable(False)
+				self.chEngineer.Enable(False)
 				self.bAssign.Enable(False)
 			else:
-				self.engineer.SetSelection(0)
-				self.selectedEngineer = self.engineer.GetString(0)
+				self.chEngineer.SetSelection(0)
+				self.selectedEngineer = self.chEngineer.GetString(0)
 				
 		else:
 			self.cbATC.SetValue(False)
-			self.bAssign.Enable(len(self.activeTrains) != 0 and len(self.activeEngineers) != 0)
+			self.bAssign.Enable(len(self.pendingTrains) != 0 and len(self.activeEngineers) != 0)
 
 	def bReassignPressed(self, _):
 		t = self.activeTrainList.getSelection()
@@ -306,13 +488,18 @@ class TrainMasterPanel(wx.Panel):
 		if t["engineer"] in self.allPresentEngineers:
 			if t["engineer"] not in self.activeEngineers:
 				self.activeEngineers.append(t["engineer"])
-			self.engineer.Enable(True)
-			self.engineer.SetItems(self.activeEngineers)
-			self.engineer.SetSelection(0)
-			self.selectedEngineer = self.engineer.GetString(0)
+			self.chEngineer.Enable(True)
+			self.chEngineer.SetItems(self.activeEngineers)
+			self.chEngineer.SetSelection(0)
+			self.selectedEngineer = self.chEngineer.GetString(0)
 
-		engActive = self.activeTrainList.getEngineers()		
-		eng = ["ATC"] + sorted([x for x in self.engineers if x not in engActive])
+		engActive = self.activeTrainList.getEngineers()	
+		if t["engineer"] != "ATC":
+			eng = ["ATC"]
+		else:
+			eng = []	
+			
+		eng += sorted([x for x in self.engineers if x not in engActive])
 		
 		dlg = wx.SingleChoiceDialog(self, 'Choose New Engineer', 'Reassign Engineer',
 				eng,
@@ -331,32 +518,32 @@ class TrainMasterPanel(wx.Panel):
 
 		if neng in self.activeEngineers:
 			self.activeEngineers.remove(neng)
-			self.engineer.SetItems(self.activeEngineers)
+			self.chEngineer.SetItems(self.activeEngineers)
 			if len(self.activeEngineers) == 0:
-				self.engineer.Enable(False)
+				self.chEngineer.Enable(False)
 				self.bAssign.Enable(self.cbATC.IsChecked())
 			else:
-				self.engineer.SetSelection(0)
-				self.selectedEngineer = self.engineer.GetString(0)
+				self.chEngineer.SetSelection(0)
+				self.selectedEngineer = self.chEngineer.GetString(0)
 				self.bAssign.Enable(True)
 		
 		self.activeTrainList.setNewEngineer(neng)
 		
 	def bSkipPressed(self, _):
-		tInfo = self.roster.getTrain(self.chosenTrain)
+		tInfo = self.roster.getTrain(self.selectedTrain)
 		if tInfo is None:
 			return
 		
-		self.activeTrains.remove(self.chosenTrain)
-		self.trainId.SetItems(self.activeTrains)
-		if len(self.activeTrains) == 0:
-			self.trainId.Enable(False)
+		self.pendingTrains.remove(self.selectedTrain)
+		self.chTrain.SetItems(self.pendingTrains)
+		if len(self.pendingTrains) == 0:
+			self.chTrain.Enable(False)
 			self.bAssign.Enable(False)
 			self.bSkip.Enable(False)
 			self.showInfo(None)
 		else:
-			self.trainId.SetSelection(0)
-			self.setSelectedTrain(self.trainId.GetString(0))
+			self.chTrain.SetSelection(0)
+			self.setSelectedTrain(self.chTrain.GetString(0))
 			
 	def bRemovePressed(self, _):
 		t = self.activeTrainList.getSelection()
@@ -365,23 +552,23 @@ class TrainMasterPanel(wx.Panel):
 			if t["engineer"] in self.allPresentEngineers:
 				if t["engineer"] not in self.activeEngineers:
 					self.activeEngineers.append(t["engineer"])
-				self.engineer.Enable(True)
-				self.engineer.SetItems(self.activeEngineers)
-				self.engineer.SetSelection(0)
-				self.selectedEngineer = self.engineer.GetString(0)
+				self.chEngineer.Enable(True)
+				self.chEngineer.SetItems(self.activeEngineers)
+				self.chEngineer.SetSelection(0)
+				self.selectedEngineer = self.chEngineer.GetString(0)
 				
-			if len(self.activeTrains) > 0 and (len(self.activeEngineers) > 0 or self.cbATC.IsChecked()):
+			if len(self.pendingTrains) > 0 and (len(self.activeEngineers) > 0 or self.cbATC.IsChecked()):
 				self.bAssign.Enable(True)
 				
 			self.bRemove.Enable(False)
 			self.bReassign.Enable(False)
 		
 	def onChoiceTID(self, _):
-		tx = self.trainId.GetSelection()
+		tx = self.chTrain.GetSelection()
 		if tx == wx.NOT_FOUND:
 			return
 		
-		tid = self.trainId.GetString(tx)
+		tid = self.chTrain.GetString(tx)
 		self.setSelectedTrain(tid)
 		
 	def reportSelection(self, tx):
@@ -393,14 +580,14 @@ class TrainMasterPanel(wx.Panel):
 			self.bReassign.Enable(True)
 		
 	def onChoiceEngineer(self, _):
-		ex = self.engineer.GetSelection()
+		ex = self.chEngineer.GetSelection()
 		if ex == wx.NOT_FOUND:
 			return
 		
-		self.selectedEngineer = self.engineer.GetString(ex)
+		self.selectedEngineer = self.chEngineer.GetString(ex)
 		
 	def setSelectedTrain(self, tid):
-		self.chosenTrain = tid
+		self.selectedTrain = tid
 		self.showInfo(tid)
 		
 	def showInfo(self, tid):
@@ -438,16 +625,17 @@ class TrainMasterPanel(wx.Panel):
 			return 
 
 		self.activeEngineers = newEngs		
-		self.engineer.SetItems(self.activeEngineers)
-		self.engineer.Enable(len(self.activeEngineers) > 0)
-		if len(self.activeTrains) > 0 and (len(self.activeEngineers) > 0 or self.cbATC.IsChecked()):
+		self.chEngineer.SetItems(self.activeEngineers)
+		self.chEngineer.Enable(len(self.activeEngineers) > 0)
+		if len(self.pendingTrains) > 0 and (len(self.activeEngineers) > 0 or self.cbATC.IsChecked()):
 			self.bAssign.Enable(True)
-		self.engineer.SetSelection(0)
-		self.selectedEngineer = self.engineer.GetString(0)
+		self.chEngineer.SetSelection(0)
+		self.selectedEngineer = self.chEngineer.GetString(0)
 		
 		self.allPresentEngineers = [x for x in self.activeEngineers] + currentEngineers
 			
 	def onClose(self, _):
+		self.settings.save()
 		self.Destroy()
 
 class App(wx.App):
