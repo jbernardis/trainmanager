@@ -262,8 +262,6 @@ class TrainMasterPanel(wx.Panel):
 
 		self.activeTrainList.clear()
 		self.cbATC.SetValue(False)
-		if len(self.pendingTrains) > 0 and self.roster is not None:
-			self.checkOrderTrains()
 
 		self.chTrain.SetItems(self.pendingTrains)
 		self.chTrain.Enable(len(self.pendingTrains) > 0)
@@ -277,34 +275,6 @@ class TrainMasterPanel(wx.Panel):
 			tid = None
 			
 		self.setSelectedTrain(tid)
-		
-	def checkOrderTrains(self):
-		msg = None
-		missingTrains = []
-		if self.roster is None:
-			msg = "The train roster is empty"
-		else:	
-			for tid in self.pendingTrains:
-				if self.roster.getTrain(tid) is None:
-					missingTrains.append(tid)
-		if len(missingTrains) == 1:
-			msg = "Train %s is missing from the roster" % missingTrains[0]
-		elif len(missingTrains) > 0:
-			msg = "The following trains are missing from the roster:\n%s\n\n" %", ".join(missingTrains)
-			msg += "These trains will be removed from the train order"
-			
-		if msg is None:
-			return
-		
-		dlg = wx.MessageDialog(self, msg,
-               'Referenced Trains missing from roster',
-               wx.OK | wx.ICON_ERROR)
-		dlg.ShowModal()
-		dlg.Destroy()
-		
-		if len(missingTrains) > 0:
-			for tid in missingTrains:
-				self.pendingTrains.remove(tid)
 
 	def onOpenEngineer(self, _):
 		if self.activeTrainList.count() > 0:
@@ -407,7 +377,6 @@ class TrainMasterPanel(wx.Panel):
 		self.chTrain.SetItems(self.pendingTrains)
 		if len(self.pendingTrains) > 0:
 			self.setSelectedTrain(self.chTrain.GetString(0))
-			self.checkOrderTrains()
 			
 		self.chTrain.Enable(len(self.pendingTrains) > 0)
 		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.activeEngineers) > 0)
@@ -588,19 +557,22 @@ class TrainMasterPanel(wx.Panel):
 		self.showInfo(tid)
 		
 	def showInfo(self, tid):
-		if tid is None:
+		if tid is None or tid == "":
 			self.stDescription.SetLabel("")
 			self.stStepsTower.SetLabel("")
 			self.stStepsStop.SetLabel("")
 			return
 		
 		if self.roster is None:
-			tInfo = None
+			self.stDescription.SetLabel("Train Roster is empty")
+			self.stStepsTower.SetLabel("")
+			self.stStepsStop.SetLabel("")
+			return
 		else:
 			tInfo = self.roster.getTrain(tid)
 			
 		if tInfo is None:
-			self.stDescription.SetLabel("")
+			self.stDescription.SetLabel("Train %s is not in Train Roster" % tid)
 			self.stStepsTower.SetLabel("")
 			self.stStepsStop.SetLabel("")
 			return
