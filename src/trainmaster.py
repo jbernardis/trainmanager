@@ -290,10 +290,11 @@ class TrainMasterPanel(wx.Panel):
 		if len(missingTrains) == 1:
 			msg = "Train %s is missing from the roster" % missingTrains[0]
 		elif len(missingTrains) > 0:
-			msg = "The following trains are missing from the rocter:\n%s\n" % ", ".join(missingTrains)
+			msg = "The following trains are missing from the roster:\n%s\n\n" %", ".join(missingTrains)
+			msg += "These trains will be removed from the train order"
 			
 		if msg is None:
-			return True
+			return
 		
 		dlg = wx.MessageDialog(self, msg,
                'Referenced Trains missing from roster',
@@ -301,13 +302,9 @@ class TrainMasterPanel(wx.Panel):
 		dlg.ShowModal()
 		dlg.Destroy()
 		
-		if len(missingTrains) == 0:
-			self.pendingTrains = []
-		else:
+		if len(missingTrains) > 0:
 			for tid in missingTrains:
 				self.pendingTrains.remove(tid)
-				
-		return False
 
 	def onOpenEngineer(self, _):
 		if self.activeTrainList.count() > 0:
@@ -406,12 +403,12 @@ class TrainMasterPanel(wx.Panel):
 			dlg.Destroy()
 			
 			self.pendingTrains = []
-			
+
+		self.chTrain.SetItems(self.pendingTrains)
 		if len(self.pendingTrains) > 0:
 			self.setSelectedTrain(self.chTrain.GetString(0))
 			self.checkOrderTrains()
 			
-		self.chTrain.SetItems(self.pendingTrains)
 		self.chTrain.Enable(len(self.pendingTrains) > 0)
 		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.activeEngineers) > 0)
 
@@ -597,7 +594,11 @@ class TrainMasterPanel(wx.Panel):
 			self.stStepsStop.SetLabel("")
 			return
 		
-		tInfo = self.roster.getTrain(tid)
+		if self.roster is None:
+			tInfo = None
+		else:
+			tInfo = self.roster.getTrain(tid)
+			
 		if tInfo is None:
 			self.stDescription.SetLabel("")
 			self.stStepsTower.SetLabel("")
