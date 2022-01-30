@@ -28,6 +28,9 @@ class MainFrame(wx.Frame):
 
 		self.CreateStatusBar()
 		menuBar = wx.MenuBar()
+		
+		self.trainfile = None
+		self.orderfile = None
 
 		self.menuFile = wx.Menu()		
 		self.menuFile.Append(MENU_FILE_LOAD_TRAIN, "&Load Train Roster", "Load Train Roster")
@@ -59,10 +62,20 @@ class MainFrame(wx.Frame):
 		self.Layout()
 		self.Fit();
 		
-	def setTitle(self, fn=None):
+	def setTitle(self, train=None, order=None):
+		if train is not None:
+			self.trainfile = train
+			
+		if order is not None:
+			self.orderfile = order
+			
 		title = "Train Master"
-		if fn is not None:
-			title += " - %s" % fn
+		if self.trainfile is not None:
+			title += " - %s" % self.trainfile
+			
+		if self.orderfile is not None:
+			title += " / %s" % self.orderfile
+		
 		self.SetTitle(title)
 	
 	def onClose(self, _):
@@ -199,6 +212,10 @@ class TrainMasterPanel(wx.Panel):
 	def initialize(self):
 		self.settings = Settings(os.getcwd())
 		
+		self.trainFile = self.settings.trainfile
+		self.orderFile = self.settings.orderfile
+		self.parent.setTitle(train=self.trainFile, order=self.orderFile)
+		
 		self.loadEngineerFile(os.path.join(self.settings.engineerdir, self.settings.engineerfile))
 
 		self.loadTrainFile(os.path.join(self.settings.traindir, self.settings.trainfile))
@@ -234,7 +251,7 @@ class TrainMasterPanel(wx.Panel):
 		self.loadTrainFile(path)
 		
 	def loadTrainFile(self, fn):
-		self.parent.setTitle(os.path.basename(fn))
+		self.parent.setTitle(train=os.path.basename(fn))
 
 		try:
 			self.roster = TrainRoster(fn)
@@ -363,6 +380,7 @@ class TrainMasterPanel(wx.Panel):
 		self.loadOrderFile(path)
 		
 	def loadOrderFile(self, fn):
+		self.parent.setTitle(order=os.path.basename(fn))
 		try:
 			self.pendingTrains = [x for x in Order(fn)]
 		except FileNotFoundError:
