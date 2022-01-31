@@ -15,7 +15,7 @@ MENU_FILE_LOAD_ENG  = 101
 MENU_FILE_LOAD_ORDER = 103
 MENU_FILE_EXIT = 199
 MENU_MANAGE_ENGINEERS = 200
-
+MENU_MANAGE_RESET_ORDER = 201
 wildcard = "JSON file (*.json)|*.json|"	 \
 		   "All files (*.*)|*.*"
 wildcardTxt = "TXT file (*.txt)|*.txt|"	 \
@@ -45,6 +45,7 @@ class MainFrame(wx.Frame):
 		
 		self.menuManage = wx.Menu()
 		self.menuManage.Append(MENU_MANAGE_ENGINEERS, "&Manage Engineers", "Manage the content and ordering of active engineers list")
+		self.menuManage.Append(MENU_MANAGE_RESET_ORDER, "&Reset Train Order", "Reser Train Order back to the beginning")
 		
 		menuBar.Append(self.menuFile, "&File")
 		menuBar.Append(self.menuManage, "&Manage")
@@ -61,6 +62,7 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.panel.onOpenOrder, id=MENU_FILE_LOAD_ORDER)
 		self.Bind(wx.EVT_MENU, self.onClose, id=MENU_FILE_EXIT)
 		self.Bind(wx.EVT_MENU, self.panel.onManageEngineers, id=MENU_MANAGE_ENGINEERS)
+		self.Bind(wx.EVT_MENU, self.panel.onResetOrder, id=MENU_MANAGE_RESET_ORDER)
 		
 		self.SetSizer(sizer)
 		self.Layout()
@@ -97,6 +99,7 @@ class TrainMasterPanel(wx.Panel):
 		self.pendingTrains = []
 		self.activeEngineers = [] 
 		self.allPresentEngineers = [x for x in self.activeEngineers]
+		self.trainOrder = None
 		
 		vsizerl = wx.BoxSizer(wx.VERTICAL)
 		vsizerl.Add(wx.StaticText(self, wx.ID_ANY, "", size=(200, -1)))
@@ -355,6 +358,23 @@ class TrainMasterPanel(wx.Panel):
 			self.chEngineer.SetSelection(wx.NOT_FOUND)
 			self.selectedEngineer = None
 			
+	def onResetOrder(self, _):
+		if self.activeTrainList.count() > 0:
+			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
+	                               'Data will be lost',
+	                               wx.YES_NO | wx.ICON_WARNING)
+			rc = dlg.ShowModal()
+			dlg.Destroy()
+			if rc != wx.ID_YES:
+				return
+			
+		if self.trainOrder is None:
+			self.pendingTrains = []
+		else:
+			self.pendingTrains = [x for x in self.trainOrder]
+			
+		self.setTrainOrder()
+		
 	def onOpenOrder(self, _):
 		if self.activeTrainList.count() > 0:
 			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
@@ -385,23 +405,36 @@ class TrainMasterPanel(wx.Panel):
 		
 	def loadOrderFile(self, fn):
 		self.parent.setTitle(order=os.path.basename(fn))
+		self.trainOrder = Order(fn)
 		try:
-			self.pendingTrains = [x for x in Order(fn)]
+			self.pendingTrains = [x for x in self.trainOrder]
 		except FileNotFoundError:
 			dlg = wx.MessageDialog(self, 'Unable to open Order file %s' % fn,
-                   'File Not Found',
-                   wx.OK | wx.ICON_ERROR)
+	               'File Not Found',
+	               wx.OK | wx.ICON_ERROR)
 			dlg.ShowModal()
 			dlg.Destroy()
 			
 			self.pendingTrains = []
-
+			
+		self.setTrainOrder()
+				
+	def setTrainOrder(self):
 		self.chTrain.SetItems(self.pendingTrains)
 		if len(self.pendingTrains) > 0:
 			self.setSelectedTrain(self.chTrain.GetString(0))
 			
+		engRunning = self.activeTrainList.getEngineers()
+		self.activeEngineers += engRunning
+		self.allPresentEngineers = [x for x in self.activeEngineers]
+		self.chEngineer.SetItems(self.activeEngineers)
+		if len(self.activeEngineers) > 0:
+			self.chEngineer.SetSelection(0)
+		self.chEngineer.Enable(len(self.activeEngineers) > 0)
+			
 		self.chTrain.Enable(len(self.pendingTrains) > 0)
 		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.activeEngineers) > 0)
+		self.bSkip.Enable(len(self.pendingTrains) > 0)
 
 		self.activeTrainList.clear()
 		self.cbATC.SetValue(False)
