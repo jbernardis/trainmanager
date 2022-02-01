@@ -421,8 +421,8 @@ class TrainMasterPanel(wx.Panel):
 		
 	def loadOrderFile(self, fn):
 		self.parent.setTitle(order=os.path.basename(fn))
-		self.trainOrder = Order(fn)
 		try:
+			self.trainOrder = Order(fn)
 			self.pendingTrains = [x for x in self.trainOrder]
 		except FileNotFoundError:
 			dlg = wx.MessageDialog(self, 'Unable to open Order file %s' % fn,
