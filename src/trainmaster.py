@@ -6,19 +6,26 @@ from engineers import Engineers
 from order import Order
 from activetrainlist import ActiveTrainList
 from manageengineers import ManageEngineersDlg
+from viewlogdlg import ViewLogDlg
 from settings import Settings
+from log import Log
 
 BTNSZ = (90, 46)
 
 MENU_FILE_LOAD_TRAIN = 100
 MENU_FILE_LOAD_ENG  = 101
 MENU_FILE_LOAD_ORDER = 103
+MENU_FILE_VIEW_LOG = 110
+MENU_FILE_CLEAR_LOG = 111
+MENU_FILE_SAVE_LOG = 112
 MENU_FILE_EXIT = 199
 MENU_MANAGE_ENGINEERS = 200
 MENU_MANAGE_RESET_ORDER = 201
 wildcard = "JSON file (*.json)|*.json|"	 \
 		   "All files (*.*)|*.*"
 wildcardTxt = "TXT file (*.txt)|*.txt|"	 \
+		   "All files (*.*)|*.*"
+wildcardLog = "Log file (*.log)|*.log|"	 \
 		   "All files (*.*)|*.*"
 
 class MainFrame(wx.Frame):
@@ -37,18 +44,22 @@ class MainFrame(wx.Frame):
 		self.orderfile = None
 
 		self.menuFile = wx.Menu()		
-		self.menuFile.Append(MENU_FILE_LOAD_TRAIN, "&Load Train Roster", "Load Train Roster")
-		self.menuFile.Append(MENU_FILE_LOAD_ORDER, "&Load Train Order", "Load Train Order List")
-		self.menuFile.Append(MENU_FILE_LOAD_ENG, "&Load Engineer list", "Load Engineer List")
+		self.menuFile.Append(MENU_FILE_LOAD_TRAIN, "Load Train Roster", "Load Train Roster")
+		self.menuFile.Append(MENU_FILE_LOAD_ORDER, "Load Train Order", "Load Train Order List")
+		self.menuFile.Append(MENU_FILE_LOAD_ENG, "Load Engineer list", "Load Engineer List")
 		self.menuFile.AppendSeparator()
-		self.menuFile.Append(MENU_FILE_EXIT, "&Exit", "Exit Program")
+		self.menuFile.Append(MENU_FILE_VIEW_LOG, "View Log", "View Log")
+		self.menuFile.Append(MENU_FILE_SAVE_LOG, "Save Log", "Save Log")
+		self.menuFile.Append(MENU_FILE_CLEAR_LOG, "Clear Log", "Clear Log")
+		self.menuFile.AppendSeparator()
+		self.menuFile.Append(MENU_FILE_EXIT, "Exit", "Exit Program")
 		
 		self.menuManage = wx.Menu()
-		self.menuManage.Append(MENU_MANAGE_ENGINEERS, "&Manage Engineers", "Manage the content and ordering of active engineers list")
-		self.menuManage.Append(MENU_MANAGE_RESET_ORDER, "&Reset Train Order", "Reser Train Order back to the beginning")
+		self.menuManage.Append(MENU_MANAGE_ENGINEERS, "Manage Engineers", "Manage the content and ordering of active engineers list")
+		self.menuManage.Append(MENU_MANAGE_RESET_ORDER, "Reset Train Order", "Reser Train Order back to the beginning")
 		
-		menuBar.Append(self.menuFile, "&File")
-		menuBar.Append(self.menuManage, "&Manage")
+		menuBar.Append(self.menuFile, "File")
+		menuBar.Append(self.menuManage, "Manage")
 				
 		self.SetMenuBar(menuBar)
 		self.menuBar = menuBar
@@ -60,6 +71,9 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.panel.onOpenTrain, id=MENU_FILE_LOAD_TRAIN)
 		self.Bind(wx.EVT_MENU, self.panel.onOpenEngineer, id=MENU_FILE_LOAD_ENG)
 		self.Bind(wx.EVT_MENU, self.panel.onOpenOrder, id=MENU_FILE_LOAD_ORDER)
+		self.Bind(wx.EVT_MENU, self.panel.onViewLog, id=MENU_FILE_VIEW_LOG)
+		self.Bind(wx.EVT_MENU, self.panel.onClearLog, id=MENU_FILE_CLEAR_LOG)
+		self.Bind(wx.EVT_MENU, self.panel.onSaveLog, id=MENU_FILE_SAVE_LOG)
 		self.Bind(wx.EVT_MENU, self.onClose, id=MENU_FILE_EXIT)
 		self.Bind(wx.EVT_MENU, self.panel.onManageEngineers, id=MENU_MANAGE_ENGINEERS)
 		self.Bind(wx.EVT_MENU, self.panel.onResetOrder, id=MENU_MANAGE_RESET_ORDER)
@@ -96,6 +110,8 @@ class TrainMasterPanel(wx.Panel):
 		
 		self.parent.setTitle()
 			
+		self.log = Log()
+
 		self.pendingTrains = []
 		self.activeEngineers = [] 
 		self.allPresentEngineers = [x for x in self.activeEngineers]
@@ -450,6 +466,29 @@ class TrainMasterPanel(wx.Panel):
 			
 		self.setSelectedTrain(tid)
 
+	def onViewLog(self, _):
+		dlg = ViewLogDlg(self, self.log)
+		dlg.ShowModal()
+		dlg.Destroy()
+		
+			
+	def onClearLog(self, _):
+		self.log.clear()
+		
+	def onSaveLog(self, _):
+		dlg = wx.FileDialog(self, message="Save log to file", defaultDir=os.getcwd(),
+			defaultFile="", wildcard=wildcardLog, style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+		if dlg.ShowModal() != wx.ID_OK:
+			dlg.Destroy()
+			return False
+		
+		path = dlg.GetPath()
+		dlg.Destroy()
+		
+		with open(path, "w") as ofp:
+			for ln in self.log:
+				ofp.write("%s\n" % ln)
+
 		
 	def onCbATC(self, _):
 		if len(self.pendingTrains) == 0:
@@ -475,6 +514,7 @@ class TrainMasterPanel(wx.Panel):
 			"terminus": tInfo["terminus"],
 			"engineer": eng}
 		self.activeTrainList.addTrain(acttr)
+		self.log.append("Assigned train %s to %s" % (self.selectedTrain, eng))
 		
 		self.pendingTrains.remove(self.selectedTrain)
 		self.chTrain.SetItems(self.pendingTrains)
@@ -547,13 +587,17 @@ class TrainMasterPanel(wx.Panel):
 				self.chEngineer.SetSelection(0)
 				self.selectedEngineer = self.chEngineer.GetString(0)
 				self.bAssign.Enable(True)
-		
+
+		oeng = t["engineer"]		
 		self.activeTrainList.setNewEngineer(neng)
+		self.log.append("Reassigned train %s from %s to %s" % (t["tid"], oeng, neng))
 		
 	def bSkipPressed(self, _):
 		tInfo = self.roster.getTrain(self.selectedTrain)
 		if tInfo is None:
 			return
+		
+		self.log.append("Skipped train %s" % self.selectedTrain)
 		
 		self.pendingTrains.remove(self.selectedTrain)
 		self.chTrain.SetItems(self.pendingTrains)
@@ -569,8 +613,10 @@ class TrainMasterPanel(wx.Panel):
 	def bRemovePressed(self, _):
 		t = self.activeTrainList.getSelection()
 		if t is not None:
+			self.log.append("Removed train %s from active list" % t["tid"])
 			self.activeTrainList.delSelected()
 			if t["engineer"] in self.allPresentEngineers:
+				self.log.append("Returned engineer %s to pool" % t["engineer"])
 				if t["engineer"] not in self.activeEngineers:
 					self.activeEngineers.append(t["engineer"])
 				self.chEngineer.Enable(True)
@@ -652,6 +698,7 @@ class TrainMasterPanel(wx.Panel):
 		if rc != wx.ID_OK:
 			return 
 
+		self.log.append("New Engineer list: %s" % str(newEngs))
 		self.activeEngineers = newEngs		
 		self.chEngineer.SetItems(self.activeEngineers)
 		self.chEngineer.Enable(len(self.activeEngineers) > 0)
