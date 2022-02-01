@@ -1,5 +1,6 @@
 import configparser
 import os
+import wx
 
 INIFILE = "trainmaster.ini"
 
@@ -15,25 +16,31 @@ def parseBoolean(val, defaultVal):
 	return defaultVal
 
 class Settings:
-	def __init__(self, folder):
+	def __init__(self, parent, folder):
+		self.parent = parent
+		
 		self.inifile = os.path.join(folder, INIFILE)
 		self.section = "trainmaster"	
 		
 		self.traindir = os.getcwd()
 		self.trainfile = "trains.json"
-		self.engineerdir = os.getcwd()
+		self.engineerdir = os.path.join(os.getcwd(), "engineers")
 		self.engineerfile = "engineers.txt"
-		self.orderdir = os.getcwd()
+		self.orderdir = os.path.join(os.getcwd(), "orders")
 		self.orderfile = "order.txt"
 		
 		self.cfg = configparser.ConfigParser()
 		self.cfg.optionxform = str
 		if not self.cfg.read(self.inifile):
-			print("Settings file %s does not exist.  Using default values" % INIFILE)
-			
+			dlg = wx.MessageDialog(self.parent, "Settings file %s does not exist.  Using default values" % INIFILE,
+	                               'File Not Found',
+	                               wx.OK | wx.ICON_WARNING)
+			dlg.ShowModal()
+			dlg.Destroy()
 			self.modified = True
 			return
 
+		msgs = []
 		self.modified = False	
 		if self.cfg.has_section(self.section):
 			for opt, value in self.cfg.items(self.section):
@@ -50,9 +57,18 @@ class Settings:
 				elif opt == "orderfile":
 					self.orderfile = value
 				else:
-					print("Unknown %s option: %s - ignoring" % (self.section, opt))
+					msgs.append("INI file: Unknown %s option: %s - ignoring" % (self.section, opt))
 		else:
-			print("Missing %s section - assuming defaults" % self.section)				
+			msgs.append("INI file: missing %s section - assuming defaults" % self.section)
+			self.modified = True
+			
+		if len(msgs) > 0:				
+			dlg = wx.MessageDialog(self.parent, "\n".join(msgs),
+	                               'Errors reading settings',
+	                               wx.OK | wx.ICON_WARNING)
+			dlg.ShowModal()
+			dlg.Destroy()
+			return
 
 	def setModified(self):
 		self.modified = True

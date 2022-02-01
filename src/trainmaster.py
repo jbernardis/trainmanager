@@ -233,7 +233,7 @@ class TrainMasterPanel(wx.Panel):
 		wx.CallAfter(self.initialize)
 		
 	def initialize(self):
-		self.settings = Settings(os.getcwd())
+		self.settings = Settings(self, os.getcwd())
 		
 		self.trainFile = self.settings.trainfile
 		self.orderFile = self.settings.orderfile
