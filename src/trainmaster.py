@@ -12,9 +12,7 @@ from viewlogdlg import ViewLogDlg
 from settings import Settings
 from log import Log
 
-import pprint
-
-BTNSZ = (90, 46)
+BTNSZ = (120, 46)
 
 MENU_FILE_LOAD_TRAIN = 100
 MENU_FILE_LOAD_ENG  = 101
@@ -36,9 +34,11 @@ wildcardLog = "Log file (*.log)|*.log|"	 \
 
 class MainFrame(wx.Frame):
 	def __init__(self):
-		wx.Frame.__init__(self, None, size=(480, 800))
+		wx.Frame.__init__(self, None, size=(900, 800))
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 		
+		font = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
+
 		icon = wx.Icon()
 		icon.CopyFromBitmap(wx.Bitmap("trainmaster.ico", wx.BITMAP_TYPE_ANY))
 		self.SetIcon(icon)
@@ -48,22 +48,47 @@ class MainFrame(wx.Frame):
 		
 		self.trainfile = None
 		self.orderfile = None
+		self.engineerfile = None
+		self.locofile = None
 
-		self.menuFile = wx.Menu()		
-		self.menuFile.Append(MENU_FILE_LOAD_TRAIN, "Load Train Roster", "Load Train Roster")
-		self.menuFile.Append(MENU_FILE_LOAD_ORDER, "Load Train Order", "Load Train Order List")
-		self.menuFile.Append(MENU_FILE_LOAD_ENG, "Load Engineer list", "Load Engineer List")
+		self.menuFile = wx.Menu()	
+		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_TRAIN, "Load Train Roster", helpString ="Load Train Roster")
+		i.SetFont(font)
+		self.menuFile.Append(i)
+		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_ORDER, "Load Train Order", helpString="Load Train Order List")
+		i.SetFont(font)
+		self.menuFile.Append(i)
+		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_ORDER, "Load Train Order", helpString="Load Train Order List")
+		i.SetFont(font)
+		self.menuFile.Append(i)
+		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_ENG, "Load Engineer list", helpString="Load Engineer List")
+		i.SetFont(font)
+		self.menuFile.Append(i)
 		self.menuFile.AppendSeparator()
-		self.menuFile.Append(MENU_FILE_VIEW_LOG, "View Log", "View Log")
-		self.menuFile.Append(MENU_FILE_SAVE_LOG, "Save Log", "Save Log")
-		self.menuFile.Append(MENU_FILE_CLEAR_LOG, "Clear Log", "Clear Log")
+		i = wx.MenuItem(self.menuFile, MENU_FILE_VIEW_LOG, "View Log", helpString="View Log")
+		i.SetFont(font)
+		self.menuFile.Append(i)
+		i = wx.MenuItem(self.menuFile, MENU_FILE_SAVE_LOG, "Save Log", helpString="Save Log")
+		i.SetFont(font)
+		self.menuFile.Append(i)
+		i = wx.MenuItem(self.menuFile, MENU_FILE_CLEAR_LOG, "Clear Log", helpString="Clear Log")
+		i.SetFont(font)
+		self.menuFile.Append(i)
 		self.menuFile.AppendSeparator()
-		self.menuFile.Append(MENU_FILE_EXIT, "Exit", "Exit Program")
+		i = wx.MenuItem(self.menuFile, MENU_FILE_EXIT, "Exit", helpString="Exit Program")
+		i.SetFont(font)
+		self.menuFile.Append(i)
 		
 		self.menuManage = wx.Menu()
-		self.menuManage.Append(MENU_MANAGE_ASSIGN_LOCOS, "Assign Locomotives", "Assign locomotives to trains")
-		self.menuManage.Append(MENU_MANAGE_ENGINEERS, "Manage Engineers", "Manage the content and ordering of active engineers list")
-		self.menuManage.Append(MENU_MANAGE_RESET_ORDER, "Reset Train Order", "Reset Train Order back to the beginning")
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ASSIGN_LOCOS, "Assign Locomotives", helpString="Assign locomotives to trains")
+		i.SetFont(font)
+		self.menuManage.Append(i)
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ENGINEERS, "Manage Engineers", helpString="Manage the content and ordering of active engineers list")
+		i.SetFont(font)
+		self.menuManage.Append(i)
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_RESET_ORDER, "Reset Train Order", helpString="Reset Train Order back to the beginning")
+		i.SetFont(font)
+		self.menuManage.Append(i)
 		
 		menuBar.Append(self.menuFile, "File")
 		menuBar.Append(self.menuManage, "Manage")
@@ -90,19 +115,39 @@ class MainFrame(wx.Frame):
 		self.Layout()
 		self.Fit();
 		
-	def setTitle(self, train=None, order=None):
+	def setTitle(self, train=None, order=None, engineer=None, loco=None):
 		if train is not None:
 			self.trainfile = train
 			
 		if order is not None:
 			self.orderfile = order
 			
+		if engineer is not None:
+			self.engineerfile = engineer
+			
+		if loco is not None:
+			self.locofile = loco
+			
 		title = "Train Master"
 		if self.trainfile is not None:
 			title += " - %s" % self.trainfile
+		else:
+			title += " - "
 			
 		if self.orderfile is not None:
 			title += " / %s" % self.orderfile
+		else:
+			title += " / "
+			
+		if self.engineerfile is not None:
+			title += " / %s" % self.engineerfile
+		else:
+			title += " / "
+			
+		if self.locofile is not None:
+			title += " / %s" % self.locofile
+		else:
+			title += " / "
 		
 		self.SetTitle(title)
 	
@@ -128,16 +173,23 @@ class TrainMasterPanel(wx.Panel):
 		vsizerl = wx.BoxSizer(wx.VERTICAL)
 		vsizerl.Add(wx.StaticText(self, wx.ID_ANY, "", size=(200, -1)))
 		vsizerl.AddSpacer(20)
+
+		
+		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
+		labelFont = wx.Font(wx.Font(12, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.NORMAL, faceName="Monospace"))
+		labelFontBold = wx.Font(wx.Font(14, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD, faceName="Monospace"))
+		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
+		textFontBold = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 		
 		self.chTrain = wx.Choice(self, wx.ID_ANY, choices=self.pendingTrains)
 		self.chTrain.SetSelection(0)
+		self.chTrain.SetFont(textFont)
 		self.Bind(wx.EVT_CHOICE, self.onChoiceTID, self.chTrain)
 
-		fontsb = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		st = wx.StaticText(self, wx.ID_ANY, "Next Train: ", size=(100, -1))
-		st.SetFont(fontsb)
+		st.SetFont(textFontBold)
 		sz.Add(st, 1, wx.TOP, 4)
 		sz.Add(self.chTrain)
 		vsizerl.Add(sz)
@@ -146,12 +198,13 @@ class TrainMasterPanel(wx.Panel):
 		
 		self.chEngineer = wx.Choice(self, wx.ID_ANY, choices=self.activeEngineers)
 		self.chEngineer.SetSelection(0)
+		self.chEngineer.SetFont(textFont)
 		self.selectedEngineer = self.chEngineer.GetString(0)
 		self.Bind(wx.EVT_CHOICE, self.onChoiceEngineer, self.chEngineer)
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		st = wx.StaticText(self, wx.ID_ANY, "Engineer: ", size=(100, -1))
-		st.SetFont(fontsb)
+		st.SetFont(textFontBold)
 		sz.Add(st, 1, wx.TOP, 4)
 		sz.Add(self.chEngineer)
 		vsizerl.Add(sz)
@@ -160,6 +213,7 @@ class TrainMasterPanel(wx.Panel):
 		
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		self.cbATC = wx.CheckBox(self, wx.ID_ANY, "ATC")
+		self.cbATC.SetFont(textFontBold)
 		self.Bind(wx.EVT_CHECKBOX, self.onCbATC, self.cbATC)
 		sz.AddSpacer(100)
 		sz.Add(self.cbATC)
@@ -170,12 +224,9 @@ class TrainMasterPanel(wx.Panel):
 		vsizerr = wx.BoxSizer(wx.VERTICAL)
 		vsizerr.Add(wx.StaticText(self, wx.ID_ANY, "", size=(300, -1)))
 		vsizerr.AddSpacer(20)
-		
-		font = wx.Font(wx.Font(12, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.NORMAL, faceName="Monospace"))
-		fontb = wx.Font(wx.Font(14, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD, faceName="Monospace"))
 
 		self.stDescription = wx.StaticText(self, wx.ID_ANY, "", size=(400, -1))
-		self.stDescription.SetFont(fontb)
+		self.stDescription.SetFont(labelFontBold)
 		vsizerr.Add(self.stDescription)
 		vsizerr.AddSpacer(10)
 		self.stStepsTower = wx.StaticText(self, wx.ID_ANY, "", size=(100, 150))
@@ -184,11 +235,11 @@ class TrainMasterPanel(wx.Panel):
 		sz.Add(self.stStepsTower)
 		sz.Add(self.stStepsStop)
 		vsizerr.Add(sz)
-		self.stStepsTower.SetFont(font)
-		self.stStepsStop.SetFont(font)
+		self.stStepsTower.SetFont(labelFont)
+		self.stStepsStop.SetFont(labelFont)
 		
 		self.stLocoInfo = wx.StaticText(self, wx.ID_ANY, "", size=(400, -1))
-		self.stLocoInfo.SetFont(fontsb)
+		self.stLocoInfo.SetFont(labelFontBold)
 		vsizerr.AddSpacer(10)
 		vsizerr.Add(self.stLocoInfo)
 		
@@ -207,6 +258,7 @@ class TrainMasterPanel(wx.Panel):
 		btnsizer = wx.BoxSizer(wx.HORIZONTAL)
 		
 		self.bAssign = wx.Button(self, wx.ID_ANY, "Assign\nTrain/Engineer", size=BTNSZ)
+		self.bAssign.SetFont(btnFont)
 		self.Bind(wx.EVT_BUTTON, self.bAssignPressed, self.bAssign)
 		btnsizer.Add(self.bAssign)
 		self.bAssign.Enable(len(self.activeEngineers) != 0 and len(self.pendingTrains) != 0)
@@ -214,12 +266,14 @@ class TrainMasterPanel(wx.Panel):
 		btnsizer.AddSpacer(30)
 		
 		self.bSkip = wx.Button(self, wx.ID_ANY, "Skip\nTrain", size=BTNSZ)
+		self.bSkip.SetFont(btnFont)
 		self.Bind(wx.EVT_BUTTON, self.bSkipPressed, self.bSkip)
 		btnsizer.Add(self.bSkip)
 		
 		btnsizer.AddSpacer(30)
 		
 		self.bRemove = wx.Button(self, wx.ID_ANY, "Remove\nActive Train", size=BTNSZ)
+		self.bRemove.SetFont(btnFont)
 		self.Bind(wx.EVT_BUTTON, self.bRemovePressed, self.bRemove)
 		btnsizer.Add(self.bRemove)
 		self.bRemove.Enable(False)
@@ -227,6 +281,7 @@ class TrainMasterPanel(wx.Panel):
 		btnsizer.AddSpacer(30)
 		
 		self.bReassign = wx.Button(self, wx.ID_ANY, "Change\nEngineer", size=BTNSZ)
+		self.bReassign.SetFont(btnFont)
 		self.Bind(wx.EVT_BUTTON, self.bReassignPressed, self.bReassign)
 		btnsizer.Add(self.bReassign)
 		self.bReassign.Enable(False)
@@ -235,7 +290,12 @@ class TrainMasterPanel(wx.Panel):
 		wsizer.AddSpacer(20)
 		
 		self.activeTrainList = ActiveTrainList(self)
-		wsizer.Add(self.activeTrainList, 0, wx.ALIGN_CENTER_HORIZONTAL)
+		sz = wx.BoxSizer(wx.HORIZONTAL)
+		sz.AddSpacer(10)
+		sz.Add(self.activeTrainList)
+		sz.AddSpacer(20)
+		
+		wsizer.Add(sz)
 		
 		wsizer.AddSpacer(20)
 
@@ -250,7 +310,12 @@ class TrainMasterPanel(wx.Panel):
 		
 		self.trainFile = self.settings.trainfile
 		self.orderFile = self.settings.orderfile
-		self.parent.setTitle(train=self.trainFile, order=self.orderFile)
+		self.engineerFile = self.settings.engineerfile
+		self.locoFile = self.settings.locofile
+		
+		self.loadLocoFile(os.path.join(self.settings.locodir, self.settings.locofile))
+		
+		self.parent.setTitle(train=self.trainFile, order=self.orderFile, engineer=self.engineerFile, loco=self.locoFile)
 		
 		self.loadEngineerFile(os.path.join(self.settings.engineerdir, self.settings.engineerfile))
 
@@ -258,8 +323,6 @@ class TrainMasterPanel(wx.Panel):
 		
 		self.loadOrderFile(os.path.join(self.settings.orderdir, self.settings.orderfile))
 
-		self.loadLocosFile(os.path.join(self.settings.locosdir, self.settings.locosfile))
-		
 	def onOpenTrain(self, _):
 		if self.activeTrainList.count() > 0:
 			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
@@ -331,7 +394,8 @@ class TrainMasterPanel(wx.Panel):
 			
 		self.setSelectedTrain(tid)
 
-	def loadLocosFile(self, fn):
+	def loadLocoFile(self, fn):
+		self.parent.setTitle(loco=os.path.basename(fn))
 		try:
 			self.locos = Locomotives(fn)
 		except FileNotFoundError:
@@ -372,6 +436,7 @@ class TrainMasterPanel(wx.Panel):
 		self.loadEngineerFile(path)
 
 	def loadEngineerFile(self, fn):
+		self.parent.setTitle(engineer=os.path.basename(fn))
 		try:
 			self.engineers = Engineers(fn)
 		except FileNotFoundError:
@@ -536,12 +601,20 @@ class TrainMasterPanel(wx.Panel):
 			eng = "ATC"
 		else:
 			eng = self.selectedEngineer
-		
+
+		if tInfo["loco"] is None:
+			loco = ""
+			descr = ""
+		else:
+			loco = tInfo["loco"]
+			descr = self.locos.getLoco(loco)		
 		acttr = {
 			"tid": self.selectedTrain,
 			"dir": tInfo["dir"],
 			"origin": tInfo["origin"],
 			"terminus": tInfo["terminus"],
+			"loco": loco,
+			"descr": descr,
 			"engineer": eng}
 		self.activeTrainList.addTrain(acttr)
 		self.log.append("Assigned train %s to %s" % (self.selectedTrain, eng))
@@ -729,14 +802,22 @@ class TrainMasterPanel(wx.Panel):
 	def onManageEngineers(self, _):
 		currentEngineers = self.activeTrainList.getEngineers()
 		availableEngineers = [x for x in list(self.engineers) if x not in currentEngineers]
-		dlg = ManageEngineersDlg(self, availableEngineers, self.activeEngineers)
+		dlg = ManageEngineersDlg(self, availableEngineers, self.activeEngineers, currentEngineers, self.settings)
 		rc = dlg.ShowModal()
 		if rc == wx.ID_OK:
-			newEngs = dlg.getValues()
+			newEngs, allEngs = dlg.getValues()
 			
 		dlg.Destroy()
 		if rc != wx.ID_OK:
-			return 
+			return
+		
+		for eng in self.engineers:
+			if not eng in allEngs:
+				self.engineers.delete(eng)
+
+		for eng in allEngs:
+			if not self.engineers.contains(eng):
+				self.engineers.add(eng)
 
 		self.log.append("New Engineer list: %s" % str(newEngs))
 		self.activeEngineers = newEngs		
@@ -764,11 +845,12 @@ class TrainMasterPanel(wx.Panel):
 		for tid in self.trainOrder:
 			tinfo = self.roster.getTrain(tid)
 			if tinfo["loco"] != result[tid]:
-				print("train %s changed from %s to %s" % (tid, tinfo["loco"], result[tid]))
+				self.log.append("Assigned loco %s to train %s (old value %s)" % (result[tid], tid, tinfo["loco"]))
 				tinfo["loco"] = result[tid]
 				if self.selectedTrain == tid:
 					self.showInfo(tid)
-
+					
+		self.roster.save()
 			
 	def onClose(self, _):
 		self.settings.save()

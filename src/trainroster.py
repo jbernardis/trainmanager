@@ -1,4 +1,5 @@
 import json
+import copy
 
 class TrainRoster:
 	def __init__(self, fn):
@@ -25,5 +26,11 @@ class TrainRoster:
 		return self.trains[tid]
 	
 	def save(self):
+		newJson = copy.deepcopy(self.trains)
+		for tid in newJson:
+			trn = newJson[tid]
+			del(trn["origin"])
+			del(trn["terminus"])
+
 		with open(self.filename, "w") as fp:
-			json.dump(self.trains, fp)
+			json.dump(newJson, fp, indent=4, sort_keys=True)

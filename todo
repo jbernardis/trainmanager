@@ -1,15 +1,14 @@
 manage trains??
 
-add engineer - add to master list only
-remove engineer
-save master engineer list
-save current engineer list
-
-add to train order
-remove from train order
-rearrange train order
-save train order
+manage train order:
+	add to train order
+	remove from train order
+	rearrange train order
+	save train order
 
 manage locos
 
 printing?  Cards??
+
+font size:
+	main menu bar??

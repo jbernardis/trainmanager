@@ -7,6 +7,21 @@ class Engineers():
 					
 		self.ex = 0
 		
+	def contains(self, eng):
+		return eng in self.engineers
+	
+	def add(self, eng):
+		if self.contains(eng):
+			return
+		
+		self.engineers.append(eng)
+		
+	def delete(self, eng):
+		if not self.contains(eng):
+			return
+		
+		self.engineers.remove(eng)
+		
 	def __len__(self):
 		return len(self.engineers)
 

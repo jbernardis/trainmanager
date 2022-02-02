@@ -24,8 +24,8 @@ class Settings:
 		
 		self.traindir = os.getcwd()
 		self.trainfile = "trains.json"
-		self.locosdir = os.getcwd()
-		self.locosfile = "locos.json"
+		self.locodir = os.getcwd()
+		self.locofile = "locos.json"
 		self.engineerdir = os.path.join(os.getcwd(), "engineers")
 		self.engineerfile = "engineers.txt"
 		self.orderdir = os.path.join(os.getcwd(), "orders")
@@ -51,10 +51,10 @@ class Settings:
 					self.traindir = value
 				elif opt == 'trainfile':
 					self.trainfile = value
-				elif opt == 'locosdir':
-					self.locosdir = value
-				elif opt == 'locosfile':
-					self.locosfile = value
+				elif opt == 'locodir':
+					self.locodir = value
+				elif opt == 'locofile':
+					self.locofile = value
 				elif opt == 'engineerdir':
 					self.engineerdir = value
 				elif opt == "engineerfile":
@@ -93,8 +93,8 @@ class Settings:
 		
 		self.cfg.set(self.section, "traindir", str(self.traindir))
 		self.cfg.set(self.section, "trainfile", str(self.trainfile))
-		self.cfg.set(self.section, "locosdir", str(self.locosdir))
-		self.cfg.set(self.section, "locosfile", str(self.locosfile))
+		self.cfg.set(self.section, "locodir", str(self.locodir))
+		self.cfg.set(self.section, "locofile", str(self.locofile))
 		self.cfg.set(self.section, "engineerdir", str(self.engineerdir))
 		self.cfg.set(self.section, "engineerfile", str(self.engineerfile))
 		self.cfg.set(self.section, "orderdir", str(self.orderdir))
@@ -104,7 +104,11 @@ class Settings:
 		try:		
 			cfp = open(self.inifile, 'w')
 		except:
-			print("Unable to open settings file %s for writing" % self.inifile)
+			dlg = wx.MessageDialog(self.parent, "Unable to open settings file %s for writing" % self.inifile,
+	                               'Errors writing settings',
+	                               wx.OK | wx.ICON_WARNING)
+			dlg.ShowModal()
+			dlg.Destroy()
 			return
 		self.cfg.write(cfp)
 		cfp.close()

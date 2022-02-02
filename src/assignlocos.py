@@ -1,12 +1,15 @@
 import wx
 
-import pprint
+BTNSZ = (120, 46)
 
 class AssignLocosDlg(wx.Dialog):
 	def __init__(self, parent, trains, order, locos):
 		wx.Dialog.__init__(self, parent, wx.ID_ANY, "")
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 		
+		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
+		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
+
 		self.titleString = "Assign Locos"
 		self.modified = None
 		self.setModified(False)
@@ -31,40 +34,46 @@ class AssignLocosDlg(wx.Dialog):
 		vsizer.AddSpacer(20)
 		
 		self.currentLocoList = CurrentLocoList(self)
+		self.currentLocoList.SetFont(textFont)
 		self.currentLocoList.setData(self.currentLoco, order, locos)
 		
-		vsizer.Add(self.currentLocoList)
+		vsizer.Add(self.currentLocoList, 0, wx.ALIGN_CENTER_HORIZONTAL)
 
 		vsizer.AddSpacer(20)
 		
 		hsizer = wx.BoxSizer(wx.HORIZONTAL)
 		hsizer.AddSpacer(20)
 		
-		self.bUnassign = wx.Button(self, wx.ID_ANY, "Unassign")
+		self.bUnassign = wx.Button(self, wx.ID_ANY, "Unassign", size=BTNSZ)
+		self.bUnassign.SetFont(btnFont)
 		self.Bind(wx.EVT_BUTTON, self.onBUnassign, self.bUnassign)
 		self.bUnassign.Enable(False)
 		hsizer.Add(self.bUnassign)
 		
 		hsizer.AddSpacer(10)
 				
-		self.bAssign = wx.Button(self, wx.ID_ANY, "Assign")
+		self.bAssign = wx.Button(self, wx.ID_ANY, "Assign", size=BTNSZ)
+		self.bAssign.SetFont(btnFont)
 		self.Bind(wx.EVT_BUTTON, self.onBAssign, self.bAssign)
 		self.bAssign.Enable(False)
 		hsizer.Add(self.bAssign)
 		
 		hsizer.AddSpacer(10)
 		self.chAvail = wx.Choice(self, wx.ID_ANY, choices=[])
+		self.chAvail.SetFont(textFont)
 		self.Bind(wx.EVT_CHOICE, self.onChAvail, self.chAvail)
-		hsizer.Add(self.chAvail)
+		hsizer.Add(self.chAvail, 0, wx.TOP, 10)
 		
 		hsizer.AddSpacer(50)
 		
-		self.bOK = wx.Button(self, wx.ID_ANY, "OK")
+		self.bOK = wx.Button(self, wx.ID_ANY, "OK", size=BTNSZ)
+		self.bOK.SetFont(btnFont)
 		self.Bind(wx.EVT_BUTTON, self.bOKPressed, self.bOK)
 		hsizer.Add(self.bOK)
 		hsizer.AddSpacer(20)
 		
-		self.bCancel = wx.Button(self, wx.ID_ANY, "Cancel")
+		self.bCancel = wx.Button(self, wx.ID_ANY, "Cancel", size=BTNSZ)
+		self.bCancel.SetFont(btnFont)
 		self.Bind(wx.EVT_BUTTON, self.bCancelPressed, self.bCancel)
 		hsizer.Add(self.bCancel)
 
@@ -112,6 +121,7 @@ class AssignLocosDlg(wx.Dialog):
 		self.determineAvailability()
 		self.currentLocoList.RefreshItem(self.selectedTx)
 		self.bUnassign.Enable(False)
+		self.bAssign.Enable(True)
 		self.setModified()
 		
 	def onBAssign(self, _):
@@ -132,7 +142,7 @@ class AssignLocosDlg(wx.Dialog):
 		self.setModified()
 		
 	def onChAvail(self, _):
-		pass
+		self.bAssign.Enable(self.selectedTx is not None)
 		
 	def setModified(self, flag=True):
 		if self.modified == flag:
@@ -175,7 +185,7 @@ class CurrentLocoList(wx.ListCtrl):
 		self.parent = parent
 		
 		wx.ListCtrl.__init__(
-			self, parent, wx.ID_ANY, size=(520, 240),
+			self, parent, wx.ID_ANY, size=(540, 240),
 			style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_VRULES|wx.LC_SINGLE_SEL
 			)
 

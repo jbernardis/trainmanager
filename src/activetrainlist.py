@@ -5,20 +5,27 @@ class ActiveTrainList(wx.ListCtrl):
 		self.parent = parent
 		
 		wx.ListCtrl.__init__(
-			self, parent, wx.ID_ANY, size=(520, 240),
+			self, parent, wx.ID_ANY, size=(925, 240),
 			style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_VRULES|wx.LC_SINGLE_SEL
 			)
+		
+		font = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
+		self.SetFont(font)
+
 
 		self.InsertColumn(0, "Train")
 		self.InsertColumn(1, "Dir")
 		self.InsertColumn(2, "Origin")
 		self.InsertColumn(3, "Terminus")
 		self.InsertColumn(4, "Engineer")
+		self.InsertColumn(5, "Loco #")
+		self.InsertColumn(6, "Train Description")
 		self.SetColumnWidth(0, 80)
 		self.SetColumnWidth(1, 80)
 		self.SetColumnWidth(2, 120)
 		self.SetColumnWidth(3, 120)
-		self.SetColumnWidth(4, 120)
+		self.SetColumnWidth(5, 80)
+		self.SetColumnWidth(6, 360)
 
 		self.SetItemCount(0)
 		self.activeTrains = []
@@ -121,6 +128,10 @@ class ActiveTrainList(wx.ListCtrl):
 			return tr["terminus"]
 		elif col == 4:
 			return tr["engineer"]
+		elif col == 5:
+			return tr["loco"]
+		elif col == 6:
+			return tr["descr"]
 
 	def OnGetItemAttr(self, item):
 		tr = self.activeTrains[item]
