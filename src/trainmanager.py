@@ -17,6 +17,7 @@ BTNSZ = (120, 46)
 MENU_FILE_LOAD_TRAIN = 100
 MENU_FILE_LOAD_ENG  = 101
 MENU_FILE_LOAD_ORDER = 103
+MENU_FILE_LOAD_LOCOS = 104
 MENU_FILE_VIEW_LOG = 110
 MENU_FILE_CLEAR_LOG = 111
 MENU_FILE_SAVE_LOG = 112
@@ -40,7 +41,7 @@ class MainFrame(wx.Frame):
 		font = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
 
 		icon = wx.Icon()
-		icon.CopyFromBitmap(wx.Bitmap("trainmaster.ico", wx.BITMAP_TYPE_ANY))
+		icon.CopyFromBitmap(wx.Bitmap("trainmanager.ico", wx.BITMAP_TYPE_ANY))
 		self.SetIcon(icon)
 
 		self.CreateStatusBar()
@@ -58,7 +59,7 @@ class MainFrame(wx.Frame):
 		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_ORDER, "Load Train Order", helpString="Load Train Order List")
 		i.SetFont(font)
 		self.menuFile.Append(i)
-		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_ORDER, "Load Train Order", helpString="Load Train Order List")
+		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_LOCOS, "Load Loco List", helpString="Load locomotice descriptions")
 		i.SetFont(font)
 		self.menuFile.Append(i)
 		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_ENG, "Load Engineer list", helpString="Load Engineer List")
@@ -97,12 +98,13 @@ class MainFrame(wx.Frame):
 		self.menuBar = menuBar
 
 		sizer = wx.BoxSizer(wx.HORIZONTAL)		
-		self.panel = TrainMasterPanel(self)
+		self.panel = TrainManagerPanel(self)
 		sizer.Add(self.panel)
 		
 		self.Bind(wx.EVT_MENU, self.panel.onOpenTrain, id=MENU_FILE_LOAD_TRAIN)
 		self.Bind(wx.EVT_MENU, self.panel.onOpenEngineer, id=MENU_FILE_LOAD_ENG)
 		self.Bind(wx.EVT_MENU, self.panel.onOpenOrder, id=MENU_FILE_LOAD_ORDER)
+		self.Bind(wx.EVT_MENU, self.panel.onOpenLocos, id=MENU_FILE_LOAD_LOCOS)
 		self.Bind(wx.EVT_MENU, self.panel.onViewLog, id=MENU_FILE_VIEW_LOG)
 		self.Bind(wx.EVT_MENU, self.panel.onClearLog, id=MENU_FILE_CLEAR_LOG)
 		self.Bind(wx.EVT_MENU, self.panel.onSaveLog, id=MENU_FILE_SAVE_LOG)
@@ -128,7 +130,7 @@ class MainFrame(wx.Frame):
 		if loco is not None:
 			self.locofile = loco
 			
-		title = "Train Master"
+		title = "Train Manager"
 		if self.trainfile is not None:
 			title += " - %s" % self.trainfile
 		else:
@@ -155,7 +157,7 @@ class MainFrame(wx.Frame):
 		self.panel.onClose(None)
 		self.Destroy()
 		
-class TrainMasterPanel(wx.Panel):
+class TrainManagerPanel(wx.Panel):
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent, wx.ID_ANY, style=wx.TAB_TRAVERSAL)
 		self.Bind(wx.EVT_CLOSE, self.onClose)
@@ -393,6 +395,9 @@ class TrainMasterPanel(wx.Panel):
 			tid = None
 			
 		self.setSelectedTrain(tid)
+		
+	def onOpenLocos(self, _):
+		print("open locos")
 
 	def loadLocoFile(self, fn):
 		self.parent.setTitle(loco=os.path.basename(fn))
