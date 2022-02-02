@@ -24,10 +24,13 @@ class Settings:
 		
 		self.traindir = os.getcwd()
 		self.trainfile = "trains.json"
+		self.locosdir = os.getcwd()
+		self.locosfile = "locos.json"
 		self.engineerdir = os.path.join(os.getcwd(), "engineers")
 		self.engineerfile = "engineers.txt"
 		self.orderdir = os.path.join(os.getcwd(), "orders")
 		self.orderfile = "order.txt"
+		self.logdir = os.path.join(os.getcwd(), "logs")
 		
 		self.cfg = configparser.ConfigParser()
 		self.cfg.optionxform = str
@@ -48,6 +51,10 @@ class Settings:
 					self.traindir = value
 				elif opt == 'trainfile':
 					self.trainfile = value
+				elif opt == 'locosdir':
+					self.locosdir = value
+				elif opt == 'locosfile':
+					self.locosfile = value
 				elif opt == 'engineerdir':
 					self.engineerdir = value
 				elif opt == "engineerfile":
@@ -56,6 +63,8 @@ class Settings:
 					self.orderdir = value
 				elif opt == "orderfile":
 					self.orderfile = value
+				elif opt == "logdir":
+					self.logdir = value
 				else:
 					msgs.append("INI file: Unknown %s option: %s - ignoring" % (self.section, opt))
 		else:
@@ -84,10 +93,13 @@ class Settings:
 		
 		self.cfg.set(self.section, "traindir", str(self.traindir))
 		self.cfg.set(self.section, "trainfile", str(self.trainfile))
+		self.cfg.set(self.section, "locosdir", str(self.locosdir))
+		self.cfg.set(self.section, "locosfile", str(self.locosfile))
 		self.cfg.set(self.section, "engineerdir", str(self.engineerdir))
 		self.cfg.set(self.section, "engineerfile", str(self.engineerfile))
 		self.cfg.set(self.section, "orderdir", str(self.orderdir))
 		self.cfg.set(self.section, "orderfile", str(self.orderfile))
+		self.cfg.set(self.section, "logdir", str(self.logdir))
 
 		try:		
 			cfp = open(self.inifile, 'w')

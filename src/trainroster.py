@@ -23,3 +23,7 @@ class TrainRoster:
 			return None
 		
 		return self.trains[tid]
+	
+	def save(self):
+		with open(self.filename, "w") as fp:
+			json.dump(self.trains, fp)
