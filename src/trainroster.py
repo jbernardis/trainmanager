@@ -1,6 +1,8 @@
 import json
 import copy
 
+import pprint
+
 class TrainRoster:
 	def __init__(self, fn):
 		self.filename = fn
@@ -18,6 +20,9 @@ class TrainRoster:
 				trn["terminus"] = trn["steps"][-1][1]
 			else:
 				trn["terminus"] = trn["steps"][-1][0]
+				
+	def getTrainList(self):
+		return list(self.trains.keys())
 	
 	def getTrain(self, tid):
 		if not tid in self.trains:

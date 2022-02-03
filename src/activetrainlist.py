@@ -77,9 +77,10 @@ class ActiveTrainList(wx.ListCtrl):
 			
 		return None
 	
-	def updateTrain(self, tid, desc):
+	def updateTrain(self, tid, loco, desc):
 		for tx in range(len(self.activeTrains)):
 			if self.activeTrains[tx]["tid"] == tid:
+				self.activeTrains[tx]["loco"] = loco
 				self.activeTrains[tx]["descr"] = desc
 				self.RefreshItem(tx)
 				return

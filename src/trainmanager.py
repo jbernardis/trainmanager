@@ -1,14 +1,13 @@
 import os
 import wx
 
-import pprint
-
 from trainroster import TrainRoster
 from locomotives import Locomotives
 from engineers import Engineers
 from order import Order
 from activetrainlist import ActiveTrainList
 from manageengineers import ManageEngineersDlg
+from manageorder import ManageOrderDlg
 from managelocos import ManageLocosDlg
 from assignlocos import AssignLocosDlg
 from viewlogdlg import ViewLogDlg
@@ -29,6 +28,8 @@ MENU_MANAGE_ENGINEERS = 200
 MENU_MANAGE_RESET_ORDER = 201
 MENU_MANAGE_ASSIGN_LOCOS = 202
 MENU_MANAGE_LOCOS = 203
+MENU_MANAGE_ORDER = 204
+
 
 wildcard = "JSON file (*.json)|*.json|"	 \
 		   "All files (*.*)|*.*"
@@ -42,7 +43,7 @@ class MainFrame(wx.Frame):
 		wx.Frame.__init__(self, None, size=(900, 800))
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 		
-		font = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
+		font = wx.Font(wx.Font(14, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
 
 		icon = wx.Icon()
 		icon.CopyFromBitmap(wx.Bitmap("trainmanager.ico", wx.BITMAP_TYPE_ANY))
@@ -57,13 +58,13 @@ class MainFrame(wx.Frame):
 		self.locofile = None
 
 		self.menuFile = wx.Menu()	
-		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_TRAIN, "Load Train Roster", helpString ="Load Train Roster")
+		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_TRAIN, "Load Train Roster", helpString ="Load a Train Roster file")
 		i.SetFont(font)
 		self.menuFile.Append(i)
-		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_ORDER, "Load Train Order", helpString="Load Train Order List")
+		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_ORDER, "Load Train Order", helpString="Load Train Order/Sequence file")
 		i.SetFont(font)
 		self.menuFile.Append(i)
-		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_LOCOS, "Load Loco List", helpString="Load locomotice descriptions")
+		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_LOCOS, "Load Loco List", helpString="Load locomotive descriptions")
 		i.SetFont(font)
 		self.menuFile.Append(i)
 		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_ENG, "Load Engineer list", helpString="Load Engineer List")
@@ -85,13 +86,18 @@ class MainFrame(wx.Frame):
 		self.menuFile.Append(i)
 		
 		self.menuManage = wx.Menu()
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ENGINEERS, "Manage Engineers", helpString="Manage the content and ordering of active engineers list")
+		i.SetFont(font)
+		self.menuManage.Append(i)
+		self.menuManage.AppendSeparator()
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_LOCOS, "Manage Locomotives", helpString="Define, modify, delete locomotives")
+		i.SetFont(font)
+		self.menuManage.Append(i)
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ASSIGN_LOCOS, "Assign Locomotives", helpString="Assign locomotives to trains")
 		i.SetFont(font)
 		self.menuManage.Append(i)
-		i = wx.MenuItem(self.menuManage, MENU_MANAGE_LOCOS, "Manage Locomotives", helpString="Manage locomotives")
-		i.SetFont(font)
-		self.menuManage.Append(i)
-		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ENGINEERS, "Manage Engineers", helpString="Manage the content and ordering of active engineers list")
+		self.menuManage.AppendSeparator()
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ORDER, "Manage Train Order", helpString="Add/remove trains and modify sequence")
 		i.SetFont(font)
 		self.menuManage.Append(i)
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_RESET_ORDER, "Reset Train Order", helpString="Reset Train Order back to the beginning")
@@ -118,6 +124,7 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.onClose, id=MENU_FILE_EXIT)
 		self.Bind(wx.EVT_MENU, self.panel.onManageEngineers, id=MENU_MANAGE_ENGINEERS)
 		self.Bind(wx.EVT_MENU, self.panel.onResetOrder, id=MENU_MANAGE_RESET_ORDER)
+		self.Bind(wx.EVT_MENU, self.panel.onManageOrder, id=MENU_MANAGE_ORDER)
 		self.Bind(wx.EVT_MENU, self.panel.onAssignLocos, id=MENU_MANAGE_ASSIGN_LOCOS)
 		self.Bind(wx.EVT_MENU, self.panel.onManageLocos, id=MENU_MANAGE_LOCOS)
 		
@@ -442,15 +449,16 @@ class TrainManagerPanel(wx.Panel):
 		actTrains = self.activeTrainList.getTrains()
 		locos = self.locos.getLocoList()
 		for tid in actTrains:
-			tInfo = self.activeTrainList.getTrainByTid(tid)
-			if tInfo is not None:
-				aloco = tInfo["loco"]
-				if aloco not in locos:
+			atInfo = self.activeTrainList.getTrainByTid(tid)
+			tInfo = self.roster.getTrain(tid)
+			if atInfo is not None:
+				rloco = tInfo["loco"]
+				if rloco not in locos:
 					ndesc = ""
 				else:
-					ndesc = self.locos.getLoco(aloco)
+					ndesc = self.locos.getLoco(rloco)
 
-				self.activeTrainList.updateTrain(tid, ndesc)
+				self.activeTrainList.updateTrain(tid, rloco, ndesc)
 					
 	def onOpenEngineer(self, _):
 		if self.activeTrainList.count() > 0:
@@ -843,6 +851,36 @@ class TrainManagerPanel(wx.Panel):
 				self.stLocoInfo.SetLabel("Loco: %s" % lId)
 			else:
 				self.stLocoInfo.SetLabel("Loco: %s - %s" % (lId, lInfo))
+				
+	def onManageOrder(self, _):
+		if self.activeTrainList.count() > 0:
+			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
+	                               'Data will be lost',
+	                               wx.YES_NO | wx.ICON_WARNING)
+			rc = dlg.ShowModal()
+			dlg.Destroy()
+			if rc != wx.ID_YES:
+				return
+			
+		dlg = ManageOrderDlg(self, self.trainOrder, self.roster, self.settings)
+		rc = dlg.ShowModal()
+		
+		if rc == wx.ID_OK:
+			norder = dlg.getValues()
+			
+		dlg.Destroy()
+		
+		if rc != wx.ID_OK:
+			return
+		
+		if self.trainOrder is None:
+			self.pendingTrains = [x for x in norder]
+		else:
+			self.trainOrder.setNewOrder(norder)
+			self.pendingTrains = [x for x in self.trainOrder]
+			
+		self.setTrainOrder()
+
 		
 	def onManageEngineers(self, _):
 		currentEngineers = self.activeTrainList.getEngineers()
@@ -880,15 +918,21 @@ class TrainManagerPanel(wx.Panel):
 		rc = dlg.ShowModal()
 		
 		if rc == wx.ID_OK:
-			locos, delLocos = dlg.getValues()
+			modlocos, delLocos = dlg.getValues()
 			
 		dlg.Destroy()
 				
 		if rc != wx.ID_OK:
 			return
 		
-		pprint.pprint(locos)
-		pprint.pprint(delLocos)
+		for lId in modlocos.keys():
+			self.locos.setDescription(lId, modlocos[lId])
+			
+		for lId in delLocos:
+			self.locos.delete(lId)
+			
+		self.showInfo(self.selectedTrain)
+		self.updateActiveListLocos()
 		
 	def onAssignLocos(self, _):
 		order = [x for x in self.trainOrder]
@@ -907,9 +951,9 @@ class TrainManagerPanel(wx.Panel):
 			if tinfo["loco"] != result[tid]:
 				self.log.append("Assigned loco %s to train %s (old value %s)" % (result[tid], tid, tinfo["loco"]))
 				tinfo["loco"] = result[tid]
-				if self.selectedTrain == tid:
-					self.showInfo(tid)
 					
+		self.showInfo(self.selectedTrain)
+		self.updateActiveListLocos()
 		self.roster.save()
 			
 	def onClose(self, _):

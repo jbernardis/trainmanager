@@ -14,4 +14,14 @@ class Locomotives:
 			return None
 		
 		return self.locos[lId]
+	
+	def delete(self, lId):
+		if lId not in self.locos:
+			return False
+		
+		del(self.locos[lId])
+		return True
+	
+	def setDescription(self, lId, desc):
+		self.locos[lId] = desc
 			

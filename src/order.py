@@ -21,3 +21,6 @@ class Order():
 		rv = self.order[self.ox]
 		self.ox += 1
 		return rv
+	
+	def setNewOrder(self, no):
+		self.order = [x for x in no]

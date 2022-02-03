@@ -45,7 +45,7 @@ class ManageLocosDlg(wx.Dialog):
 		self.locoList.SetFont(textFont)
 		self.locoList.setData(self.locos, self.locoOrder)
 		self.locoOrder = self.locoList.getLocoOrder()
-		vsizer.Add(self.locoList)
+		vsizer.Add(self.locoList, 0, wx.ALIGN_CENTER_HORIZONTAL)
 
 		vsizer.AddSpacer(20)
 		
@@ -81,6 +81,13 @@ class ManageLocosDlg(wx.Dialog):
 		btnSizer.Add(self.bDel)
 		self.bDel.Enable(False)
 		
+		btnSizer.AddSpacer(20)
+
+		self.bSave = wx.Button(self, wx.ID_ANY, "Save", size=BTNSZ)
+		self.bSave.SetFont(btnFont)
+		self.Bind(wx.EVT_BUTTON, self.bSavePressed, self.bSave)
+		btnSizer.Add(self.bSave)
+		
 		btnSizer.AddSpacer(10)
 		
 		vsizer.Add(btnSizer, 0, wx.ALIGN_CENTER_HORIZONTAL)
@@ -89,13 +96,6 @@ class ManageLocosDlg(wx.Dialog):
 		
 		btnSizer = wx.BoxSizer(wx.HORIZONTAL)
 		btnSizer.AddSpacer(10)
-		
-		self.bSave = wx.Button(self, wx.ID_ANY, "Save", size=BTNSZ)
-		self.bSave.SetFont(btnFont)
-		self.Bind(wx.EVT_BUTTON, self.bSavePressed, self.bSave)
-		btnSizer.Add(self.bSave)
-		
-		btnSizer.AddSpacer(20)
 		
 		self.bOK = wx.Button(self, wx.ID_ANY, "OK", size=BTNSZ)
 		self.bOK.SetFont(btnFont)

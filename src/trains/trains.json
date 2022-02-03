@@ -72,7 +72,7 @@
     "17": {
         "desc": "Express Passenger",
         "dir": "West",
-        "loco": "5450",
+        "loco": "3648",
         "steps": [
             [
                 "CLIFF",
@@ -99,7 +99,7 @@
     "18": {
         "desc": "Express Passenger",
         "dir": "East",
-        "loco": null,
+        "loco": "2100",
         "steps": [
             [
                 "YARD",
@@ -504,7 +504,7 @@
     "91": {
         "desc": "Express Passenger",
         "dir": "West",
-        "loco": "3648",
+        "loco": "7600",
         "steps": [
             [
                 "",
