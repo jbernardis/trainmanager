@@ -67,6 +67,23 @@ class ActiveTrainList(wx.ListCtrl):
 			
 		self.parent.reportSelection(tx)
 		
+	def getTrains(self):
+		return [tr["tid"] for tr in self.activeTrains]
+	
+	def getTrainByTid(self, tid):
+		for tr in self.activeTrains:
+			if tr["tid"] == tid:
+				return tr
+			
+		return None
+	
+	def updateTrain(self, tid, desc):
+		for tx in range(len(self.activeTrains)):
+			if self.activeTrains[tx]["tid"] == tid:
+				self.activeTrains[tx]["descr"] = desc
+				self.RefreshItem(tx)
+				return
+		
 	def addTrain(self, tr):
 		self.activeTrains.append(tr)
 		self.SetItemCount(len(self.activeTrains))

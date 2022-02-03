@@ -262,7 +262,12 @@ class CurrentLocoList(wx.ListCtrl):
 			if lId is None:
 				return ""
 			else:
-				return self.locos.getLoco(lId)
+				d = self.locos.getLoco(lId)
+				if d is None:
+					return ""
+				else:
+					return d
+				
 
 	def OnGetItemAttr(self, item):
 		if item % 2 == 1:

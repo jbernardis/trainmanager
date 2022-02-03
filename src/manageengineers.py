@@ -339,9 +339,6 @@ class ManageEngineersDlg(wx.Dialog):
 		path = dlg.GetPath()
 		dlg.Destroy()
 	
-		self.settings.engineerdir = os.path.split(path)[0]
-		self.settings.setModified()
-
 		with open(path, "w") as ofp:
 			for ln in engList:
 				ofp.write("%s\n" % ln)

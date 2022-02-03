@@ -1,12 +1,15 @@
 import os
 import wx
 
+import pprint
+
 from trainroster import TrainRoster
 from locomotives import Locomotives
 from engineers import Engineers
 from order import Order
 from activetrainlist import ActiveTrainList
 from manageengineers import ManageEngineersDlg
+from managelocos import ManageLocosDlg
 from assignlocos import AssignLocosDlg
 from viewlogdlg import ViewLogDlg
 from settings import Settings
@@ -25,6 +28,7 @@ MENU_FILE_EXIT = 199
 MENU_MANAGE_ENGINEERS = 200
 MENU_MANAGE_RESET_ORDER = 201
 MENU_MANAGE_ASSIGN_LOCOS = 202
+MENU_MANAGE_LOCOS = 203
 
 wildcard = "JSON file (*.json)|*.json|"	 \
 		   "All files (*.*)|*.*"
@@ -84,6 +88,9 @@ class MainFrame(wx.Frame):
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ASSIGN_LOCOS, "Assign Locomotives", helpString="Assign locomotives to trains")
 		i.SetFont(font)
 		self.menuManage.Append(i)
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_LOCOS, "Manage Locomotives", helpString="Manage locomotives")
+		i.SetFont(font)
+		self.menuManage.Append(i)
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ENGINEERS, "Manage Engineers", helpString="Manage the content and ordering of active engineers list")
 		i.SetFont(font)
 		self.menuManage.Append(i)
@@ -112,6 +119,7 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.panel.onManageEngineers, id=MENU_MANAGE_ENGINEERS)
 		self.Bind(wx.EVT_MENU, self.panel.onResetOrder, id=MENU_MANAGE_RESET_ORDER)
 		self.Bind(wx.EVT_MENU, self.panel.onAssignLocos, id=MENU_MANAGE_ASSIGN_LOCOS)
+		self.Bind(wx.EVT_MENU, self.panel.onManageLocos, id=MENU_MANAGE_LOCOS)
 		
 		self.SetSizer(sizer)
 		self.Layout()
@@ -240,7 +248,7 @@ class TrainManagerPanel(wx.Panel):
 		self.stStepsTower.SetFont(labelFont)
 		self.stStepsStop.SetFont(labelFont)
 		
-		self.stLocoInfo = wx.StaticText(self, wx.ID_ANY, "", size=(400, -1))
+		self.stLocoInfo = wx.StaticText(self, wx.ID_ANY, "", size=(700, -1))
 		self.stLocoInfo.SetFont(labelFontBold)
 		vsizerr.AddSpacer(10)
 		vsizerr.Add(self.stLocoInfo)
@@ -397,8 +405,25 @@ class TrainManagerPanel(wx.Panel):
 		self.setSelectedTrain(tid)
 		
 	def onOpenLocos(self, _):
-		print("open locos")
+		dlg = wx.FileDialog(
+			self, message="Choose a locomotive file",
+			defaultDir=self.settings.locodir,
+			defaultFile="",
+			wildcard=wildcard,
+			style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_PREVIEW)
+		if dlg.ShowModal() != wx.ID_OK:
+			dlg.Destroy()
+			return 
 
+		path = dlg.GetPath()
+		dlg.Destroy()
+		
+		self.settings.locodir, self.settings.locofile = os.path.split(path)
+		self.settings.setModified()
+		
+		self.loadLocoFile(path)
+		self.showInfo(self.selectedTrain)
+					
 	def loadLocoFile(self, fn):
 		self.parent.setTitle(loco=os.path.basename(fn))
 		try:
@@ -411,7 +436,22 @@ class TrainManagerPanel(wx.Panel):
 			dlg.Destroy()
 
 			self.locos = None
+		self.updateActiveListLocos()
+		
+	def updateActiveListLocos(self):
+		actTrains = self.activeTrainList.getTrains()
+		locos = self.locos.getLocoList()
+		for tid in actTrains:
+			tInfo = self.activeTrainList.getTrainByTid(tid)
+			if tInfo is not None:
+				aloco = tInfo["loco"]
+				if aloco not in locos:
+					ndesc = ""
+				else:
+					ndesc = self.locos.getLoco(aloco)
 
+				self.activeTrainList.updateTrain(tid, ndesc)
+					
 	def onOpenEngineer(self, _):
 		if self.activeTrainList.count() > 0:
 			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
@@ -834,6 +874,21 @@ class TrainManagerPanel(wx.Panel):
 		self.selectedEngineer = self.chEngineer.GetString(0)
 		
 		self.allPresentEngineers = [x for x in self.activeEngineers] + currentEngineers
+		
+	def onManageLocos(self, _):
+		dlg = ManageLocosDlg(self, self.locos, self.settings)
+		rc = dlg.ShowModal()
+		
+		if rc == wx.ID_OK:
+			locos, delLocos = dlg.getValues()
+			
+		dlg.Destroy()
+				
+		if rc != wx.ID_OK:
+			return
+		
+		pprint.pprint(locos)
+		pprint.pprint(delLocos)
 		
 	def onAssignLocos(self, _):
 		order = [x for x in self.trainOrder]
