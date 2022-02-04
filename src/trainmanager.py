@@ -12,6 +12,7 @@ from managelocos import ManageLocosDlg
 from assignlocos import AssignLocosDlg
 from viewlogdlg import ViewLogDlg
 from settings import Settings
+from reports import Report
 from log import Log
 
 BTNSZ = (120, 46)
@@ -29,6 +30,7 @@ MENU_MANAGE_RESET_ORDER = 201
 MENU_MANAGE_ASSIGN_LOCOS = 202
 MENU_MANAGE_LOCOS = 203
 MENU_MANAGE_ORDER = 204
+MENU_REPORT_OP_WORKSHEET = 301
 
 
 wildcard = "JSON file (*.json)|*.json|"	 \
@@ -104,8 +106,14 @@ class MainFrame(wx.Frame):
 		i.SetFont(font)
 		self.menuManage.Append(i)
 		
+		self.menuReports = wx.Menu()
+		i = wx.MenuItem(self.menuManage, MENU_REPORT_OP_WORKSHEET, "Operating Worksheet", helpString="Print an Operating Worksheet")
+		i.SetFont(font)
+		self.menuReports.Append(i)
+
 		menuBar.Append(self.menuFile, "File")
 		menuBar.Append(self.menuManage, "Manage")
+		menuBar.Append(self.menuReports, "Reports")
 				
 		self.SetMenuBar(menuBar)
 		self.menuBar = menuBar
@@ -122,11 +130,14 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.panel.onClearLog, id=MENU_FILE_CLEAR_LOG)
 		self.Bind(wx.EVT_MENU, self.panel.onSaveLog, id=MENU_FILE_SAVE_LOG)
 		self.Bind(wx.EVT_MENU, self.onClose, id=MENU_FILE_EXIT)
+		
 		self.Bind(wx.EVT_MENU, self.panel.onManageEngineers, id=MENU_MANAGE_ENGINEERS)
 		self.Bind(wx.EVT_MENU, self.panel.onResetOrder, id=MENU_MANAGE_RESET_ORDER)
 		self.Bind(wx.EVT_MENU, self.panel.onManageOrder, id=MENU_MANAGE_ORDER)
 		self.Bind(wx.EVT_MENU, self.panel.onAssignLocos, id=MENU_MANAGE_ASSIGN_LOCOS)
 		self.Bind(wx.EVT_MENU, self.panel.onManageLocos, id=MENU_MANAGE_LOCOS)
+		
+		self.Bind(wx.EVT_MENU, self.panel.onReportOpWorksheet, id=MENU_REPORT_OP_WORKSHEET)
 		
 		self.SetSizer(sizer)
 		self.Layout()
@@ -167,6 +178,9 @@ class MainFrame(wx.Frame):
 			title += " / "
 		
 		self.SetTitle(title)
+		
+	def disableReports(self):
+		self.menuReports.Enable(MENU_REPORT_OP_WORKSHEET, False)
 	
 	def onClose(self, _):
 		self.panel.onClose(None)
@@ -339,6 +353,10 @@ class TrainManagerPanel(wx.Panel):
 		self.loadTrainFile(os.path.join(self.settings.traindir, self.settings.trainfile))
 		
 		self.loadOrderFile(os.path.join(self.settings.orderdir, self.settings.orderfile))
+		
+		self.report = Report(self)
+		if not self.report.Initialized():
+			self.parent.disableReports()
 
 	def onOpenTrain(self, _):
 		if self.activeTrainList.count() > 0:
@@ -955,6 +973,9 @@ class TrainManagerPanel(wx.Panel):
 		self.showInfo(self.selectedTrain)
 		self.updateActiveListLocos()
 		self.roster.save()
+		
+	def onReportOpWorksheet(self, _):
+		self.report.OpWorksheetReport(self.roster, self.trainOrder, self.locos)
 			
 	def onClose(self, _):
 		self.settings.save()
@@ -966,6 +987,7 @@ class App(wx.App):
 		self.frame.Show()
 		self.SetTopWindow(self.frame)
 		return True
+
 
 app = App(False)
 app.MainLoop()

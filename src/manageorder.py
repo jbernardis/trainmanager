@@ -1,4 +1,5 @@
 import wx
+
 wildcardTxt = "TXT file (*.txt)|*.txt|"	 \
 		   "All files (*.*)|*.*"
 
