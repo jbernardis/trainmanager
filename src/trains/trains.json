@@ -2,7 +2,7 @@
     "11": {
         "desc": "Express Passenger",
         "dir": "West",
-        "loco": null,
+        "loco": "1419",
         "steps": [
             [
                 "CLIFF",
@@ -37,7 +37,7 @@
     "12": {
         "desc": "Express Passenger",
         "dir": "East",
-        "loco": null,
+        "loco": "069",
         "steps": [
             [
                 "YARD",
@@ -72,7 +72,7 @@
     "17": {
         "desc": "Express Passenger",
         "dir": "West",
-        "loco": "3648",
+        "loco": "914",
         "steps": [
             [
                 "CLIFF",
@@ -99,7 +99,7 @@
     "18": {
         "desc": "Express Passenger",
         "dir": "East",
-        "loco": "2100",
+        "loco": "68",
         "steps": [
             [
                 "YARD",
@@ -126,7 +126,7 @@
     "21": {
         "desc": "Local Passenger",
         "dir": "West",
-        "loco": null,
+        "loco": "3408",
         "steps": [
             [
                 "NASSAU",
@@ -161,7 +161,7 @@
     "22": {
         "desc": "Local Passenger",
         "dir": "East",
-        "loco": null,
+        "loco": "5024",
         "steps": [
             [
                 "PORT",
@@ -196,7 +196,7 @@
     "43": {
         "desc": "Local Passenger",
         "dir": "West",
-        "loco": null,
+        "loco": "1921",
         "steps": [
             [
                 "CLIFF",
@@ -227,7 +227,7 @@
     "44": {
         "desc": "Local Passenger",
         "dir": "East",
-        "loco": null,
+        "loco": "2681",
         "steps": [
             [
                 "NASSAU",
@@ -258,7 +258,7 @@
     "61": {
         "desc": "Local Passenger (RDC)",
         "dir": "West",
-        "loco": null,
+        "loco": "6137",
         "steps": [
             [
                 "NASSAU",
@@ -285,7 +285,7 @@
     "62": {
         "desc": "Local Passenger",
         "dir": "East",
-        "loco": null,
+        "loco": "375",
         "steps": [
             [
                 "PORT",
@@ -312,7 +312,7 @@
     "63": {
         "desc": "Local Passenger (RDC)",
         "dir": "West",
-        "loco": null,
+        "loco": "6118",
         "steps": [
             [
                 "PORT",
@@ -327,7 +327,7 @@
     "64": {
         "desc": "Express Passenger (RDC)",
         "dir": "East",
-        "loco": null,
+        "loco": "6118",
         "steps": [
             [
                 "YARD",
@@ -342,7 +342,7 @@
     "71": {
         "desc": "Express Passenger",
         "dir": "West",
-        "loco": null,
+        "loco": "791",
         "steps": [
             [
                 "HYDE",
@@ -369,7 +369,7 @@
     "72": {
         "desc": "Express Passenger",
         "dir": "East",
-        "loco": null,
+        "loco": "5641",
         "steps": [
             [
                 "PORT",
@@ -396,7 +396,7 @@
     "73": {
         "desc": "Loop Passenger",
         "dir": "West",
-        "loco": null,
+        "loco": "860",
         "steps": [
             [
                 "HYDE",
@@ -419,7 +419,7 @@
     "81": {
         "desc": "Express Passenger",
         "dir": "West",
-        "loco": null,
+        "loco": "5450",
         "steps": [
             [
                 "CLIFF",
@@ -450,7 +450,7 @@
     "82": {
         "desc": "Express Passenger",
         "dir": "East",
-        "loco": null,
+        "loco": "9669",
         "steps": [
             [
                 "HYDE",
@@ -481,7 +481,7 @@
     "84": {
         "desc": "Loop Passenger",
         "dir": "East",
-        "loco": null,
+        "loco": "083",
         "steps": [
             [
                 "HYDE",
@@ -504,7 +504,7 @@
     "91": {
         "desc": "Express Passenger",
         "dir": "West",
-        "loco": "7600",
+        "loco": "493",
         "steps": [
             [
                 "",
@@ -527,7 +527,7 @@
     "92": {
         "desc": "Express Passenger",
         "dir": "East",
-        "loco": null,
+        "loco": "3819",
         "steps": [
             [
                 "PORT",
@@ -550,7 +550,7 @@
     "95": {
         "desc": "Local Passenger",
         "dir": "West",
-        "loco": null,
+        "loco": "493",
         "steps": [
             [
                 "",
@@ -589,7 +589,7 @@
     "96": {
         "desc": "Local Passenger",
         "dir": "East",
-        "loco": null,
+        "loco": "427",
         "steps": [
             [
                 "YARD",
@@ -628,7 +628,7 @@
     "CFHY": {
         "desc": "Unit Freight",
         "dir": "West",
-        "loco": null,
+        "loco": "5840",
         "steps": [
             [
                 "CLIFF",
@@ -659,7 +659,7 @@
     "HEX": {
         "desc": "Empty Coal Hoppers",
         "dir": "East",
-        "loco": null,
+        "loco": "7600",
         "steps": [
             [
                 "HYDE",
@@ -682,7 +682,7 @@
     "HWX": {
         "desc": "Loaded Coal Hoppers",
         "dir": "West",
-        "loco": null,
+        "loco": "3809",
         "steps": [
             [
                 "HYDE",
@@ -705,7 +705,7 @@
     "HYCF": {
         "desc": "Unit Freight",
         "dir": "East",
-        "loco": null,
+        "loco": "3648",
         "steps": [
             [
                 "HYDE",
@@ -736,7 +736,7 @@
     "HYYD": {
         "desc": "Unit Freight",
         "dir": "West",
-        "loco": null,
+        "loco": "6070",
         "steps": [
             [
                 "HYDE",
@@ -763,7 +763,7 @@
     "PBCX": {
         "desc": "Pate Brothers Circus",
         "dir": "West",
-        "loco": null,
+        "loco": "4023",
         "steps": [
             [
                 "HYDE",
@@ -786,7 +786,7 @@
     "YDHY": {
         "desc": "Unit Freight",
         "dir": "East",
-        "loco": null,
+        "loco": "326",
         "steps": [
             [
                 "YARD",

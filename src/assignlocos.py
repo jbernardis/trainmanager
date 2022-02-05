@@ -94,7 +94,7 @@ class AssignLocosDlg(wx.Dialog):
 
 	def determineAvailability(self):
 		self.locosInUse = [self.currentLoco[x] for x in self.currentLoco.keys() if self.currentLoco[x] is not None]
-		self.availLocos = [x for x in self.allLocos if x not in self.locosInUse]
+		self.availLocos = [x for x in self.allLocos] # if x not in self.locosInUse]
 		self.chAvail.SetItems(self.availLocos)
 		if len(self.availLocos) == 0:
 			self.chAvail.Enable(False)

@@ -62,16 +62,14 @@ class Report:
 		html += HTML.h1({'align': 'center'}, "Operating Worksheet")	
 		html += "<br><br>"
 		
-		color1 = "#ffffff"
-		color2 = "#caffca"
+		colorEast = "#c1e2b4"
+		colorWest = "#fdc4a8"
 		
 		rows = []
 		
 		for tid in order:
-			c = color1
-			color1 = color2
-			color2 = c
 			tInfo = roster.getTrain(tid)
+			c = colorEast if tInfo["dir"].lower() == "east" else colorWest
 			lid = tInfo["loco"]
 			if lid is None:
 				lid = ""
@@ -80,8 +78,8 @@ class Report:
 				desc = locos.getLoco(lid)
 				if desc is None:
 					desc = ""
-			rows.append(HTML.tr({"bgcolor": c},
-				HTML.td({}, tid),
+			rows.append(HTML.tr({},
+				HTML.td({"bgcolor": c}, tid),
 				HTML.td({}, lid),
 				HTML.td({'class': 'description'}, HTML.nbsp(2), desc),
 				HTML.td({'class': 'engineer'}, ""))
