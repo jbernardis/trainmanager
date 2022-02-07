@@ -4,6 +4,8 @@ import json
 
 wildcardTxt = "TXT file (*.txt)|*.txt|"	 \
 		   "All files (*.*)|*.*"
+wildcard = "JSON file (*.json)|*.json|"	 \
+		   "All files (*.*)|*.*"
 
 BTNSZ = (120, 46)
 BTNSZSMALL = (80, 30)
@@ -61,13 +63,28 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		sz = wx.BoxSizer(wx.VERTICAL)
 		
+		self.stDirection = wx.StaticText(self, wx.ID_ANY, "", size=(200, -1))
+		self.stDirection.SetFont(textFontBold)
+		self.stDescription = wx.StaticText(self, wx.ID_ANY, "", size=(200, -1))
+		self.stDescription.SetFont(textFontBold)
+		self.stLocomotive = wx.StaticText(self, wx.ID_ANY, "", size=(200, -1))
+		self.stLocomotive.SetFont(textFontBold)
+		
+		sz.AddSpacer(5)
+		sz.Add(self.stDirection)
+		sz.AddSpacer(10)
+		sz.Add(self.stDescription)
+		sz.AddSpacer(10)
+		sz.Add(self.stLocomotive)
+		sz.AddSpacer(50)
+		
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
 		st = wx.StaticText(self, wx.ID_ANY, "Eastbound:", size=(120, -1))
-		st.SetFont(textFontBold)
+		st.SetFont(textFont)
 		hsz.Add(st, 0, wx.TOP, 5)
 		hsz.AddSpacer(5)
 		self.cbEast = wx.CheckBox(self, wx.ID_ANY, "", style=wx.ALIGN_RIGHT)
-		self.cbEast.SetFont(textFontBold)
+		self.cbEast.SetFont(textFont)
 		hsz.Add(self.cbEast)
 		
 		sz.Add(hsz)
@@ -75,11 +92,11 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
 		st = wx.StaticText(self, wx.ID_ANY, "Description:", size=(120, -1))
-		st.SetFont(textFontBold)
+		st.SetFont(textFont)
 		hsz.Add(st, 0, wx.TOP, 5)
 		hsz.AddSpacer(5)
 		self.teDesc = wx.TextCtrl(self, wx.ID_ANY, "", size=(200, -1))
-		self.teDesc.SetFont(textFontBold)
+		self.teDesc.SetFont(textFont)
 		hsz.Add(self.teDesc)
 		
 		sz.Add(hsz)
@@ -87,11 +104,11 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
 		st = wx.StaticText(self, wx.ID_ANY, "Locomotive:", size=(120, -1))
-		st.SetFont(textFontBold)
+		st.SetFont(textFont)
 		hsz.Add(st, 0, wx.TOP, 5)
 		hsz.AddSpacer(5)
 		self.teLoco = wx.TextCtrl(self, wx.ID_ANY, "", size=(100, -1))
-		self.teLoco.SetFont(textFontBold)
+		self.teLoco.SetFont(textFont)
 		hsz.Add(self.teLoco)
 		
 		sz.Add(hsz)
@@ -190,7 +207,7 @@ class ManageTrainsDlg(wx.Dialog):
 		self.bAdd = wx.Button(self, wx.ID_ANY, "Add\nTrain", size=BTNSZ)
 		self.bAdd.SetFont(btnFont)
 		self.bAdd.SetToolTip("Add a new train to the list")
-		#self.Bind(wx.EVT_BUTTON, self.bAddPressed, self.bAdd)
+		self.Bind(wx.EVT_BUTTON, self.bAddPressed, self.bAdd)
 		btnSizer.Add(self.bAdd)
 		
 		btnSizer.AddSpacer(10)
@@ -198,7 +215,7 @@ class ManageTrainsDlg(wx.Dialog):
 		self.bMod = wx.Button(self, wx.ID_ANY, "Modify\nTrain", size=BTNSZ)
 		self.bMod.SetFont(btnFont)
 		self.bMod.SetToolTip("Update the currently selected train with the above direction/description/loco number")
-		#self.Bind(wx.EVT_BUTTON, self.bModPressed, self.bMod)
+		self.Bind(wx.EVT_BUTTON, self.bModPressed, self.bMod)
 		btnSizer.Add(self.bMod)
 		self.bMod.Enable(False)
 		
@@ -207,7 +224,7 @@ class ManageTrainsDlg(wx.Dialog):
 		self.bDel = wx.Button(self, wx.ID_ANY, "Delete\nTrain", size=BTNSZ)
 		self.bDel.SetFont(btnFont)
 		self.bDel.SetToolTip("Delete the currently selected train from the list")
-		#self.Bind(wx.EVT_BUTTON, self.bDelPressed, self.bDel)
+		self.Bind(wx.EVT_BUTTON, self.bDelPressed, self.bDel)
 		btnSizer.Add(self.bDel)
 		self.bDel.Enable(False)
 		
@@ -216,7 +233,7 @@ class ManageTrainsDlg(wx.Dialog):
 		self.bSave = wx.Button(self, wx.ID_ANY, "Save", size=BTNSZ)
 		self.bSave.SetFont(btnFont)
 		self.bSave.SetToolTip("Save the train list to the currently loaded file")
-		#self.Bind(wx.EVT_BUTTON, self.bSavePressed, self.bSave)
+		self.Bind(wx.EVT_BUTTON, self.bSavePressed, self.bSave)
 		btnSizer.Add(self.bSave)
 		
 		btnSizer.AddSpacer(10)
@@ -224,7 +241,7 @@ class ManageTrainsDlg(wx.Dialog):
 		self.bSaveAs = wx.Button(self, wx.ID_ANY, "Save As", size=BTNSZ)
 		self.bSaveAs.SetFont(btnFont)
 		self.bSaveAs.SetToolTip("Save the train list to a named file")
-		#self.Bind(wx.EVT_BUTTON, self.bSaveAsPressed, self.bSaveAs)
+		self.Bind(wx.EVT_BUTTON, self.bSaveAsPressed, self.bSaveAs)
 		btnSizer.Add(self.bSaveAs)
 		
 		btnSizer.AddSpacer(20)
@@ -264,7 +281,6 @@ class ManageTrainsDlg(wx.Dialog):
 		tx = self.cbTrains.GetSelection()
 		if tx == wx.NOT_FOUND:
 			self.selectedTid = None
-			print("none")
 			return
 		
 		self.setSelectedTrain(self.trainList[tx])
@@ -288,6 +304,83 @@ class ManageTrainsDlg(wx.Dialog):
 		self.teTower.SetValue(self.selectedTrainInfo["steps"][tx][0])
 		self.teStop.SetValue(self.selectedTrainInfo["steps"][tx][1])
 		
+	def bAddPressed(self, _):
+		dlg = wx.TextEntryDialog(self, 'Enter New Train Number/Name', 'Train ID', '')
+		rc = dlg.ShowModal()
+		if rc == wx.ID_OK:
+			trainID = dlg.GetValue()
+
+		dlg.Destroy()
+		
+		if rc != wx.ID_OK:
+			return
+		
+		if trainID in self.trainList:
+			dlg = wx.MessageDialog(self, "A train with the ID/Name \"%s\" already exists" % trainID, 
+		                               "Duplicate Name",
+		                               wx.OK | wx.ICON_WARNING)
+			dlg.ShowModal()
+			dlg.Destroy()
+			return
+		
+		self.trainList = sorted(self.trainList + [trainID])
+		self.roster[trainID] = {
+			'dir': "East",
+			'desc': "",
+			'loco': "",
+			'steps': []
+			}
+		
+		self.cbTrains.SetItems(self.trainList)
+		self.cbTrains.SetSelection(self.trainList.index(trainID))
+		self.setSelectedTrain(trainID)
+		self.setModified()
+		
+	def bModPressed(self, _):
+		if self.selectedTid is None:
+			return
+		if self.selectedTrainInfo is None:
+			return
+		
+		self.selectedTrainInfo["dir"] = "East" if self.cbEast.IsChecked() else "West"
+		self.stDirection.SetLabel("%sbound" % self.selectedTrainInfo["dir"])
+		
+		self.selectedTrainInfo["desc"] = self.teDesc.GetValue()
+		self.stDescription.SetLabel(self.selectedTrainInfo["desc"])
+		
+		loco = self.teLoco.GetValue().strip()
+		self.stLocomotive.SetLabel("Loco: %s" % loco)
+		if loco == "":
+			loco = None
+		self.selectedTrainInfo["loco"] = loco
+		
+		self.setSelectedTrain(self.selectedTid)
+		self.setModified()
+		
+	def bDelPressed(self, _):
+		if self.selectedTid is None:
+			return
+		if self.selectedTrainInfo is None:
+			return
+		
+		tx = self.trainList.index(self.selectedTid)
+		del(self.trainList[tx])
+		del(self.roster[self.selectedTid])
+		
+		self.cbTrains.SetItems(self.trainList)
+		
+		if tx >= len(self.trainList):
+			tx = len(self.trainList)-1
+			
+		if tx < 0:
+			self.setSelectedTrain(None)
+			self.cbTrains.SetSelection(wx.NOT_FOUND)
+		else:
+			self.setSelectedTrain(self.trainList[tx])
+			self.cbTrains.SetSelection(tx)
+			
+		self.setModified()
+	
 	def bAddStepPressed(self, _):
 		steps = self.selectedTrainInfo["steps"]
 		steps.append([self.teTower.GetValue(), self.teStop.GetValue()])
@@ -346,14 +439,32 @@ class ManageTrainsDlg(wx.Dialog):
 		
 	def setSelectedTrain(self, tid):
 		if tid == wx.NOT_FOUND or tid is None:
+			self.selectedTid = None
+			self.selectedTrainInfo = None
+			self.bMod.Enable(False)
+			self.bDel.Enable(False)
+			self.cbEast.SetValue(False)
+			self.teDesc.SetValue("")
+			self.teLoco.SetValue("")			
+			self.lcSteps.setData([])
 			return
 		
+		self.bMod.Enable(True)
+		self.bDel.Enable(True)
 		self.selectedTid = tid
 		self.selectedTrainInfo = self.roster[tid]
 		
 		self.cbEast.SetValue(self.selectedTrainInfo['dir'].lower() == 'east')
+		self.stDirection.SetLabel("%sbound" % self.selectedTrainInfo["dir"])
+		
 		self.teDesc.SetValue(self.selectedTrainInfo["desc"])
-		self.teLoco.SetValue(self.selectedTrainInfo["loco"])
+		self.stDescription.SetLabel(self.selectedTrainInfo["desc"])
+		
+		loco = self.selectedTrainInfo["loco"]
+		if loco is None:
+			loco = ""
+		self.teLoco.SetValue(loco)
+		self.stLocomotive.SetLabel("Loco: %s" % loco)
 		
 		self.lcSteps.setData(self.selectedTrainInfo["steps"])
 		
@@ -374,6 +485,26 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		self.modified = flag
 		self.setTitle()
+		
+	def bSaveAsPressed(self, _):
+		dlg = wx.FileDialog(self, message="Save Train list to file", defaultDir=self.settings.traindir,
+			defaultFile="", wildcard=wildcard, style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+		if dlg.ShowModal() != wx.ID_OK:
+			dlg.Destroy()
+			return False
+		
+		path = dlg.GetPath()
+		dlg.Destroy()
+		
+		self.saveTrains(path)
+		
+		if os.path.basename(path) == self.settings.trainfile: # same as "Save"
+			self.setModified(False)
+		
+	def bSavePressed(self, _):
+		path = os.path.join(self.settings.traindir, self.settings.trainfile)
+		self.saveTrains(path)
+		self.setModified(False)
 		
 	def saveTrains(self, path):	
 		with open(path, "w") as fp:

@@ -71,7 +71,7 @@ class ManageOrderDlg(wx.Dialog):
 		
 		btnSizer.AddSpacer(10)
 		
-		self.chAvail = wx.Choice(self, wx.ID_ANY, choices=[])
+		self.chAvail = wx.Choice(self, wx.ID_ANY, choices=[], size=(100, -1))
 		self.chAvail.SetFont(textFont)
 		btnSizer.Add(self.chAvail)
 		
