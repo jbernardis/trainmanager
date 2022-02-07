@@ -40,6 +40,7 @@ class ManageOrderDlg(wx.Dialog):
 		
 		self.bUp = wx.Button(self, wx.ID_ANY, "Up", size=BTNSZ)
 		self.bUp.SetFont(btnFont)
+		self.bUp.SetToolTip("Move the selected train up in the order")
 		self.Bind(wx.EVT_BUTTON, self.bUpPressed, self.bUp)
 		btnSizer.Add(self.bUp)
 		self.bUp.Enable(False)
@@ -48,6 +49,7 @@ class ManageOrderDlg(wx.Dialog):
 		
 		self.bDown = wx.Button(self, wx.ID_ANY, "Down", size=BTNSZ)
 		self.bDown.SetFont(btnFont)
+		self.bDown.SetToolTip("Move the selected train down in the order")
 		self.Bind(wx.EVT_BUTTON, self.bDownPressed, self.bDown)
 		btnSizer.Add(self.bDown)
 		self.bDown.Enable(False)
@@ -63,6 +65,7 @@ class ManageOrderDlg(wx.Dialog):
 		
 		self.bAdd = wx.Button(self, wx.ID_ANY, "Add", size=BTNSZ)
 		self.bAdd.SetFont(btnFont)
+		self.bAdd.SetToolTip("Add the selected train to the end of the order list")
 		self.Bind(wx.EVT_BUTTON, self.bAddPressed, self.bAdd)
 		btnSizer.Add(self.bAdd)
 		
@@ -76,6 +79,7 @@ class ManageOrderDlg(wx.Dialog):
 		
 		self.bDel = wx.Button(self, wx.ID_ANY, "Delete", size=BTNSZ)
 		self.bDel.SetFont(btnFont)
+		self.bDel.SetToolTip("Delete the currently selected train from the train order")
 		self.Bind(wx.EVT_BUTTON, self.bDelPressed, self.bDel)
 		btnSizer.Add(self.bDel)
 		self.bDel.Enable(False)
@@ -84,6 +88,7 @@ class ManageOrderDlg(wx.Dialog):
 
 		self.bSave = wx.Button(self, wx.ID_ANY, "Save", size=BTNSZ)
 		self.bSave.SetFont(btnFont)
+		self.bSave.SetToolTip("Save the train order list to a named file")
 		self.Bind(wx.EVT_BUTTON, self.bSavePressed, self.bSave)
 		btnSizer.Add(self.bSave)
 		
@@ -98,6 +103,7 @@ class ManageOrderDlg(wx.Dialog):
 		
 		self.bOK = wx.Button(self, wx.ID_ANY, "OK", size=BTNSZ)
 		self.bOK.SetFont(btnFont)
+		self.bOK.SetToolTip("Exit the dialog box and update the loaded train order.  No file will be saved")
 		self.Bind(wx.EVT_BUTTON, self.bOKPressed, self.bOK)
 		hsizer2.Add(self.bOK)
 		
@@ -105,6 +111,7 @@ class ManageOrderDlg(wx.Dialog):
 		
 		self.bCancel = wx.Button(self, wx.ID_ANY, "Cancel", size=BTNSZ)
 		self.bCancel.SetFont(btnFont)
+		self.bCancel.SetToolTip("Exit the dialog box discarding any pending changes")
 		self.Bind(wx.EVT_BUTTON, self.bCancelPressed, self.bCancel)
 		hsizer2.Add(self.bCancel)
 

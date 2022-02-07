@@ -1,11 +1,14 @@
 import os
 import wx
 
+import pprint
+
 from trainroster import TrainRoster
 from locomotives import Locomotives
 from engineers import Engineers
 from order import Order
 from activetrainlist import ActiveTrainList
+from managetrains import ManageTrainsDlg
 from manageengineers import ManageEngineersDlg
 from manageorder import ManageOrderDlg
 from managelocos import ManageLocosDlg
@@ -19,17 +22,18 @@ BTNSZ = (120, 46)
 
 MENU_FILE_LOAD_TRAIN = 100
 MENU_FILE_LOAD_ENG  = 101
-MENU_FILE_LOAD_ORDER = 103
-MENU_FILE_LOAD_LOCOS = 104
+MENU_FILE_LOAD_ORDER = 102
+MENU_FILE_LOAD_LOCOS = 103
 MENU_FILE_VIEW_LOG = 110
 MENU_FILE_CLEAR_LOG = 111
 MENU_FILE_SAVE_LOG = 112
 MENU_FILE_EXIT = 199
-MENU_MANAGE_ENGINEERS = 200
-MENU_MANAGE_RESET_ORDER = 201
-MENU_MANAGE_ASSIGN_LOCOS = 202
-MENU_MANAGE_LOCOS = 203
-MENU_MANAGE_ORDER = 204
+MENU_MANAGE_TRAINS = 200
+MENU_MANAGE_ENGINEERS = 201
+MENU_MANAGE_RESET_ORDER = 202
+MENU_MANAGE_ASSIGN_LOCOS = 203
+MENU_MANAGE_LOCOS = 204
+MENU_MANAGE_ORDER = 205
 MENU_REPORT_OP_WORKSHEET = 301
 
 
@@ -88,6 +92,10 @@ class MainFrame(wx.Frame):
 		self.menuFile.Append(i)
 		
 		self.menuManage = wx.Menu()
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_TRAINS, "Manage Trains", helpString="Manage the train rodter")
+		i.SetFont(font)
+		self.menuManage.Append(i)
+		self.menuManage.AppendSeparator()
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ENGINEERS, "Manage Engineers", helpString="Manage the content and ordering of active engineers list")
 		i.SetFont(font)
 		self.menuManage.Append(i)
@@ -131,6 +139,7 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.panel.onSaveLog, id=MENU_FILE_SAVE_LOG)
 		self.Bind(wx.EVT_MENU, self.onClose, id=MENU_FILE_EXIT)
 		
+		self.Bind(wx.EVT_MENU, self.panel.onManageTrains, id=MENU_MANAGE_TRAINS)
 		self.Bind(wx.EVT_MENU, self.panel.onManageEngineers, id=MENU_MANAGE_ENGINEERS)
 		self.Bind(wx.EVT_MENU, self.panel.onResetOrder, id=MENU_MANAGE_RESET_ORDER)
 		self.Bind(wx.EVT_MENU, self.panel.onManageOrder, id=MENU_MANAGE_ORDER)
@@ -859,6 +868,7 @@ class TrainManagerPanel(wx.Panel):
 
 		self.stStepsTower.SetLabel(towers)
 		self.stStepsStop.SetLabel(stops)
+		# TODO - May have to limit how many lines we see here - or come up with other approach
 		
 		if tInfo["loco"] is None:
 			self.stLocoInfo.SetLabel("")
@@ -899,6 +909,17 @@ class TrainManagerPanel(wx.Panel):
 			
 		self.setTrainOrder()
 
+	def onManageTrains(self, _):
+		dlg = ManageTrainsDlg(self, self.roster, self.locos, self.settings)
+		rc = dlg.ShowModal()
+		if rc == wx.ID_OK:
+			newTrains = dlg.getValues()
+			
+		dlg.Destroy()
+		if rc != wx.ID_OK:
+			return
+		
+		pprint.pprint(newTrains)
 		
 	def onManageEngineers(self, _):
 		currentEngineers = self.activeTrainList.getEngineers()

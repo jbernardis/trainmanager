@@ -18,6 +18,7 @@ class ManageLocosDlg(wx.Dialog):
 		self.settings = settings
 		
 		self.modified = None
+		self.everModified = False
 		self.selectedLx = None
 		self.selectedLoco = None
 		self.selectesDesc = None
@@ -36,7 +37,6 @@ class ManageLocosDlg(wx.Dialog):
 		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
 		textFontBold = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 		
-		
 		hsizer=wx.BoxSizer(wx.HORIZONTAL)
 		vsizer = wx.BoxSizer(wx.VERTICAL)
 		vsizer.AddSpacer(20)
@@ -50,9 +50,17 @@ class ManageLocosDlg(wx.Dialog):
 		vsizer.AddSpacer(20)
 		
 		
+		sz = wx.BoxSizer(wx.HORIZONTAL)
+		
+		st = wx.StaticText(self, wx.ID_ANY, "Description: ")
+		st.SetFont(textFontBold)
+		sz.Add(st, 0, wx.TOP, 5)
+		
 		self.teDesc = wx.TextCtrl(self, wx.ID_ANY, "", size=(300, -1))
 		self.teDesc.SetFont(textFont)
-		vsizer.Add(self.teDesc, 0, wx.ALIGN_CENTER_HORIZONTAL)
+		sz.Add(self.teDesc)
+		
+		vsizer.Add(sz, 0, wx.ALIGN_CENTER_HORIZONTAL)
 		
 		vsizer.AddSpacer(20)
 
@@ -62,6 +70,7 @@ class ManageLocosDlg(wx.Dialog):
 		
 		self.bAdd = wx.Button(self, wx.ID_ANY, "Add", size=BTNSZ)
 		self.bAdd.SetFont(btnFont)
+		self.bAdd.SetToolTip("Add a new locomotive to the list")
 		self.Bind(wx.EVT_BUTTON, self.bAddPressed, self.bAdd)
 		btnSizer.Add(self.bAdd)
 		
@@ -69,6 +78,7 @@ class ManageLocosDlg(wx.Dialog):
 		
 		self.bMod = wx.Button(self, wx.ID_ANY, "Modify", size=BTNSZ)
 		self.bMod.SetFont(btnFont)
+		self.bMod.SetToolTip("Update the currently selected locomotive with the contents of the description box")
 		self.Bind(wx.EVT_BUTTON, self.bModPressed, self.bMod)
 		btnSizer.Add(self.bMod)
 		self.bMod.Enable(False)
@@ -77,16 +87,10 @@ class ManageLocosDlg(wx.Dialog):
 		
 		self.bDel = wx.Button(self, wx.ID_ANY, "Delete", size=BTNSZ)
 		self.bDel.SetFont(btnFont)
+		self.bDel.SetToolTip("Delete the currently selected locomotive from the list")
 		self.Bind(wx.EVT_BUTTON, self.bDelPressed, self.bDel)
 		btnSizer.Add(self.bDel)
 		self.bDel.Enable(False)
-		
-		btnSizer.AddSpacer(20)
-
-		self.bSave = wx.Button(self, wx.ID_ANY, "Save", size=BTNSZ)
-		self.bSave.SetFont(btnFont)
-		self.Bind(wx.EVT_BUTTON, self.bSavePressed, self.bSave)
-		btnSizer.Add(self.bSave)
 		
 		btnSizer.AddSpacer(10)
 		
@@ -97,8 +101,25 @@ class ManageLocosDlg(wx.Dialog):
 		btnSizer = wx.BoxSizer(wx.HORIZONTAL)
 		btnSizer.AddSpacer(10)
 		
+		self.bSave = wx.Button(self, wx.ID_ANY, "Save", size=BTNSZ)
+		self.bSave.SetFont(btnFont)
+		self.bSave.SetToolTip("Save the locomotive list to the currently loaded file")
+		self.Bind(wx.EVT_BUTTON, self.bSavePressed, self.bSave)
+		btnSizer.Add(self.bSave)
+		
+		btnSizer.AddSpacer(10)
+		
+		self.bSaveAs = wx.Button(self, wx.ID_ANY, "Save As", size=BTNSZ)
+		self.bSaveAs.SetFont(btnFont)
+		self.bSaveAs.SetToolTip("Save the locomotive list to a named file")
+		self.Bind(wx.EVT_BUTTON, self.bSaveAsPressed, self.bSaveAs)
+		btnSizer.Add(self.bSaveAs)
+		
+		btnSizer.AddSpacer(20)
+		
 		self.bOK = wx.Button(self, wx.ID_ANY, "OK", size=BTNSZ)
 		self.bOK.SetFont(btnFont)
+		self.bOK.SetToolTip("Exit the dialog box saving any pending changes to the currently loaded file")
 		self.Bind(wx.EVT_BUTTON, self.bOKPressed, self.bOK)
 		btnSizer.Add(self.bOK)
 		
@@ -106,6 +127,7 @@ class ManageLocosDlg(wx.Dialog):
 		
 		self.bCancel = wx.Button(self, wx.ID_ANY, "Cancel", size=BTNSZ)
 		self.bCancel.SetFont(btnFont)
+		self.bCancel.SetToolTip("Exit the dialog box discarding any pending changes (since last save)")
 		self.Bind(wx.EVT_BUTTON, self.bCancelPressed, self.bCancel)
 		btnSizer.Add(self.bCancel)
 
@@ -203,13 +225,15 @@ class ManageLocosDlg(wx.Dialog):
 		self.teDesc.SetValue(self.selectedDesc)
 		
 	def setModified(self, flag=True):
+		if flag:
+			self.everModified = True
 		if self.modified == flag:
 			return
 		
 		self.modified = flag
 		self.setTitle()
 		
-	def bSavePressed(self, _):
+	def bSaveAsPressed(self, _):
 		dlg = wx.FileDialog(self, message="Save Locomotive list to file", defaultDir=self.settings.locodir,
 			defaultFile="", wildcard=wildcard, style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
 		if dlg.ShowModal() != wx.ID_OK:
@@ -218,12 +242,32 @@ class ManageLocosDlg(wx.Dialog):
 		
 		path = dlg.GetPath()
 		dlg.Destroy()
-	
+		
+		self.saveLocos(path)
+		
+		if os.path.basename(path) == self.settings.locofile: # same as "Save"
+			self.setModified(False)
+		
+	def bSavePressed(self, _):
+		path = os.path.join(self.settings.locodir, self.settings.locofile)
+		self.saveLocos(path)
+		self.setModified(False)
+		
+	def saveLocos(self, path):	
 		with open(path, "w") as fp:
 			json.dump(self.locos, fp, indent=4, sort_keys=True)
 		
 	def bOKPressed(self, _):
-		self.EndModal(wx.ID_OK)
+		if self.modified:
+			path = os.path.join(self.settings.locodir, self.settings.locofile)
+			self.saveLocos(path)
+			self.setModified(False)
+			
+		if self.everModified:
+			self.EndModal(wx.ID_OK)
+		else:
+			self.EndModal(wx.ID_EXIT)
+			
 		
 	def getValues(self):
 		retval = {}

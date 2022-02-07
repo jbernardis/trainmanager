@@ -20,6 +20,19 @@ class TrainRoster:
 				trn["terminus"] = trn["steps"][-1][1]
 			else:
 				trn["terminus"] = trn["steps"][-1][0]
+
+	def __iter__(self):
+		self.order = sorted(self.trains.keys())
+		self._tx = 0
+		return self
+		
+	def __next__(self):
+		if self._tx >= len(self.order):
+			raise StopIteration
+		
+		rv = self.order[self._tx]
+		self._tx += 1
+		return rv
 				
 	def getTrainList(self):
 		return list(self.trains.keys())

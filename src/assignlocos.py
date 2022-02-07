@@ -46,6 +46,7 @@ class AssignLocosDlg(wx.Dialog):
 		
 		self.bUnassign = wx.Button(self, wx.ID_ANY, "Unassign", size=BTNSZ)
 		self.bUnassign.SetFont(btnFont)
+		self.bUnassign.SetToolTip("Remove the locomotive number from the currently selected train")
 		self.Bind(wx.EVT_BUTTON, self.onBUnassign, self.bUnassign)
 		self.bUnassign.Enable(False)
 		hsizer.Add(self.bUnassign)
@@ -54,6 +55,7 @@ class AssignLocosDlg(wx.Dialog):
 				
 		self.bAssign = wx.Button(self, wx.ID_ANY, "Assign", size=BTNSZ)
 		self.bAssign.SetFont(btnFont)
+		self.bAssign.SetToolTip("Assign the currently selected locomotive number to the currently selected train")
 		self.Bind(wx.EVT_BUTTON, self.onBAssign, self.bAssign)
 		self.bAssign.Enable(False)
 		hsizer.Add(self.bAssign)
@@ -68,12 +70,14 @@ class AssignLocosDlg(wx.Dialog):
 		
 		self.bOK = wx.Button(self, wx.ID_ANY, "OK", size=BTNSZ)
 		self.bOK.SetFont(btnFont)
+		self.bOK.SetToolTip("Exit the dialog box and.  The currently loaded train roster will be updated and saved")
 		self.Bind(wx.EVT_BUTTON, self.bOKPressed, self.bOK)
 		hsizer.Add(self.bOK)
 		hsizer.AddSpacer(20)
 		
 		self.bCancel = wx.Button(self, wx.ID_ANY, "Cancel", size=BTNSZ)
 		self.bCancel.SetFont(btnFont)
+		self.bCancel.SetToolTip("Exit the dialog box discarding any pending changes")
 		self.Bind(wx.EVT_BUTTON, self.bCancelPressed, self.bCancel)
 		hsizer.Add(self.bCancel)
 

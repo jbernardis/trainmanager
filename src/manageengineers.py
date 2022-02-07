@@ -57,26 +57,30 @@ class ManageEngineersDlg(wx.Dialog):
 		btnsizer = wx.BoxSizer(wx.VERTICAL)
 		btnsizer.AddSpacer(20)
 		
-		self.bRight = wx.Button(self, wx.ID_ANY, "->")
+		self.bRight = wx.Button(self, wx.ID_ANY, ">>>")
 		self.bRight.SetFont(btnFont)
+		self.bRight.SetToolTip("Move the selected engineer to the right, from the all/available list to the active list")
 		btnsizer.Add(self.bRight)
 		
 		btnsizer.AddSpacer(10)
 		
-		self.bLeft = wx.Button(self, wx.ID_ANY, "<-")
+		self.bLeft = wx.Button(self, wx.ID_ANY, "<<<")
 		self.bLeft.SetFont(btnFont)
+		self.bLeft.SetToolTip("Move the selected engineer to the left, from the active list to the all/available list")
 		btnsizer.Add(self.bLeft)
 		
 		btnsizer.AddSpacer(30)
 		
 		self.bUp = wx.Button(self, wx.ID_ANY, "up")
 		self.bUp.SetFont(btnFont)
+		self.bUp.SetToolTip("Move the selected engineer up in the active list")
 		btnsizer.Add(self.bUp)
 		
 		btnsizer.AddSpacer(10)
 		
 		self.bDown = wx.Button(self, wx.ID_ANY, "down")
 		self.bDown.SetFont(btnFont)
+		self.bDown.SetToolTip("Move the selected engineer down in the active list")
 		btnsizer.Add(self.bDown)
 		
 		btnsizer.AddSpacer(20)
@@ -99,12 +103,14 @@ class ManageEngineersDlg(wx.Dialog):
 		sz.AddSpacer(20)
 		self.bAddEng = wx.Button(self, wx.ID_ANY, "Add\nEngineer", size=BTNSZ)
 		self.bAddEng.SetFont(btnFont)
+		self.bAddEng.SetToolTip("Add a new engineer to the all/available list")
 		sz.Add(self.bAddEng)
 		self.Bind(wx.EVT_BUTTON, self.bAddEngPressed, self.bAddEng)
 		
 		sz.AddSpacer(20)
 		self.bDelEng = wx.Button(self, wx.ID_ANY, "Delete\nEngineer", size=BTNSZ)
 		self.bDelEng.SetFont(btnFont)
+		self.bDelEng.SetToolTip("Delete the selected engineer from the all/available list")
 		sz.Add(self.bDelEng)
 		self.Bind(wx.EVT_BUTTON, self.bDelEngPressed, self.bDelEng)
 		self.bDelEng.Enable(False)
@@ -112,12 +118,14 @@ class ManageEngineersDlg(wx.Dialog):
 		sz.AddSpacer(20)
 		self.bSaveAll = wx.Button(self, wx.ID_ANY, "Save\nAll List", size=BTNSZ)
 		self.bSaveAll.SetFont(btnFont)
+		self.bSaveAll.SetToolTip("Save the full list of ALL engineers, including active engineers, to a named file")
 		sz.Add(self.bSaveAll)
 		self.Bind(wx.EVT_BUTTON, self.bSaveAllPressed, self.bSaveAll)
 		
 		sz.AddSpacer(20)
 		self.bSaveAct = wx.Button(self, wx.ID_ANY, "Save\nActive List", size=BTNSZ)
 		self.bSaveAct.SetFont(btnFont)
+		self.bSaveAct.SetToolTip("Save the list of active engineers to a named file")
 		sz.Add(self.bSaveAct)
 		self.Bind(wx.EVT_BUTTON, self.bSaveActPressed, self.bSaveAct)
 
@@ -128,14 +136,16 @@ class ManageEngineersDlg(wx.Dialog):
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		
 		sz.AddSpacer(20)
-		self.bOk = wx.Button(self, wx.ID_ANY, "OK", size=BTNSZ)
-		self.bOk.SetFont(btnFont)
-		sz.Add(self.bOk)
-		self.Bind(wx.EVT_BUTTON, self.bOKPressed, self.bOk)
+		self.bOK = wx.Button(self, wx.ID_ANY, "OK", size=BTNSZ)
+		self.bOK.SetFont(btnFont)
+		self.bOK.SetToolTip("Exit the dialog box and replace the loaded engineer list with the above active list")
+		sz.Add(self.bOK)
+		self.Bind(wx.EVT_BUTTON, self.bOKPressed, self.bOK)
 		
 		sz.AddSpacer(20)
 		self.bCancel = wx.Button(self, wx.ID_ANY, "Cancel", size=BTNSZ)
 		self.bCancel.SetFont(btnFont)
+		self.bCancel.SetToolTip("Exit the dialog box discarding any pending changes")
 		sz.Add(self.bCancel)
 		self.Bind(wx.EVT_BUTTON, self.bCancelPressed, self.bCancel)
 
