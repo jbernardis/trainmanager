@@ -31,12 +31,12 @@ class ActiveTrainList(wx.ListCtrl):
 		self.activeTrains = []
 
 		self.attr1 = wx.ItemAttr()
-		self.attr1.SetBackgroundColour(wx.Colour(164, 255, 214)) # light Blue
 		self.attr2 = wx.ItemAttr()
-		self.attr2.SetBackgroundColour(wx.Colour( 85, 255, 179)) # blue
+		self.attr1.SetBackgroundColour(wx.Colour(225, 255, 240))
+		self.attr2.SetBackgroundColour(wx.Colour(138, 255, 197))
 		self.attr3 = wx.ItemAttr()
-		self.attr3.SetBackgroundColour(wx.Colour(252, 169, 186)) # light red
 		self.attr4 = wx.ItemAttr()
+		self.attr3.SetBackgroundColour(wx.Colour(252, 169, 186)) # light red
 		self.attr4.SetBackgroundColour(wx.Colour(251, 145, 166)) # red
 		
 		self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnItemSelected)
@@ -60,15 +60,24 @@ class ActiveTrainList(wx.ListCtrl):
 		
 		return self.activeTrains[self.selected]
 			
-	def setSelection(self, tx):
+	def setSelection(self, tx, dclick=False):
 		self.selected = tx;
 		if tx is not None:
 			self.Select(tx)
 			
-		self.parent.reportSelection(tx)
+		if dclick:
+			self.parent.reportDoubleClick(tx)
+		else:
+			self.parent.reportSelection(tx)
 		
 	def getTrains(self):
 		return [tr["tid"] for tr in self.activeTrains]
+	
+	def getTrain(self, tx):
+		if tx < 0 or tx >= len(self.activeTrains):
+			return None
+		
+		return self.activeTrains[tx]
 	
 	def getTrainByTid(self, tid):
 		for tr in self.activeTrains:
@@ -122,7 +131,7 @@ class ActiveTrainList(wx.ListCtrl):
 		self.setSelection(event.Index)
 		
 	def OnItemActivated(self, event):
-		self.setSelection(event.Index)
+		self.setSelection(event.Index, dclick=True)
 
 	def OnItemDeselected(self, evt):
 		self.setSelection(None)

@@ -625,6 +625,29 @@
             ]
         ]
     },
+    "99": {
+        "desc": "Express Passenger",
+        "dir": "West",
+        "loco": "069",
+        "steps": [
+            [
+                "HYDE",
+                ""
+            ],
+            [
+                "SHORE",
+                ""
+            ],
+            [
+                "DELL",
+                ""
+            ],
+            [
+                "HYDE",
+                ""
+            ]
+        ]
+    },
     "CFHY": {
         "desc": "Unit Freight",
         "dir": "West",

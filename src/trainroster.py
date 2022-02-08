@@ -1,8 +1,6 @@
 import json
 import copy
 
-import pprint
-
 class TrainRoster:
 	def __init__(self, fn):
 		self.filename = fn

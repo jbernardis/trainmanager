@@ -99,6 +99,237 @@ class Report:
 		dlg.ShowModal()
 		dlg.Destroy()
 
+	def TrainCards(self, roster, order):	
+		if not self.Initialized:
+			dlg = wx.MessageDialog(self.parent, "Unable to generate reports - initialization failed", 
+		                               "Report Initialization failed",
+		                               wx.OK | wx.ICON_ERROR)
+			dlg.ShowModal()
+			dlg.Destroy()
+			return
+		
+		dlg = ChooseCardsDlg(self.parent, list(order))
+		rc = dlg.ShowModal()
+		
+		if rc == wx.ID_OK:
+			cardsToPrint = dlg.getValues()
+			
+		dlg.Destroy()
+		
+		if rc != wx.ID_OK:
+			return
+		
+		ct = 0
+		for flag in cardsToPrint:
+			if flag:
+				ct += 1
+				
+		if ct == 0:
+			dlg = wx.MessageDialog(self.parent, "No Train Cards chosen - skipping report", 
+		                               "Nothing to print",
+		                               wx.OK | wx.ICON_INFORMATION)
+			dlg.ShowModal()
+			dlg.Destroy()
+			return
+
+		css = HTML.StyleSheet()
+		css.addElement("@media print", { ".pagebreak": "{page-break-before: always}" })
+		css.addElement("*", {"box-sizing": "border-box"})
+		css.addElement(".row", {"margin-left": "-5px", "margin-right": "-5px"})
+		css.addElement(".column", {"float": "left", "width": "138mm", "padding": "1px"})
+		css.addElement(".row::after", {"content": '""', "clear": "both", "display": "table"})
+		css.addElement("table", {"border-collapse": "collapse", "border-spacing": "0", "width": "100%", "height": "103mm", "font-family": '"Times New Roman", Times, serif', "font-size": "16px"})
+		css.addElement("td.trainid", {"width": "36.4%", "padding-left": "20px", "font-size": "28px", "font-weight": "bold"})
+		css.addElement("td.firstcol", {"width": "36.4%", "padding-left": "20px"})
+		css.addElement("td", {"text-align": "left", "padding": "6px"})
+		css.addElement("td.cardnumber", {"text-align": "right", "padding-right": "50px"})
+		
+		html  = HTML.starthtml()
+		html += HTML.head(HTML.style({'type': "text/css", 'media': "screen, print"}, css))
+		
+		html += HTML.startbody()
+		
+		cards = []
+
+		for tx in range(len(order)):
+			tid = order.getTid(tx)
+			if cardsToPrint[tx]:
+				cards.append(self.formatTrainCard(tid, roster.getTrain(tid), tx+1))
+			
+		nCards = len(cards)
+		
+		for i in range(0, nCards-1, 2):
+			if i != 0:
+				html += HTML.div({"class" : "pagebreak"})
+
+			html += HTML.div({"class": "row"}, cards[i], cards[i+1])
+			
+		if nCards%2 != 0:
+			if nCards != 1:
+				html += HTML.div({"class" : "pagebreak"})
+			html += HTML.div({"class": "row"}, cards[-1])
+
+		html += HTML.endbody()
+		html += HTML.endhtml()
+
+		dlg = RptDlg(self.parent, self.backend, "Train Cards", html)
+		dlg.ShowModal()
+		dlg.Destroy()
+		
+
+
+	def formatTrainCard(self, tid, tinfo, tx):
+		trainIdRow = HTML.tr({}, HTML.td({"class": "trainid"}, tid), HTML.td())
+		emptyRow = HTML.tr({}, HTML.td({}, HTML.nbsp()))
+		descRow = HTML.tr({}, HTML.td({"class": "firstcol", "colspan": "2"}, "%sbound %s" % (tinfo["dir"], tinfo["desc"])))
+		cardNumberRow = HTML.tr({}, HTML.td({}, ""), HTML.td({"class": "cardnumber"}, "%d" % tx))
+
+		stepRows = []
+		for stp in tinfo["steps"]:
+			row = HTML.tr({},
+						HTML.td({"class": "firstcol"}, stp[0]),
+						HTML.td({}, stp[1])
+			)
+			stepRows.append(row)
+			
+		nRows = len(stepRows)
+		nEmpty = 9 - nRows
+		
+		table = HTML.table({},
+			trainIdRow,
+			descRow,
+			emptyRow,
+			" ".join(stepRows),
+			nEmpty * emptyRow,
+			cardNumberRow
+		)
+		
+		return HTML.div({"class": "column"}, table)
+	
+class ChooseCardsDlg(wx.Dialog):
+	def __init__(self, parent, order):
+		wx.Dialog.__init__(self, parent, wx.ID_ANY, "Choose Train Cards")
+		self.Bind(wx.EVT_CLOSE, self.onClose)
+		
+		self.order = order
+
+		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
+		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
+		textFontBold = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
+
+		vsizer = wx.BoxSizer(wx.VERTICAL)
+		vsizer.AddSpacer(20)
+		
+		st = wx.StaticText(self, wx.ID_ANY, "Select Train Cards to Print:")
+		st.SetFont(textFontBold)
+		vsizer.Add(st)
+		vsizer.AddSpacer(5)
+		
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		
+		clb = wx.CheckListBox(self, wx.ID_ANY, choices=order)
+		clb.SetFont(textFont)
+		self.Bind(wx.EVT_CHECKLISTBOX, self.onClbOrder, clb)
+		self.clbOrder = clb
+		hsz.Add(clb)
+		
+		hsz.AddSpacer(10)
+		
+		vsz = wx.BoxSizer(wx.VERTICAL)
+		
+		self.bCheckAll = wx.Button(self, wx.ID_ANY, "Select\nAll", size=BTNSZ)
+		self.Bind(wx.EVT_BUTTON, self.bCheckAllPressed, self.bCheckAll)
+		self.bCheckAll.SetFont(btnFont)
+		
+		self.bUncheckAll = wx.Button(self, wx.ID_ANY, "Unselect\nAll", size=BTNSZ)
+		self.Bind(wx.EVT_BUTTON, self.bUncheckAllPressed, self.bUncheckAll)
+		self.bUncheckAll.SetFont(btnFont)
+		
+		vsz.Add(self.bCheckAll)
+		vsz.AddSpacer(20)
+		vsz.Add(self.bUncheckAll)
+		
+		hsz.Add(vsz, 0, wx.ALIGN_CENTER_VERTICAL)
+		
+		vsizer.Add(hsz)
+		
+		vsizer.AddSpacer(10)
+		
+		self.stCheckCount = wx.StaticText(self, wx.ID_ANY, " 0 Trains Selected")
+		self.stCheckCount.SetFont(textFontBold)
+		vsizer.Add(self.stCheckCount, 0, wx.ALIGN_CENTER_HORIZONTAL)
+		
+		vsizer.AddSpacer(20)
+		
+		self.bOK = wx.Button(self, wx.ID_ANY, "OK", size=BTNSZ)
+		self.bOK.SetFont(btnFont)
+		self.Bind(wx.EVT_BUTTON, self.bOKPressed, self.bOK)
+		
+		self.bCancel = wx.Button(self, wx.ID_ANY, "Cancel", size=BTNSZ)
+		self.bCancel.SetFont(btnFont)
+		self.Bind(wx.EVT_BUTTON, self.bCancelPressed, self.bCancel)
+		
+		btnSizer = wx.BoxSizer(wx.HORIZONTAL)
+		btnSizer.Add(self.bOK)
+		btnSizer.AddSpacer(30)
+		btnSizer.Add(self.bCancel)
+		
+		vsizer.Add(btnSizer, 0, wx.ALIGN_CENTER_HORIZONTAL)
+		
+		vsizer.AddSpacer(20)
+		
+		hsizer = wx.BoxSizer(wx.HORIZONTAL)
+		hsizer.AddSpacer(20)
+		hsizer.Add(vsizer)
+		hsizer.AddSpacer(20)
+		
+		self.SetSizer(hsizer)
+		self.Layout()
+		self.Fit();
+		
+	def bCheckAllPressed(self, _):
+		for i in range(len(self.order)):
+			self.clbOrder.Check(i, True)
+			
+		self.reportCheckCount()
+		
+	def bUncheckAllPressed(self, _):
+		for i in range(len(self.order)):
+			self.clbOrder.Check(i, False)
+			
+		self.reportCheckCount()
+		
+	def onClbOrder(self, _):
+		self.reportCheckCount()
+		
+	def reportCheckCount(self):
+		ct = 0
+		for i in range(len(self.order)):
+			if self.clbOrder.IsChecked(i):
+				ct += 1
+				
+		if ct == 1:
+			text = " 1 Train  Selected"
+		else:
+			text = "%2d Trains Selected" % ct
+			
+		self.stCheckCount.SetLabel(text)
+		
+	def bOKPressed(self, _):
+		self.EndModal(wx.ID_OK)
+		
+	def bCancelPressed(self, _):
+		self.doCancel()
+		
+	def onClose(self, _):
+		self.doCancel()
+		
+	def doCancel(self):
+		self.EndModal(wx.ID_CANCEL)
+		
+	def getValues(self):
+		return [self.clbOrder.IsChecked(i) for i in range(len(self.order))]
+
 class RptDlg(wx.Dialog):
 	def __init__(self, parent, backend, title, html):
 		wx.Dialog.__init__(self, parent, wx.ID_ANY, title, size=(760, 800), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)

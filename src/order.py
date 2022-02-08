@@ -7,6 +7,12 @@ class Order():
 					
 		self.ox = 0
 		
+	def getTid(self, tx):
+		if tx < 0 or tx >= len(self.order):
+			return None
+		
+		return self.order[tx]
+		
 	def __len__(self):
 		return len(self.order)
 

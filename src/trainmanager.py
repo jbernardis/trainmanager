@@ -1,8 +1,6 @@
 import os
 import wx
 
-import pprint
-
 from trainroster import TrainRoster
 from locomotives import Locomotives
 from engineers import Engineers
@@ -35,6 +33,7 @@ MENU_MANAGE_ASSIGN_LOCOS = 203
 MENU_MANAGE_LOCOS = 204
 MENU_MANAGE_ORDER = 205
 MENU_REPORT_OP_WORKSHEET = 301
+MENU_REPORT_TRAIN_CARDS = 302
 
 
 wildcard = "JSON file (*.json)|*.json|"	 \
@@ -118,6 +117,9 @@ class MainFrame(wx.Frame):
 		i = wx.MenuItem(self.menuManage, MENU_REPORT_OP_WORKSHEET, "Operating Worksheet", helpString="Print an Operating Worksheet")
 		i.SetFont(font)
 		self.menuReports.Append(i)
+		i = wx.MenuItem(self.menuManage, MENU_REPORT_TRAIN_CARDS, "Train Cards", helpString="Print Train Cards")
+		i.SetFont(font)
+		self.menuReports.Append(i)
 
 		menuBar.Append(self.menuFile, "File")
 		menuBar.Append(self.menuManage, "Manage")
@@ -147,6 +149,7 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.panel.onManageLocos, id=MENU_MANAGE_LOCOS)
 		
 		self.Bind(wx.EVT_MENU, self.panel.onReportOpWorksheet, id=MENU_REPORT_OP_WORKSHEET)
+		self.Bind(wx.EVT_MENU, self.panel.onReportTrainCards, id=MENU_REPORT_TRAIN_CARDS)
 		
 		self.SetSizer(sizer)
 		self.Layout()
@@ -325,6 +328,14 @@ class TrainManagerPanel(wx.Panel):
 		self.Bind(wx.EVT_BUTTON, self.bReassignPressed, self.bReassign)
 		btnsizer.Add(self.bReassign)
 		self.bReassign.Enable(False)
+
+		btnsizer.AddSpacer(30)
+		
+		self.bShowDetails = wx.Button(self, wx.ID_ANY, "Show Train\nDetails", size=BTNSZ)
+		self.bShowDetails.SetFont(btnFont)
+		self.Bind(wx.EVT_BUTTON, self.bShowDetailsPressed, self.bShowDetails)
+		btnsizer.Add(self.bShowDetails)
+		self.bShowDetails.Enable(False)
 		
 		wsizer.Add(btnsizer, 1, wx.ALIGN_CENTER_HORIZONTAL)
 		wsizer.AddSpacer(20)
@@ -729,14 +740,6 @@ class TrainManagerPanel(wx.Panel):
 		if t is None:
 			return
 
-		if t["engineer"] in self.allPresentEngineers:
-			if t["engineer"] not in self.activeEngineers:
-				self.activeEngineers.append(t["engineer"])
-			self.chEngineer.Enable(True)
-			self.chEngineer.SetItems(self.activeEngineers)
-			self.chEngineer.SetSelection(0)
-			self.selectedEngineer = self.chEngineer.GetString(0)
-
 		engActive = self.activeTrainList.getEngineers()	
 		if t["engineer"] != "ATC":
 			eng = ["ATC"]
@@ -759,6 +762,14 @@ class TrainManagerPanel(wx.Panel):
 		if rc != wx.ID_OK:
 			dlg.Destroy()
 			return
+		
+		if t["engineer"] in self.allPresentEngineers:
+			if t["engineer"] not in self.activeEngineers:
+				self.activeEngineers.append(t["engineer"])
+			self.chEngineer.Enable(True)
+			self.chEngineer.SetItems(self.activeEngineers)
+			self.chEngineer.SetSelection(0)
+			self.selectedEngineer = self.chEngineer.GetString(0)
 
 		if neng in self.activeEngineers:
 			self.activeEngineers.remove(neng)
@@ -774,6 +785,29 @@ class TrainManagerPanel(wx.Panel):
 		oeng = t["engineer"]		
 		self.activeTrainList.setNewEngineer(neng)
 		self.log.append("Reassigned train %s from %s to %s" % (t["tid"], oeng, neng))
+		
+	def bShowDetailsPressed(self, _):
+		t = self.activeTrainList.getSelection()
+		if t is None:
+			return
+		
+		self.showDetails(t)
+		
+	def showDetails(self, t):
+		if t is None:
+			return
+		
+		tid = t["tid"]
+		tinfo = self.roster.getTrain(tid)
+		
+		lid = t["loco"]
+		if lid is None or lid == "":
+			desc = ""
+		else:
+			desc = self.locos.getLoco(lid)
+			
+		dlg = DetailsDlg(self, tid, tinfo, desc, t["engineer"])
+		dlg.Show()
 		
 	def bSkipPressed(self, _):
 		tInfo = self.roster.getTrain(self.selectedTrain)
@@ -822,12 +856,14 @@ class TrainManagerPanel(wx.Panel):
 		self.setSelectedTrain(tid)
 		
 	def reportSelection(self, tx):
-		if tx is None:
-			self.bRemove.Enable(False)
-			self.bReassign.Enable(False)
-		else:
-			self.bRemove.Enable(True)
-			self.bReassign.Enable(True)
+		self.bRemove.Enable(tx is not None)
+		self.bReassign.Enable(tx is not None)
+		self.bShowDetails.Enable(tx is not None)
+		
+	def reportDoubleClick(self, tx):
+		self.reportSelection(tx)
+		tinfo = self.activeTrainList.getTrain(tx)
+		self.showDetails(tinfo)
 		
 	def onChoiceEngineer(self, _):
 		ex = self.chEngineer.GetSelection()
@@ -912,14 +948,14 @@ class TrainManagerPanel(wx.Panel):
 	def onManageTrains(self, _):
 		dlg = ManageTrainsDlg(self, self.roster, self.locos, self.settings)
 		rc = dlg.ShowModal()
-		if rc == wx.ID_OK:
-			newTrains = dlg.getValues()
-			
 		dlg.Destroy()
 		if rc != wx.ID_OK:
 			return
 		
-		pprint.pprint(newTrains)
+		# no need to retrieve dialog values because the data is saved automatically when OK is pressed
+		# just re-read the file
+		self.loadTrainFile(os.path.join(self.settings.traindir, self.settings.trainfile))
+
 		
 	def onManageEngineers(self, _):
 		currentEngineers = self.activeTrainList.getEngineers()
@@ -998,9 +1034,94 @@ class TrainManagerPanel(wx.Panel):
 	def onReportOpWorksheet(self, _):
 		self.report.OpWorksheetReport(self.roster, self.trainOrder, self.locos)
 			
+	def onReportTrainCards(self, _):
+		self.report.TrainCards(self.roster, self.trainOrder)
+			
 	def onClose(self, _):
 		self.settings.save()
 		self.Destroy()
+		
+class DetailsDlg(wx.Dialog):
+	def __init__(self, parent, tid, tinfo, desc, engineer):
+		wx.Dialog.__init__(self, parent, wx.ID_ANY, "Train Details")
+		self.Bind(wx.EVT_CLOSE, self.onClose)
+
+		labelFont = wx.Font(wx.Font(12, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.NORMAL, faceName="Monospace"))
+		labelFontBold = wx.Font(wx.Font(12, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD, faceName="Monospace"))
+		labelFontLargeBold = wx.Font(wx.Font(16, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD, faceName="Monospace"))
+		
+		vsizer=wx.BoxSizer(wx.VERTICAL)
+		vsizer.AddSpacer(20)
+		
+		st1 = wx.StaticText(self, wx.ID_ANY, tid, size=(80, -1))
+		st1.SetFont(labelFontLargeBold)
+		
+		st2 = wx.StaticText(self, wx.ID_ANY, "%sbound %s" % (tinfo["dir"], tinfo["desc"]))
+		st2.SetFont(labelFontBold)
+		
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		hsz.AddSpacer(20)
+		hsz.Add(st1)
+		hsz.Add(st2)
+		
+		vsizer.Add(hsz)
+		vsizer.AddSpacer(10)
+		
+		st = wx.StaticText(self, wx.ID_ANY, "Loco: %s - %s" % (tinfo["loco"], desc))
+		st.SetFont(labelFontBold)
+		
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		hsz.AddSpacer(100)
+		hsz.Add(st)
+		
+		vsizer.Add(hsz)
+		vsizer.AddSpacer(10)
+		
+		st = wx.StaticText(self, wx.ID_ANY, "Engineer: %s" % engineer)
+		st.SetFont(labelFontBold)
+		
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		hsz.AddSpacer(100)
+		hsz.Add(st)
+		
+		vsizer.Add(hsz)
+		vsizer.AddSpacer(20)
+		
+		for stp in tinfo["steps"]:
+			st1 = wx.StaticText(self, wx.ID_ANY, stp[0], size=(80, -1))
+			st1.SetFont(labelFontBold)
+			st2 = wx.StaticText(self, wx.ID_ANY, stp[1])
+			st2.SetFont(labelFontBold)
+			
+			hsz = wx.BoxSizer(wx.HORIZONTAL)
+			hsz.AddSpacer(120)
+			hsz.Add(st1)
+			hsz.Add(st2)
+			
+			vsizer.Add(hsz)
+			vsizer.AddSpacer(2)
+
+
+		
+		
+		
+		
+		vsizer.AddSpacer(20)
+				
+		hsizer=wx.BoxSizer(wx.HORIZONTAL)
+		hsizer.AddSpacer(20)
+		hsizer.Add(vsizer)
+		hsizer.AddSpacer(20)
+		self.SetSizer(hsizer)
+
+		self.Layout()
+		self.Fit()
+		
+	def onClose(self, _):
+		self.Destroy()
+
+
+
 
 class App(wx.App):
 	def OnInit(self):

@@ -313,9 +313,9 @@ class LocoList(wx.ListCtrl):
 		self.selected = None
 
 		self.attr1 = wx.ItemAttr()
-		self.attr1.SetBackgroundColour(wx.Colour(164, 255, 214)) # light Blue
 		self.attr2 = wx.ItemAttr()
-		self.attr2.SetBackgroundColour(wx.Colour( 85, 255, 179)) # blue
+		self.attr1.SetBackgroundColour(wx.Colour(225, 255, 240))
+		self.attr2.SetBackgroundColour(wx.Colour(138, 255, 197))
 		
 		self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnItemSelected)
 		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnItemActivated)
