@@ -1,6 +1,8 @@
 import os
 import wx
 
+from wx.lib import newevent
+
 from trainroster import TrainRoster
 from locomotives import Locomotives
 from engineers import Engineers
@@ -15,6 +17,7 @@ from viewlogdlg import ViewLogDlg
 from settings import Settings
 from reports import Report
 from log import Log
+from listener import Listener
 
 BTNSZ = (120, 46)
 
@@ -42,6 +45,8 @@ wildcardTxt = "TXT file (*.txt)|*.txt|"	 \
 		   "All files (*.*)|*.*"
 wildcardLog = "Log file (*.log)|*.log|"	 \
 		   "All files (*.*)|*.*"
+
+(TrainLocationEvent, EVT_TRAINLOC) = newevent.NewEvent()  
 
 class MainFrame(wx.Frame):
 	def __init__(self):
@@ -155,6 +160,8 @@ class MainFrame(wx.Frame):
 		self.Layout()
 		self.Fit();
 		
+
+		
 	def setTitle(self, train=None, order=None, engineer=None, loco=None):
 		if train is not None:
 			self.trainfile = train
@@ -224,20 +231,45 @@ class TrainManagerPanel(wx.Panel):
 		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
 		textFontBold = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 		
-		self.chTrain = wx.Choice(self, wx.ID_ANY, choices=self.pendingTrains)
+		self.chTrain = wx.Choice(self, wx.ID_ANY, choices=self.pendingTrains, size=(90, -1))
 		self.chTrain.SetSelection(0)
 		self.chTrain.SetFont(textFont)
 		self.Bind(wx.EVT_CHOICE, self.onChoiceTID, self.chTrain)
 
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
-		st = wx.StaticText(self, wx.ID_ANY, "Next Train: ", size=(100, -1))
+		st = wx.StaticText(self, wx.ID_ANY, "Next Train: ", size=(120, -1))
 		st.SetFont(textFontBold)
 		sz.Add(st, 1, wx.TOP, 4)
 		sz.Add(self.chTrain)
 		vsizerl.Add(sz)
 		
 		vsizerl.AddSpacer(10)
+
+
+		sz = wx.BoxSizer(wx.HORIZONTAL)
+		self.cbExtra = wx.CheckBox(self, wx.ID_ANY, "Run Extra")
+		self.cbExtra.SetFont(textFontBold)
+		self.Bind(wx.EVT_CHECKBOX, self.onCbExtra, self.cbExtra)
+		sz.AddSpacer(100)
+		sz.Add(self.cbExtra)
+		self.cbExtra.Enable(False)
+		vsizerl.Add(sz)
+		
+		vsizerl.AddSpacer(10)
+
+		self.chExtra = wx.Choice(self, wx.ID_ANY, choices=[], size=(90, -1))
+		self.chExtra.SetFont(textFont)
+		self.chExtra.Enable(False)
+
+		sz = wx.BoxSizer(wx.HORIZONTAL)
+		st = wx.StaticText(self, wx.ID_ANY, "Extra Trains: ", size=(120, -1))
+		st.SetFont(textFontBold)
+		sz.Add(st, 1, wx.TOP, 4)
+		sz.Add(self.chExtra)
+		vsizerl.Add(sz)
+
+		vsizerl.AddSpacer(50)
 		
 		self.chEngineer = wx.Choice(self, wx.ID_ANY, choices=self.activeEngineers)
 		self.chEngineer.SetSelection(0)
@@ -246,7 +278,7 @@ class TrainManagerPanel(wx.Panel):
 		self.Bind(wx.EVT_CHOICE, self.onChoiceEngineer, self.chEngineer)
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
-		st = wx.StaticText(self, wx.ID_ANY, "Engineer: ", size=(100, -1))
+		st = wx.StaticText(self, wx.ID_ANY, "Engineer: ", size=(120, -1))
 		st.SetFont(textFontBold)
 		sz.Add(st, 1, wx.TOP, 4)
 		sz.Add(self.chEngineer)
@@ -291,7 +323,7 @@ class TrainManagerPanel(wx.Panel):
 		hsizer = wx.BoxSizer(wx.HORIZONTAL)
 		hsizer.AddSpacer(20)
 		hsizer.Add(vsizerl)
-		hsizer.AddSpacer(10)
+		hsizer.AddSpacer(90)
 		hsizer.Add(vsizerr)
 		hsizer.AddSpacer(20)
 		
@@ -354,6 +386,8 @@ class TrainManagerPanel(wx.Panel):
 		self.Layout()
 		self.Fit()
 		
+		self.Bind(EVT_TRAINLOC, self.setTrainLocation)
+		
 		wx.CallAfter(self.initialize)
 		
 	def initialize(self):
@@ -377,6 +411,45 @@ class TrainManagerPanel(wx.Panel):
 		self.report = Report(self)
 		if not self.report.Initialized():
 			self.parent.disableReports()
+			
+		self.connectToDispatcher()
+		
+	def connectToDispatcher(self):
+		self.log.append("Connecting to dispatch at %s:%s" % (self.settings.dispatchip, self.settings.dispatchport))
+		self.listener = Listener(self.settings.dispatchip, self.settings.dispatchport)
+		self.listener.bind(self.trainReport)
+		self.listener.start()
+		
+	def trainReport(self, train, loco, block):
+		# This method executes in thread context - don't touch the wxpython elements here
+		evt = TrainLocationEvent(train=train, loco=loco, block=block)
+		wx.PostEvent(self, evt)
+		
+	def setTrainLocation(self, evt):
+		tid = evt.train
+		loco = evt.loco
+		block = evt.block
+		print("Train (%s) loco (%s) block (%s)" % (str(tid), str(loco), block))
+
+		if tid is None or tid == "":
+			if loco is not None:
+				tid = self.roster.getTrainByLoco(loco)
+				if tid is None:
+					print("loco %s did not resolve to a train" % loco)
+				else:
+					print("loco %s resolved to train %s" % (loco, tid))	
+						
+		if not (tid is None or tid == ""):
+			tInfo = self.roster.getTrain(tid)
+			if tInfo is None:
+				return
+			tInfo["block"] = block
+			self.log.append("Setting block for train %s to %s" % (tid, block))
+	
+			self.activeTrainList.updateTrainBlock(tid, block)
+			if tid == self.selectedTrain:
+				self.showInfo(self.selectedTrain)
+
 
 	def onOpenTrain(self, _):
 		if self.activeTrainList.count() > 0:
@@ -407,6 +480,7 @@ class TrainManagerPanel(wx.Panel):
 		self.loadTrainFile(path)
 		
 	def loadTrainFile(self, fn):
+		self.log.append("loading train file (%s)" % fn)
 		self.parent.setTitle(train=os.path.basename(fn))
 
 		try:
@@ -447,7 +521,19 @@ class TrainManagerPanel(wx.Panel):
 			self.chTrain.SetSelection(wx.NOT_FOUND)
 			tid = None
 			
+		self.extraTrains = self.roster.getExtraTrains()
+		self.chExtra.SetItems(self.extraTrains)
+		self.cbExtra.Enable(len(self.extraTrains) > 0)
+		print("extra trains: (%s)" % str(self.extraTrains))
+			
 		self.setSelectedTrain(tid)
+		
+	def onCbExtra(self, _):
+		if self.cbExtra.IsChecked:
+			self.chExtra.Enable(True)
+			self.chExtra.SetSelection(0)
+		else:
+			self.chExtra.Enablke(False)
 		
 	def onOpenLocos(self, _):
 		dlg = wx.FileDialog(
@@ -470,6 +556,7 @@ class TrainManagerPanel(wx.Panel):
 		self.showInfo(self.selectedTrain)
 					
 	def loadLocoFile(self, fn):
+		self.log.append("Loading locomotive file (%s)" % fn)
 		self.parent.setTitle(loco=os.path.basename(fn))
 		try:
 			self.locos = Locomotives(fn)
@@ -496,7 +583,7 @@ class TrainManagerPanel(wx.Panel):
 				else:
 					ndesc = self.locos.getLoco(rloco)
 
-				self.activeTrainList.updateTrain(tid, rloco, ndesc)
+				self.activeTrainList.updateTrain(tid, rloco, ndesc, tInfo["block"])
 					
 	def onOpenEngineer(self, _):
 		if self.activeTrainList.count() > 0:
@@ -527,6 +614,7 @@ class TrainManagerPanel(wx.Panel):
 		self.loadEngineerFile(path)
 
 	def loadEngineerFile(self, fn):
+		self.log.append("loading engineer file (%s)" % fn)
 		self.parent.setTitle(engineer=os.path.basename(fn))
 		try:
 			self.engineers = Engineers(fn)
@@ -603,6 +691,7 @@ class TrainManagerPanel(wx.Panel):
 		self.loadOrderFile(path)
 		
 	def loadOrderFile(self, fn):
+		self.log.append("loading train order file (%s)" % fn)
 		self.parent.setTitle(order=os.path.basename(fn))
 		try:
 			self.trainOrder = Order(fn)
@@ -619,6 +708,7 @@ class TrainManagerPanel(wx.Panel):
 		self.setTrainOrder()
 				
 	def setTrainOrder(self):
+		self.log.append("Setting train order to %s" % str(self.pendingTrains))
 		self.chTrain.SetItems(self.pendingTrains)
 		if len(self.pendingTrains) > 0:
 			self.setSelectedTrain(self.chTrain.GetString(0))
@@ -684,7 +774,17 @@ class TrainManagerPanel(wx.Panel):
 			self.bAssign.Enable(self.cbATC.IsChecked())
 		
 	def bAssignPressed(self, _):
-		tInfo = self.roster.getTrain(self.selectedTrain)
+		if self.cbExtra.IsChecked():
+			tx = self.chExtra.GetSelection()
+			tid = self.chExtra.GetString(tx)
+			tInfo = self.roster.getTrain(tid)
+			self.cbExtra.SetValue(False)
+			runningExtra = True
+		else:
+			tid = self.selectedTrain
+			tInfo = self.roster.getTrain(self.selectedTrain)
+			runningExtra = False
+			
 		if tInfo is None:
 			return
 		
@@ -698,28 +798,34 @@ class TrainManagerPanel(wx.Panel):
 			descr = ""
 		else:
 			loco = tInfo["loco"]
-			descr = self.locos.getLoco(loco)		
+			descr = self.locos.getLoco(loco)
+		if "block" in tInfo:
+			block = tInfo["block"]
+		else:
+			block = None	
 		acttr = {
-			"tid": self.selectedTrain,
+			"tid": tid,
 			"dir": tInfo["dir"],
 			"origin": tInfo["origin"],
 			"terminus": tInfo["terminus"],
+			"block": block,
 			"loco": loco,
 			"descr": descr,
 			"engineer": eng}
 		self.activeTrainList.addTrain(acttr)
-		self.log.append("Assigned train %s to %s" % (self.selectedTrain, eng))
-		
-		self.pendingTrains.remove(self.selectedTrain)
-		self.chTrain.SetItems(self.pendingTrains)
-		if len(self.pendingTrains) == 0:
-			self.chTrain.Enable(False)
-			self.bAssign.Enable(False)
-			self.bSkip.Enable(False)
-			self.showInfo(None)
-		else:
-			self.chTrain.SetSelection(0)
-			self.setSelectedTrain(self.chTrain.GetString(0))
+		self.log.append("Assigned %s train %s to %s" % (tid, "extra" if runningExtra else "", eng))
+
+		if not runningExtra:		
+			self.pendingTrains.remove(tid)
+			self.chTrain.SetItems(self.pendingTrains)
+			if len(self.pendingTrains) == 0:
+				self.chTrain.Enable(False)
+				self.bAssign.Enable(False)
+				self.bSkip.Enable(False)
+				self.showInfo(None)
+			else:
+				self.chTrain.SetSelection(0)
+				self.setSelectedTrain(self.chTrain.GetString(0))
 		
 		if not self.cbATC.IsChecked():
 			self.activeEngineers.remove(self.selectedEngineer)
@@ -907,14 +1013,21 @@ class TrainManagerPanel(wx.Panel):
 		# TODO - May have to limit how many lines we see here - or come up with other approach
 		
 		if tInfo["loco"] is None:
-			self.stLocoInfo.SetLabel("")
+			locoString = ""
 		else:
 			lId = tInfo["loco"]
 			lInfo = self.locos.getLoco(lId)
 			if lInfo is None:
-				self.stLocoInfo.SetLabel("Loco: %s" % lId)
+				locoString = "Loco: %s" % lId
 			else:
-				self.stLocoInfo.SetLabel("Loco: %s - %s" % (lId, lInfo))
+				locoString = "Loco: %s - %s" % (lId, lInfo)
+
+		if tInfo["block"] is None or tInfo["block"] == "":
+			blockString = ""
+		else:
+			blockString = "Block: %s" % tInfo["block"]	
+						
+		self.stLocoInfo.SetLabel("%-40.40s %s" % (locoString, blockString))
 				
 	def onManageOrder(self, _):
 		if self.activeTrainList.count() > 0:
@@ -1038,6 +1151,7 @@ class TrainManagerPanel(wx.Panel):
 		self.report.TrainCards(self.roster, self.trainOrder)
 			
 	def onClose(self, _):
+		self.listener.kill()
 		self.settings.save()
 		self.Destroy()
 		
@@ -1100,12 +1214,22 @@ class DetailsDlg(wx.Dialog):
 			
 			vsizer.Add(hsz)
 			vsizer.AddSpacer(2)
-
-
+			
+		vsizer.AddSpacer(10)
 		
+		if tinfo["block"] is None or tinfo["block"] == "":
+			block = "<unknown>"
+		else:
+			block = tinfo["block"]
+			
+		st = wx.StaticText(self, wx.ID_ANY, "Block: %s" % block)
+		st.SetFont(labelFontBold)
 		
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		hsz.AddSpacer(100)
+		hsz.Add(st)
 		
-		
+		vsizer.Add(hsz)
 		vsizer.AddSpacer(20)
 				
 		hsizer=wx.BoxSizer(wx.HORIZONTAL)

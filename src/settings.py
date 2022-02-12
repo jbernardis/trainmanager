@@ -31,6 +31,8 @@ class Settings:
 		self.orderdir = os.path.join(os.getcwd(), "orders")
 		self.orderfile = "order.txt"
 		self.logdir = os.path.join(os.getcwd(), "logs")
+		self.dispatchip = "192.168.1.157"
+		self.dispatchport = "5204"
 		
 		self.cfg = configparser.ConfigParser()
 		self.cfg.optionxform = str
@@ -65,6 +67,10 @@ class Settings:
 					self.orderfile = value
 				elif opt == "logdir":
 					self.logdir = value
+				elif opt == "dispatchip":
+					self.dispatchip = value
+				elif opt == "dispatchport":
+					self.dispatchport = value
 				else:
 					msgs.append("INI file: Unknown %s option: %s - ignoring" % (self.section, opt))
 		else:
@@ -100,6 +106,8 @@ class Settings:
 		self.cfg.set(self.section, "orderdir", str(self.orderdir))
 		self.cfg.set(self.section, "orderfile", str(self.orderfile))
 		self.cfg.set(self.section, "logdir", str(self.logdir))
+		self.cfg.set(self.section, "dispatchip", str(self.dispatchip))
+		self.cfg.set(self.section, "dispatchport", str(self.dispatchport))
 
 		try:		
 			cfp = open(self.inifile, 'w')

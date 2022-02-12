@@ -5,7 +5,7 @@ class ActiveTrainList(wx.ListCtrl):
 		self.parent = parent
 		
 		wx.ListCtrl.__init__(
-			self, parent, wx.ID_ANY, size=(925, 240),
+			self, parent, wx.ID_ANY, size=(1005, 240),
 			style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_VRULES|wx.LC_SINGLE_SEL
 			)
 		
@@ -20,12 +20,14 @@ class ActiveTrainList(wx.ListCtrl):
 		self.InsertColumn(4, "Engineer")
 		self.InsertColumn(5, "Loco #")
 		self.InsertColumn(6, "Train Description")
+		self.InsertColumn(7, "Block")
 		self.SetColumnWidth(0, 80)
 		self.SetColumnWidth(1, 80)
 		self.SetColumnWidth(2, 120)
 		self.SetColumnWidth(3, 120)
 		self.SetColumnWidth(5, 80)
 		self.SetColumnWidth(6, 360)
+		self.SetColumnWidth(7, 80)
 
 		self.SetItemCount(0)
 		self.activeTrains = []
@@ -86,11 +88,19 @@ class ActiveTrainList(wx.ListCtrl):
 			
 		return None
 	
-	def updateTrain(self, tid, loco, desc):
+	def updateTrain(self, tid, loco, desc, block):
 		for tx in range(len(self.activeTrains)):
 			if self.activeTrains[tx]["tid"] == tid:
 				self.activeTrains[tx]["loco"] = loco
 				self.activeTrains[tx]["descr"] = desc
+				self.activeTrains[tx]["block"] = block
+				self.RefreshItem(tx)
+				return
+			
+	def updateTrainBlock(self, tid, block):	
+		for tx in range(len(self.activeTrains)):
+			if self.activeTrains[tx]["tid"] == tid:
+				self.activeTrains[tx]["block"] = block
 				self.RefreshItem(tx)
 				return
 		
@@ -159,6 +169,11 @@ class ActiveTrainList(wx.ListCtrl):
 			return tr["loco"]
 		elif col == 6:
 			return tr["descr"]
+		elif col == 7:
+			if tr["block"] is None:
+				return ""
+			else:
+				return tr["block"]
 
 	def OnGetItemAttr(self, item):
 		tr = self.activeTrains[item]

@@ -1,6 +1,7 @@
 import wx
 import os
 import json
+import pprint
 
 wildcardTxt = "TXT file (*.txt)|*.txt|"	 \
 		   "All files (*.*)|*.*"
@@ -34,7 +35,9 @@ class ManageTrainsDlg(wx.Dialog):
 			ti = self.trains.getTrain(t)
 			info = {"dir": ti["dir"],
 				"loco": ti["loco"],
-				"desc": ti["desc"]
+				"desc": ti["desc"],
+				"block": ti["block"],
+				"extra": ti["extra"]
 				}
 			
 			steps = [[s[0], s[1]] for s in ti["steps"]]
@@ -69,6 +72,8 @@ class ManageTrainsDlg(wx.Dialog):
 		self.stDescription.SetFont(textFontBold)
 		self.stLocomotive = wx.StaticText(self, wx.ID_ANY, "", size=(200, -1))
 		self.stLocomotive.SetFont(textFontBold)
+		self.stExtra = wx.StaticText(self, wx.ID_ANY, "Extra: ", size=(200, -1))
+		self.stExtra.SetFont(textFontBold)
 		
 		sz.AddSpacer(5)
 		sz.Add(self.stDirection)
@@ -76,12 +81,14 @@ class ManageTrainsDlg(wx.Dialog):
 		sz.Add(self.stDescription)
 		sz.AddSpacer(10)
 		sz.Add(self.stLocomotive)
+		sz.AddSpacer(10)
+		sz.Add(self.stExtra)
 		sz.AddSpacer(50)
 		
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
 		st = wx.StaticText(self, wx.ID_ANY, "Eastbound:", size=(120, -1))
 		st.SetFont(textFont)
-		hsz.Add(st, 0, wx.TOP, 5)
+		hsz.Add(st)
 		hsz.AddSpacer(5)
 		self.cbEast = wx.CheckBox(self, wx.ID_ANY, "", style=wx.ALIGN_RIGHT)
 		self.cbEast.SetFont(textFont)
@@ -110,6 +117,18 @@ class ManageTrainsDlg(wx.Dialog):
 		self.teLoco = wx.TextCtrl(self, wx.ID_ANY, "", size=(100, -1))
 		self.teLoco.SetFont(textFont)
 		hsz.Add(self.teLoco)
+		
+		sz.Add(hsz)
+		sz.AddSpacer(10)
+
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		st = wx.StaticText(self, wx.ID_ANY, "Extra:", size=(120, -1))
+		st.SetFont(textFont)
+		hsz.Add(st)
+		hsz.AddSpacer(5)
+		self.cbExtra = wx.CheckBox(self, wx.ID_ANY, "", style=wx.ALIGN_RIGHT)
+		self.cbExtra.SetFont(textFont)
+		hsz.Add(self.cbExtra)
 		
 		sz.Add(hsz)
 		
@@ -328,7 +347,9 @@ class ManageTrainsDlg(wx.Dialog):
 			'dir': "East",
 			'desc': "",
 			'loco': "",
-			'steps': []
+			'extra': False,
+			'steps': [],
+			'block': None
 			}
 		
 		self.cbTrains.SetItems(self.trainList)
@@ -354,6 +375,9 @@ class ManageTrainsDlg(wx.Dialog):
 			loco = None
 		self.selectedTrainInfo["loco"] = loco
 		
+		self.selectedTrainInfo["extra"] = self.cbExtra.IsChecked()
+		pprint.pprint(self.selectedTrainInfo)
+
 		self.setSelectedTrain(self.selectedTid)
 		self.setModified()
 		
@@ -444,6 +468,7 @@ class ManageTrainsDlg(wx.Dialog):
 			self.bMod.Enable(False)
 			self.bDel.Enable(False)
 			self.cbEast.SetValue(False)
+			self.cbExtra.SetValue(False)
 			self.teDesc.SetValue("")
 			self.teLoco.SetValue("")			
 			self.lcSteps.setData([])
@@ -459,6 +484,13 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		self.teDesc.SetValue(self.selectedTrainInfo["desc"])
 		self.stDescription.SetLabel(self.selectedTrainInfo["desc"])
+		
+		try:
+			self.cbExtra.SetValue(self.selectedTrainInfo['extra'])	
+		except:
+			self.cbExtra.SetValue(False)
+			self.selectedTrainInfo['extra'] = False
+		self.stExtra.SetLabel("Extra: %s" % str(self.selectedTrainInfo['extra']))
 		
 		loco = self.selectedTrainInfo["loco"]
 		if loco is None:

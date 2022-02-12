@@ -9,6 +9,9 @@ class TrainRoster:
 			
 		for tid in self.trains:
 			trn = self.trains[tid]
+			if 'extra' not in trn:
+				trn['extra'] = False
+			trn["block"] = None
 			if trn["steps"][0][0] == "":
 				trn["origin"] = trn["steps"][0][1]
 			else:
@@ -18,6 +21,9 @@ class TrainRoster:
 				trn["terminus"] = trn["steps"][-1][1]
 			else:
 				trn["terminus"] = trn["steps"][-1][0]
+				
+	def getExtraTrains(self):
+		return [tid for tid in sorted(self.trains.keys()) if self.trains[tid]['extra']]
 
 	def __iter__(self):
 		self.order = sorted(self.trains.keys())
@@ -40,6 +46,13 @@ class TrainRoster:
 			return None
 		
 		return self.trains[tid]
+	
+	def getTrainByLoco(self, loco):
+		for tid in self.trains:
+			if loco == self.trains[tid]["loco"]:
+				return tid
+			
+		return None
 	
 	def save(self):
 		newJson = copy.deepcopy(self.trains)
