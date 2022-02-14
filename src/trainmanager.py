@@ -220,104 +220,150 @@ class TrainManagerPanel(wx.Panel):
 		self.allPresentEngineers = [x for x in self.activeEngineers]
 		self.trainOrder = None
 		
-		vsizerl = wx.BoxSizer(wx.VERTICAL)
-		vsizerl.Add(wx.StaticText(self, wx.ID_ANY, "", size=(200, -1)))
-		vsizerl.AddSpacer(20)
-
-		
 		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 		labelFont = wx.Font(wx.Font(12, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.NORMAL, faceName="Monospace"))
 		labelFontBold = wx.Font(wx.Font(14, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD, faceName="Monospace"))
 		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
 		textFontBold = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 		
-		self.chTrain = wx.Choice(self, wx.ID_ANY, choices=self.pendingTrains, size=(90, -1))
+		vsizerl = wx.BoxSizer(wx.VERTICAL)
+		vsizerl.AddSpacer(20)
+
+		boxTrain = wx.StaticBox(self, wx.ID_ANY, "Train")
+		boxTrain.SetFont(labelFontBold)
+		topBorder = boxTrain.GetBordersForSizer()[0]
+		bsizer = wx.BoxSizer(wx.VERTICAL)
+		bsizer.AddSpacer(topBorder)
+		bsizer.Add(wx.StaticText(boxTrain, wx.ID_ANY, "", size=(240, -1)))
+		
+		self.chTrain = wx.Choice(boxTrain, wx.ID_ANY, choices=self.pendingTrains, size=(90, -1))
 		self.chTrain.SetSelection(0)
 		self.chTrain.SetFont(textFont)
 		self.Bind(wx.EVT_CHOICE, self.onChoiceTID, self.chTrain)
 
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
-		st = wx.StaticText(self, wx.ID_ANY, "Next Train: ", size=(120, -1))
+		st = wx.StaticText(boxTrain, wx.ID_ANY, "Scheduled: ", size=(120, -1))
 		st.SetFont(textFontBold)
 		sz.Add(st, 1, wx.TOP, 4)
 		sz.Add(self.chTrain)
-		vsizerl.Add(sz)
+		bsizer.Add(sz)
 		
-		vsizerl.AddSpacer(10)
+		bsizer.AddSpacer(10)
 
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
-		self.cbExtra = wx.CheckBox(self, wx.ID_ANY, "Run Extra")
+		self.cbExtra = wx.CheckBox(boxTrain, wx.ID_ANY, "Run Extra")
 		self.cbExtra.SetFont(textFontBold)
 		self.Bind(wx.EVT_CHECKBOX, self.onCbExtra, self.cbExtra)
 		sz.AddSpacer(100)
 		sz.Add(self.cbExtra)
 		self.cbExtra.Enable(False)
-		vsizerl.Add(sz)
+		bsizer.Add(sz)
 		
-		vsizerl.AddSpacer(10)
+		bsizer.AddSpacer(10)
 
-		self.chExtra = wx.Choice(self, wx.ID_ANY, choices=[], size=(90, -1))
+		self.chExtra = wx.Choice(boxTrain, wx.ID_ANY, choices=[], size=(90, -1))
 		self.chExtra.SetFont(textFont)
 		self.chExtra.Enable(False)
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
-		st = wx.StaticText(self, wx.ID_ANY, "Extra Trains: ", size=(120, -1))
+		st = wx.StaticText(boxTrain, wx.ID_ANY, "Extra: ", size=(120, -1))
 		st.SetFont(textFontBold)
 		sz.Add(st, 1, wx.TOP, 4)
 		sz.Add(self.chExtra)
-		vsizerl.Add(sz)
-
-		vsizerl.AddSpacer(50)
+		bsizer.Add(sz)
+		bsizer.AddSpacer(20)
 		
-		self.chEngineer = wx.Choice(self, wx.ID_ANY, choices=self.activeEngineers)
+		bhsizer = wx.BoxSizer(wx.HORIZONTAL)
+		bhsizer.AddSpacer(20)
+		bhsizer.Add(bsizer)
+		bhsizer.AddSpacer(20)
+		boxTrain.SetSizer(bhsizer)
+		
+		vsizerl.Add(boxTrain)
+		
+		vsizerl.AddSpacer(20)
+
+
+		boxEng = wx.StaticBox(self, wx.ID_ANY, "Engineer")
+		boxEng.SetFont(labelFontBold)
+		topBorder = boxEng.GetBordersForSizer()[0]
+		bsizer = wx.BoxSizer(wx.VERTICAL)
+		bsizer.AddSpacer(topBorder)
+		bsizer.Add(wx.StaticText(boxEng, wx.ID_ANY, "", size=(240, -1)))
+
+		self.chEngineer = wx.Choice(boxEng, wx.ID_ANY, choices=self.activeEngineers)
 		self.chEngineer.SetSelection(0)
 		self.chEngineer.SetFont(textFont)
 		self.selectedEngineer = self.chEngineer.GetString(0)
 		self.Bind(wx.EVT_CHOICE, self.onChoiceEngineer, self.chEngineer)
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
-		st = wx.StaticText(self, wx.ID_ANY, "Engineer: ", size=(120, -1))
+		st = wx.StaticText(boxEng, wx.ID_ANY, "Engineer: ", size=(120, -1))
 		st.SetFont(textFontBold)
 		sz.Add(st, 1, wx.TOP, 4)
 		sz.Add(self.chEngineer)
-		vsizerl.Add(sz)
+		bsizer.Add(sz)
 		
-		vsizerl.AddSpacer(10)
+		bsizer.AddSpacer(10)
 		
 		sz = wx.BoxSizer(wx.HORIZONTAL)
-		self.cbATC = wx.CheckBox(self, wx.ID_ANY, "ATC")
+		self.cbATC = wx.CheckBox(boxEng, wx.ID_ANY, "ATC")
 		self.cbATC.SetFont(textFontBold)
 		self.Bind(wx.EVT_CHECKBOX, self.onCbATC, self.cbATC)
 		sz.AddSpacer(100)
 		sz.Add(self.cbATC)
-		vsizerl.Add(sz)
+		bsizer.Add(sz)
 		
-		vsizerl.AddSpacer(20)
+		bsizer.AddSpacer(20)
+
+		bhsizer = wx.BoxSizer(wx.HORIZONTAL)
+		bhsizer.AddSpacer(20)
+		bhsizer.Add(bsizer)
+		bhsizer.AddSpacer(20)
+		boxEng.SetSizer(bhsizer)
 		
+		vsizerl.Add(boxEng)
+
 		vsizerr = wx.BoxSizer(wx.VERTICAL)
-		vsizerr.Add(wx.StaticText(self, wx.ID_ANY, "", size=(300, -1)))
 		vsizerr.AddSpacer(20)
 
-		self.stDescription = wx.StaticText(self, wx.ID_ANY, "", size=(400, -1))
+		boxDetails = wx.StaticBox(self, wx.ID_ANY, "Train Details")
+		boxDetails.SetFont(labelFontBold)
+		topBorder = boxDetails.GetBordersForSizer()[0]
+		bsizer = wx.BoxSizer(wx.VERTICAL)
+		bsizer.AddSpacer(topBorder)
+		
+		bsizer.Add(wx.StaticText(boxDetails, wx.ID_ANY, "", size=(300, -1)))
+		bsizer.AddSpacer(20)
+
+		self.stDescription = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(400, -1))
 		self.stDescription.SetFont(labelFontBold)
-		vsizerr.Add(self.stDescription)
-		vsizerr.AddSpacer(10)
-		self.stStepsTower = wx.StaticText(self, wx.ID_ANY, "", size=(100, 150))
-		self.stStepsStop = wx.StaticText(self, wx.ID_ANY, "", size=(300, 150))
+		bsizer.Add(self.stDescription)
+		bsizer.AddSpacer(10)
+		self.stStepsTower = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(100, 150))
+		self.stStepsStop = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(300, 150))
+		self.stStepsTower.SetFont(labelFont)
+		self.stStepsStop.SetFont(labelFont)
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		sz.Add(self.stStepsTower)
 		sz.Add(self.stStepsStop)
-		vsizerr.Add(sz)
-		self.stStepsTower.SetFont(labelFont)
-		self.stStepsStop.SetFont(labelFont)
+		bsizer.Add(sz)
 		
-		self.stLocoInfo = wx.StaticText(self, wx.ID_ANY, "", size=(700, -1))
+		self.stLocoInfo = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(600, -1))
 		self.stLocoInfo.SetFont(labelFontBold)
-		vsizerr.AddSpacer(10)
-		vsizerr.Add(self.stLocoInfo)
+		bsizer.AddSpacer(10)
+		bsizer.Add(self.stLocoInfo)
+		bsizer.AddSpacer(20)
 		
+		bhsizer = wx.BoxSizer(wx.HORIZONTAL)
+		bhsizer.AddSpacer(20)
+		bhsizer.Add(bsizer)
+		bhsizer.AddSpacer(20)
+		boxDetails.SetSizer(bhsizer)
+		
+		vsizerr.Add(boxDetails)
 		vsizerr.AddSpacer(20)
 		
 		hsizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -329,6 +375,7 @@ class TrainManagerPanel(wx.Panel):
 		
 		wsizer = wx.BoxSizer(wx.VERTICAL)
 		wsizer.Add(hsizer)
+		wsizer.AddSpacer(20)
 		
 		btnsizer = wx.BoxSizer(wx.HORIZONTAL)
 		
@@ -374,11 +421,11 @@ class TrainManagerPanel(wx.Panel):
 		
 		self.activeTrainList = ActiveTrainList(self)
 		sz = wx.BoxSizer(wx.HORIZONTAL)
-		sz.AddSpacer(10)
+		sz.AddSpacer(20)
 		sz.Add(self.activeTrainList)
 		sz.AddSpacer(20)
 		
-		wsizer.Add(sz)
+		wsizer.Add(sz, 0, wx.ALIGN_CENTER_HORIZONTAL)
 		
 		wsizer.AddSpacer(20)
 
@@ -412,6 +459,7 @@ class TrainManagerPanel(wx.Panel):
 		if not self.report.Initialized():
 			self.parent.disableReports()
 			
+		self.setExtraTrains()
 		self.connectToDispatcher()
 		
 	def connectToDispatcher(self):
@@ -429,26 +477,24 @@ class TrainManagerPanel(wx.Panel):
 		tid = evt.train
 		loco = evt.loco
 		block = evt.block
-		print("Train (%s) loco (%s) block (%s)" % (str(tid), str(loco), block))
 
 		if tid is None or tid == "":
 			if loco is not None:
 				tid = self.roster.getTrainByLoco(loco)
-				if tid is None:
-					print("loco %s did not resolve to a train" % loco)
-				else:
-					print("loco %s resolved to train %s" % (loco, tid))	
 						
-		if not (tid is None or tid == ""):
-			tInfo = self.roster.getTrain(tid)
-			if tInfo is None:
-				return
-			tInfo["block"] = block
-			self.log.append("Setting block for train %s to %s" % (tid, block))
-	
-			self.activeTrainList.updateTrainBlock(tid, block)
-			if tid == self.selectedTrain:
-				self.showInfo(self.selectedTrain)
+		if tid is None or tid == "":
+			return 
+		
+		print("Train (%s) loco (%s) block (%s)" % (str(tid), str(loco), block))
+		tInfo = self.roster.getTrain(tid)
+		if tInfo is None:
+			return
+		tInfo["block"] = block
+		self.log.append("Setting block for train %s to %s" % (tid, block))
+
+		self.activeTrainList.updateTrainBlock(tid, block)
+		if tid == self.selectedTrain:
+			self.showInfo(self.selectedTrain)
 
 
 	def onOpenTrain(self, _):
@@ -478,6 +524,7 @@ class TrainManagerPanel(wx.Panel):
 		self.settings.setModified()
 		
 		self.loadTrainFile(path)
+		self.setExtraTrains()
 		
 	def loadTrainFile(self, fn):
 		self.log.append("loading train file (%s)" % fn)
@@ -521,19 +568,38 @@ class TrainManagerPanel(wx.Panel):
 			self.chTrain.SetSelection(wx.NOT_FOUND)
 			tid = None
 			
-		self.extraTrains = self.roster.getExtraTrains()
-		self.chExtra.SetItems(self.extraTrains)
-		self.cbExtra.Enable(len(self.extraTrains) > 0)
-		print("extra trains: (%s)" % str(self.extraTrains))
-			
 		self.setSelectedTrain(tid)
+	
+	def setExtraTrains(self):		
+		self.extraTrains = self.roster.getExtraTrains(self.pendingTrains)
+		self.chExtra.SetItems(self.extraTrains)
+		if len(self.extraTrains) > 0:
+			self.chExtra.SetSelection(0)
+			
+		self.cbExtra.SetValue(False)			
+		self.cbExtra.Enable(len(self.extraTrains) > 0)
+		self.chExtra.Enable(False)
 		
 	def onCbExtra(self, _):
-		if self.cbExtra.IsChecked:
+		self.enableExtraMode(self.cbExtra.IsChecked())
+			
+	def enableExtraMode(self, flag=True):
+		if flag:
 			self.chExtra.Enable(True)
 			self.chExtra.SetSelection(0)
+			tid = self.chExtra.GetString(0)
+			self.setSelectedTrain(tid)
+			self.chTrain.Enable(False)
+			self.bSkip.Enable(False)
 		else:
-			self.chExtra.Enablke(False)
+			self.chExtra.Enable(False)
+			self.chTrain.Enable(True)
+			tx = self.chTrain.GetSelection()
+			tid = self.chTrain.GetString(tx)
+			self.setSelectedTrain(tid)
+			self.bSkip.Enable(True)
+			self.cbExtra.SetValue(False)
+
 		
 	def onOpenLocos(self, _):
 		dlg = wx.FileDialog(
@@ -689,6 +755,7 @@ class TrainManagerPanel(wx.Panel):
 		self.settings.setModified()
 		
 		self.loadOrderFile(path)
+		self.setExtraTrains()
 		
 	def loadOrderFile(self, fn):
 		self.log.append("loading train order file (%s)" % fn)
@@ -778,7 +845,6 @@ class TrainManagerPanel(wx.Panel):
 			tx = self.chExtra.GetSelection()
 			tid = self.chExtra.GetString(tx)
 			tInfo = self.roster.getTrain(tid)
-			self.cbExtra.SetValue(False)
 			runningExtra = True
 		else:
 			tid = self.selectedTrain
@@ -799,6 +865,8 @@ class TrainManagerPanel(wx.Panel):
 		else:
 			loco = tInfo["loco"]
 			descr = self.locos.getLoco(loco)
+			if descr is None:
+				descr = ""
 		if "block" in tInfo:
 			block = tInfo["block"]
 		else:
@@ -810,7 +878,7 @@ class TrainManagerPanel(wx.Panel):
 			"terminus": tInfo["terminus"],
 			"block": block,
 			"loco": loco,
-			"descr": descr,
+			"desc": descr,
 			"engineer": eng}
 		self.activeTrainList.addTrain(acttr)
 		self.log.append("Assigned %s train %s to %s" % (tid, "extra" if runningExtra else "", eng))
@@ -826,6 +894,8 @@ class TrainManagerPanel(wx.Panel):
 			else:
 				self.chTrain.SetSelection(0)
 				self.setSelectedTrain(self.chTrain.GetString(0))
+		else:
+			self.enableExtraMode(False)
 		
 		if not self.cbATC.IsChecked():
 			self.activeEngineers.remove(self.selectedEngineer)
@@ -1003,7 +1073,7 @@ class TrainManagerPanel(wx.Panel):
 			self.stStepsStop.SetLabel("")
 			return
 
-		descr = "%sbound %s" % (tInfo["dir"], tInfo["desc"])		
+		descr = "%s   %sbound %s" % (tid, tInfo["dir"], tInfo["desc"])		
 		self.stDescription.SetLabel(descr)
 		towers = "\n".join([step[0] for step in tInfo["steps"]])
 		stops  = "\n".join([step[1] for step in tInfo["steps"]])
@@ -1020,7 +1090,7 @@ class TrainManagerPanel(wx.Panel):
 			if lInfo is None:
 				locoString = "Loco: %s" % lId
 			else:
-				locoString = "Loco: %s - %s" % (lId, lInfo)
+				locoString = "Loco: %s - %s" % (lId, lInfo.replace('&', '&&'))
 
 		if tInfo["block"] is None or tInfo["block"] == "":
 			blockString = ""
@@ -1068,6 +1138,7 @@ class TrainManagerPanel(wx.Panel):
 		# no need to retrieve dialog values because the data is saved automatically when OK is pressed
 		# just re-read the file
 		self.loadTrainFile(os.path.join(self.settings.traindir, self.settings.trainfile))
+		self.setExtraTrains()
 
 		
 	def onManageEngineers(self, _):
@@ -1124,7 +1195,7 @@ class TrainManagerPanel(wx.Panel):
 		
 	def onAssignLocos(self, _):
 		order = [x for x in self.trainOrder]
-		dlg = AssignLocosDlg(self, self.roster, order, self.locos)
+		dlg = AssignLocosDlg(self, self.roster, order, self.extraTrains, self.locos)
 		rc = dlg.ShowModal()
 		if rc == wx.ID_OK:
 			result = dlg.getValues()
@@ -1181,7 +1252,11 @@ class DetailsDlg(wx.Dialog):
 		vsizer.Add(hsz)
 		vsizer.AddSpacer(10)
 		
-		st = wx.StaticText(self, wx.ID_ANY, "Loco: %s - %s" % (tinfo["loco"], desc))
+		if desc is None:
+			ldesc = ""
+		else:
+			ldesc = desc.replace('&', '&&')
+		st = wx.StaticText(self, wx.ID_ANY, "Loco: %s - %s" % (tinfo["loco"], ldesc))
 		st.SetFont(labelFontBold)
 		
 		hsz = wx.BoxSizer(wx.HORIZONTAL)

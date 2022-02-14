@@ -1,7 +1,6 @@
 import wx
 import os
 import json
-import pprint
 
 wildcardTxt = "TXT file (*.txt)|*.txt|"	 \
 		   "All files (*.*)|*.*"
@@ -344,10 +343,10 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		self.trainList = sorted(self.trainList + [trainID])
 		self.roster[trainID] = {
-			'dir': "East",
-			'desc': "",
-			'loco': "",
-			'extra': False,
+			'dir': "East" if self.cbEast.IsChecked() else "West",
+			'desc': self.teDesc.GetValue(),
+			'loco': self.teLoco.GetValue().strip(),
+			'extra': self.cbExtra.IsChecked(),
 			'steps': [],
 			'block': None
 			}
@@ -376,7 +375,6 @@ class ManageTrainsDlg(wx.Dialog):
 		self.selectedTrainInfo["loco"] = loco
 		
 		self.selectedTrainInfo["extra"] = self.cbExtra.IsChecked()
-		pprint.pprint(self.selectedTrainInfo)
 
 		self.setSelectedTrain(self.selectedTid)
 		self.setModified()

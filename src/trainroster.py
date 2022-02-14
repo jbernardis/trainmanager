@@ -12,18 +12,22 @@ class TrainRoster:
 			if 'extra' not in trn:
 				trn['extra'] = False
 			trn["block"] = None
-			if trn["steps"][0][0] == "":
-				trn["origin"] = trn["steps"][0][1]
+			if len(trn["steps"]) > 0:
+				if trn["steps"][0][0] == "":
+					trn["origin"] = trn["steps"][0][1]
+				else:
+					trn["origin"] = trn["steps"][0][0]
+					
+				if trn["steps"][-1][0] == "":
+					trn["terminus"] = trn["steps"][-1][1]
+				else:
+					trn["terminus"] = trn["steps"][-1][0]
 			else:
-				trn["origin"] = trn["steps"][0][0]
+				trn["origin"] = ""
+				trn["terminus"] = ""
 				
-			if trn["steps"][-1][0] == "":
-				trn["terminus"] = trn["steps"][-1][1]
-			else:
-				trn["terminus"] = trn["steps"][-1][0]
-				
-	def getExtraTrains(self):
-		return [tid for tid in sorted(self.trains.keys()) if self.trains[tid]['extra']]
+	def getExtraTrains(self, order=[]):
+		return [tid for tid in sorted(self.trains.keys()) if self.trains[tid]['extra'] and tid not in order]
 
 	def __iter__(self):
 		self.order = sorted(self.trains.keys())

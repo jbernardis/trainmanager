@@ -92,7 +92,7 @@ class ActiveTrainList(wx.ListCtrl):
 		for tx in range(len(self.activeTrains)):
 			if self.activeTrains[tx]["tid"] == tid:
 				self.activeTrains[tx]["loco"] = loco
-				self.activeTrains[tx]["descr"] = desc
+				self.activeTrains[tx]["desc"] = desc
 				self.activeTrains[tx]["block"] = block
 				self.RefreshItem(tx)
 				return
@@ -168,7 +168,7 @@ class ActiveTrainList(wx.ListCtrl):
 		elif col == 5:
 			return tr["loco"]
 		elif col == 6:
-			return tr["descr"]
+			return tr["desc"]
 		elif col == 7:
 			if tr["block"] is None:
 				return ""

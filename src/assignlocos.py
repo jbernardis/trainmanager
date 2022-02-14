@@ -3,7 +3,7 @@ import wx
 BTNSZ = (120, 46)
 
 class AssignLocosDlg(wx.Dialog):
-	def __init__(self, parent, trains, order, locos):
+	def __init__(self, parent, trains, order, extras, locos):
 		wx.Dialog.__init__(self, parent, wx.ID_ANY, "")
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 		
@@ -13,29 +13,48 @@ class AssignLocosDlg(wx.Dialog):
 		self.titleString = "Assign Locos"
 		self.modified = None
 		self.setModified(False)
+		self.extraTrains = extras
+		self.timeOrder = [x for x in order] + self.extraTrains
+		self.order = [x for x in order] + self.extraTrains
 		
 		self.parent = parent
 		
 		self.trains = trains
-		self.order = order
+		
 		self.locos = locos
 		
 		self.selectedTx = None
 		
 		self.currentLoco = {}
-		for tid in order:
+		for tid in self.order:
 			tinfo = trains.getTrain(tid)
 			self.currentLoco[tid] = tinfo["loco"]
-
+			
 		self.allLocos = locos.getLocoList()
 		
 		vsizer = wx.BoxSizer(wx.VERTICAL)
 		vsizer.AddSpacer(20)
+		self.rbSequence = wx.RadioButton(self, wx.ID_ANY, " Time Sequence ", style = wx.RB_GROUP )
+		self.Bind(wx.EVT_RADIOBUTTON, self.onSortOrder, self.rbSequence)
+		self.rbTID = wx.RadioButton(self, wx.ID_ANY, " Train ID " )
+		self.Bind(wx.EVT_RADIOBUTTON, self.onSortOrder, self.rbTID)
+		self.rbOrigin = wx.RadioButton(self, wx.ID_ANY, " Origin " )
+		self.Bind(wx.EVT_RADIOBUTTON, self.onSortOrder, self.rbOrigin)
+		
+		sz = wx.BoxSizer(wx.HORIZONTAL)
+		sz.Add(self.rbSequence)
+		sz.AddSpacer(20)
+		sz.Add(self.rbTID)
+		sz.AddSpacer(20)
+		sz.Add(self.rbOrigin)
+		
+		vsizer.Add(sz, 0, wx.ALIGN_CENTER_HORIZONTAL)
+
 		vsizer.AddSpacer(20)
 		
 		self.currentLocoList = CurrentLocoList(self)
 		self.currentLocoList.SetFont(textFont)
-		self.currentLocoList.setData(self.currentLoco, order, locos)
+		self.currentLocoList.setData(self.currentLoco, self.order, self.locos)
 		
 		vsizer.Add(self.currentLocoList, 0, wx.ALIGN_CENTER_HORIZONTAL)
 
@@ -96,9 +115,24 @@ class AssignLocosDlg(wx.Dialog):
 		self.Layout()
 		self.Fit();
 
+	def onSortOrder(self, _):
+		if self.rbSequence.GetValue():
+			self.order = [x for x in self.timeOrder]
+		elif self.rbTID.GetValue():
+			self.order = sorted(self.timeOrder)
+		elif self.rbOrigin.GetValue():
+			self.order = sorted(self.timeOrder, key=self.useOrigin)
+		else:
+			return
+		
+		self.currentLocoList.setData(self.currentLoco, self.order, self.locos)
+		
+	def useOrigin(self, tid):
+		return (self.trains.getTrain(tid)['origin']+tid).lower()
+
 	def determineAvailability(self):
 		self.locosInUse = [self.currentLoco[x] for x in self.currentLoco.keys() if self.currentLoco[x] is not None]
-		self.availLocos = [x for x in self.allLocos] # if x not in self.locosInUse]
+		self.availLocos = ["%s - %s" % (x, self.locos.getLoco(x)) for x in self.allLocos] # if x not in self.locosInUse]
 		self.chAvail.SetItems(self.availLocos)
 		if len(self.availLocos) == 0:
 			self.chAvail.Enable(False)
@@ -137,7 +171,7 @@ class AssignLocosDlg(wx.Dialog):
 		if lx == wx.NOT_FOUND:
 			return
 		
-		lid = self.chAvail.GetString(lx)
+		lid = self.chAvail.GetString(lx).split(" ")[0]
 		self.currentLoco[tid] = lid
 		self.determineAvailability()
 		self.currentLocoList.RefreshItem(self.selectedTx)
@@ -217,6 +251,7 @@ class CurrentLocoList(wx.ListCtrl):
 		self.currentLocos = currentLocos
 		self.order = order
 		self.locos = locos
+		self.SetItemCount(0)
 		self.SetItemCount(len(self.order))
 			
 	def getSelection(self):
