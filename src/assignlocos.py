@@ -9,6 +9,7 @@ class AssignLocosDlg(wx.Dialog):
 		
 		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
+		textFontBold = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 
 		self.titleString = "Assign Locos"
 		self.modified = None
@@ -35,10 +36,13 @@ class AssignLocosDlg(wx.Dialog):
 		vsizer = wx.BoxSizer(wx.VERTICAL)
 		vsizer.AddSpacer(20)
 		self.rbSequence = wx.RadioButton(self, wx.ID_ANY, " Time Sequence ", style = wx.RB_GROUP )
+		self.rbSequence.SetFont(textFontBold)
 		self.Bind(wx.EVT_RADIOBUTTON, self.onSortOrder, self.rbSequence)
 		self.rbTID = wx.RadioButton(self, wx.ID_ANY, " Train ID " )
+		self.rbTID.SetFont(textFontBold)
 		self.Bind(wx.EVT_RADIOBUTTON, self.onSortOrder, self.rbTID)
 		self.rbOrigin = wx.RadioButton(self, wx.ID_ANY, " Origin " )
+		self.rbOrigin.SetFont(textFontBold)
 		self.Bind(wx.EVT_RADIOBUTTON, self.onSortOrder, self.rbOrigin)
 		
 		sz = wx.BoxSizer(wx.HORIZONTAL)
@@ -54,7 +58,7 @@ class AssignLocosDlg(wx.Dialog):
 		
 		self.currentLocoList = CurrentLocoList(self)
 		self.currentLocoList.SetFont(textFont)
-		self.currentLocoList.setData(self.currentLoco, self.order, self.locos)
+		self.currentLocoList.setData(self.trains, self.currentLoco, self.order, self.locos)
 		
 		vsizer.Add(self.currentLocoList, 0, wx.ALIGN_CENTER_HORIZONTAL)
 
@@ -125,7 +129,7 @@ class AssignLocosDlg(wx.Dialog):
 		else:
 			return
 		
-		self.currentLocoList.setData(self.currentLoco, self.order, self.locos)
+		self.currentLocoList.setData(self.trains, self.currentLoco, self.order, self.locos)
 		
 	def useOrigin(self, tid):
 		return (self.trains.getTrain(tid)['origin']+tid).lower()
@@ -223,16 +227,18 @@ class CurrentLocoList(wx.ListCtrl):
 		self.parent = parent
 		
 		wx.ListCtrl.__init__(
-			self, parent, wx.ID_ANY, size=(540, 240),
+			self, parent, wx.ID_ANY, size=(660, 240),
 			style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_VRULES|wx.LC_SINGLE_SEL
 			)
 
 		self.InsertColumn(0, "Train")
-		self.InsertColumn(1, "Loco")
-		self.InsertColumn(2, "Description")
+		self.InsertColumn(1, "Origin")
+		self.InsertColumn(2, "Loco")
+		self.InsertColumn(3, "Description")
 		self.SetColumnWidth(0, 80)
-		self.SetColumnWidth(1, 80)
-		self.SetColumnWidth(2, 360)
+		self.SetColumnWidth(1, 120)
+		self.SetColumnWidth(2, 80)
+		self.SetColumnWidth(3, 360)
 
 		self.SetItemCount(0)
 		self.selected = None
@@ -247,7 +253,8 @@ class CurrentLocoList(wx.ListCtrl):
 		self.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.OnItemDeselected)
 		self.Bind(wx.EVT_LIST_CACHE_HINT, self.OnItemHint)
 		
-	def setData(self, currentLocos, order, locos):
+	def setData(self, trains, currentLocos, order, locos):
+		self.trains = trains
 		self.currentLocos = currentLocos
 		self.order = order
 		self.locos = locos
@@ -293,11 +300,18 @@ class CurrentLocoList(wx.ListCtrl):
 		if col == 0:
 			return tid
 		elif col == 1:
+			tinfo = self.trains.getTrain(tid)
+			rv = tinfo["origin"]
+			if rv is None:
+				return ""
+			else:
+				return rv
+		elif col == 2:
 			if lId is None:
 				return "<none>"
 			else:
 				return self.currentLocos[tid]
-		elif col == 2:
+		elif col == 3:
 			if lId is None:
 				return ""
 			else:
