@@ -50,7 +50,7 @@ wildcardLog = "Log file (*.log)|*.log|"	 \
 
 class MainFrame(wx.Frame):
 	def __init__(self):
-		wx.Frame.__init__(self, None, size=(900, 800))
+		wx.Frame.__init__(self, None, size=(900, 800), style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER)
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 		
 		font = wx.Font(wx.Font(14, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
