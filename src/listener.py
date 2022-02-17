@@ -1,19 +1,26 @@
 import socket
 import threading
-import time
-from rrmap import rrmap
 
 class Listener():
 	def __init__(self, ip, port):
-		#self.skt = socket.create_connection((ip, port))
-		#self.skt.settimeout(0.5)
-		self.fp = open("disp.log", "r")
+		self.failedSetup = False
+		self.isRunning = False
+		try:
+			self.skt = socket.create_connection((ip, port))
+		except TimeoutError:
+			self.failedSetup = True
+			return
+		
+		self.skt.settimeout(0.5)
 		
 		self.cbTrainID = None
 
 		self.thread = threading.Thread(target=self.run)
 		
 	def start(self):
+		if self.failedSetup:
+			return
+		
 		self.thread.start()
 		
 	def kill(self):
@@ -28,33 +35,27 @@ class Listener():
 		self.isRunning = True
 		while self.isRunning:
 			try:
-				b = self.fp.readline()
-				#b = str(self.skt.recv(1024), 'utf-8')
+				b = str(self.skt.recv(1024), 'utf-8')
 				if len(b) == 0:
-					#self.skt.close()
+					self.skt.close()
+					print("closing socket")
 					self.isRunning = False
-					
-			except Exception as e:
-				print(e)
-			#except socket.timeout:
-				#pass
+				bl = b.split("\r\n")
+
+			except socket.timeout:
+				pass
 			else:
-				if self.isRunning and b.startswith("TrainID"):
-					screen = b[9:19].strip()
-					x = int(b[19:24].strip())
-					y = int(b[24:29].strip())
-					train = b[29:39].strip()
-					if train.startswith("#"):
-						loco = train[2:]
-						train = ""
-					else:
-						loco = ""
-					for row, col, block in rrmap[screen]:
-						if row == x and col == y:
+				if self.isRunning:
+					for b in bl:
+						if b == "":
+							continue
+						
+						if b.startswith("TrnMgr"):
+							train = b[9:19].strip()
+							block = b[19:29].strip()
+							loco = b[29:39].strip()
 							if callable(self.cbTrainID):
 								self.cbTrainID(train, loco, block)
-							break
-					time.sleep(1)
 					
 		self.isRunning = False
 					

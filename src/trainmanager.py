@@ -465,6 +465,14 @@ class TrainManagerPanel(wx.Panel):
 	def connectToDispatcher(self):
 		self.log.append("Connecting to dispatch at %s:%s" % (self.settings.dispatchip, self.settings.dispatchport))
 		self.listener = Listener(self.settings.dispatchip, self.settings.dispatchport)
+		if self.listener.failedSetup:
+			dlg = wx.MessageDialog(self, 'Unable to connect to dispatcher.\nNo train location information will be available.',
+	                               'Unable to connect',
+	                               wx.OK | wx.ICON_WARNING)
+			dlg.ShowModal()
+			dlg.Destroy()
+			return
+		
 		self.listener.bind(self.trainReport)
 		self.listener.start()
 		
@@ -485,7 +493,6 @@ class TrainManagerPanel(wx.Panel):
 		if tid is None or tid == "":
 			return 
 		
-		print("Train (%s) loco (%s) block (%s)" % (str(tid), str(loco), block))
 		tInfo = self.roster.getTrain(tid)
 		if tInfo is None:
 			return
