@@ -37,6 +37,11 @@ MENU_MANAGE_LOCOS = 204
 MENU_MANAGE_ORDER = 205
 MENU_REPORT_OP_WORKSHEET = 301
 MENU_REPORT_TRAIN_CARDS = 302
+MENU_REPORT_DISPATCH = 303
+MENU_DISPATCH_CONNECT = 401
+MENU_DISPATCH_DISCONNECT = 402
+MENU_DISPATCH_SETUPIP = 403
+MENU_DISPATCH_SETUPPORT = 404
 
 
 wildcard = "JSON file (*.json)|*.json|"	 \
@@ -47,6 +52,9 @@ wildcardLog = "Log file (*.log)|*.log|"	 \
 		   "All files (*.*)|*.*"
 
 (TrainLocationEvent, EVT_TRAINLOC) = newevent.NewEvent()  
+(SocketConnectEvent, EVT_SOCKET_CONNECT) = newevent.NewEvent()
+(SocketDisconnectEvent, EVT_SOCKET_DISCONNECT) = newevent.NewEvent()
+(SocketFailureEvent, EVT_SOCKET_FAILURE) = newevent.NewEvent()
 
 class MainFrame(wx.Frame):
 	def __init__(self):
@@ -66,6 +74,8 @@ class MainFrame(wx.Frame):
 		self.orderfile = None
 		self.engineerfile = None
 		self.locofile = None
+		self.connection = None
+		
 
 		self.menuFile = wx.Menu()	
 		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_TRAIN, "Load Train Roster", helpString ="Load a Train Roster file")
@@ -119,16 +129,36 @@ class MainFrame(wx.Frame):
 		self.menuManage.Append(i)
 		
 		self.menuReports = wx.Menu()
-		i = wx.MenuItem(self.menuManage, MENU_REPORT_OP_WORKSHEET, "Operating Worksheet", helpString="Print an Operating Worksheet")
+		i = wx.MenuItem(self.menuReports, MENU_REPORT_OP_WORKSHEET, "Operating Worksheet", helpString="Print an Operating Worksheet")
 		i.SetFont(font)
 		self.menuReports.Append(i)
-		i = wx.MenuItem(self.menuManage, MENU_REPORT_TRAIN_CARDS, "Train Cards", helpString="Print Train Cards")
+		i = wx.MenuItem(self.menuReports, MENU_REPORT_TRAIN_CARDS, "Train Cards", helpString="Print Train Cards")
 		i.SetFont(font)
 		self.menuReports.Append(i)
+		i = wx.MenuItem(self.menuReports, MENU_REPORT_DISPATCH, "Train/Loco/Block Report", helpString="Information to enter into dispatcher")
+		i.SetFont(font)
+		self.menuReports.Append(i)
+		
+		self.menuDispatch = wx.Menu()
+		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_CONNECT, "Connect", helpString="Connect to dispatcher")
+		i.SetFont(font)
+		self.menuDispatch.Append(i)
+		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_DISCONNECT, "Disconnect", helpString="Disconnect from Dispatcher")
+		i.SetFont(font)
+		self.menuDispatch.Append(i)
+		self.menuDispatch.Enable(MENU_DISPATCH_DISCONNECT, False)
+		self.menuDispatch.AppendSeparator()
+		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_SETUPIP, "Configure IP Address", helpString="Configure IP address")
+		i.SetFont(font)
+		self.menuDispatch.Append(i)
+		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_SETUPPORT, "Configure Port", helpString="Configure Port")
+		i.SetFont(font)
+		self.menuDispatch.Append(i)
 
 		menuBar.Append(self.menuFile, "File")
 		menuBar.Append(self.menuManage, "Manage")
 		menuBar.Append(self.menuReports, "Reports")
+		menuBar.Append(self.menuDispatch, "Dispatch")
 				
 		self.SetMenuBar(menuBar)
 		self.menuBar = menuBar
@@ -156,13 +186,19 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.panel.onReportOpWorksheet, id=MENU_REPORT_OP_WORKSHEET)
 		self.Bind(wx.EVT_MENU, self.panel.onReportTrainCards, id=MENU_REPORT_TRAIN_CARDS)
 		
+		self.Bind(wx.EVT_MENU, self.panel.connectToDispatch, id=MENU_DISPATCH_CONNECT)
+		self.Bind(wx.EVT_MENU, self.panel.disconnectFromDispatch, id=MENU_DISPATCH_DISCONNECT)
+		self.Bind(wx.EVT_MENU, self.panel.setupIP, id=MENU_DISPATCH_SETUPIP)
+		self.Bind(wx.EVT_MENU, self.panel.setupPort, id=MENU_DISPATCH_SETUPPORT)
+		self.Bind(wx.EVT_MENU, self.panel.dispatchReport, id=MENU_REPORT_DISPATCH)
+		
 		self.SetSizer(sizer)
 		self.Layout()
 		self.Fit();
 		
 
 		
-	def setTitle(self, train=None, order=None, engineer=None, loco=None):
+	def setTitle(self, train=None, order=None, engineer=None, loco=None, connection=None):
 		if train is not None:
 			self.trainfile = train
 			
@@ -174,6 +210,9 @@ class MainFrame(wx.Frame):
 			
 		if loco is not None:
 			self.locofile = loco
+			
+		if connection is not None:
+			self.connection = connection
 			
 		title = "Train Manager"
 		if self.trainfile is not None:
@@ -196,10 +235,16 @@ class MainFrame(wx.Frame):
 		else:
 			title += " / "
 		
+		if self.connection is not None:
+			title += "     %s" % self.connection
 		self.SetTitle(title)
 		
 	def disableReports(self):
 		self.menuReports.Enable(MENU_REPORT_OP_WORKSHEET, False)
+		
+	def enableListenerDisconnect(self, flag=True):
+		self.menuDispatch.Enable(MENU_DISPATCH_DISCONNECT(flag))
+		self.menuDispatch.Enable(MENU_DISPATCH_CONNECT(not flag))
 	
 	def onClose(self, _):
 		self.panel.onClose(None)
@@ -214,6 +259,8 @@ class TrainManagerPanel(wx.Panel):
 		self.parent.setTitle()
 			
 		self.log = Log()
+		
+		self.listener = None
 
 		self.pendingTrains = []
 		self.activeEngineers = [] 
@@ -274,6 +321,8 @@ class TrainManagerPanel(wx.Panel):
 		sz.Add(self.chExtra)
 		bsizer.Add(sz)
 		bsizer.AddSpacer(20)
+		self.Bind(wx.EVT_CHOICE, self.onChExtra, self.chExtra)
+
 		
 		bhsizer = wx.BoxSizer(wx.HORIZONTAL)
 		bhsizer.AddSpacer(20)
@@ -343,11 +392,14 @@ class TrainManagerPanel(wx.Panel):
 		bsizer.Add(self.stDescription)
 		bsizer.AddSpacer(10)
 		self.stStepsTower = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(100, 150))
+		self.stStepsLoc = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(60, 150))
 		self.stStepsStop = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(300, 150))
 		self.stStepsTower.SetFont(labelFont)
+		self.stStepsLoc.SetFont(labelFont)
 		self.stStepsStop.SetFont(labelFont)
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		sz.Add(self.stStepsTower)
+		sz.Add(self.stStepsLoc)
 		sz.Add(self.stStepsStop)
 		bsizer.Add(sz)
 		
@@ -434,6 +486,9 @@ class TrainManagerPanel(wx.Panel):
 		self.Fit()
 		
 		self.Bind(EVT_TRAINLOC, self.setTrainLocation)
+		self.Bind(EVT_SOCKET_CONNECT, self.socketConnectEvent)
+		self.Bind(EVT_SOCKET_DISCONNECT, self.socketDisconnectEvent)
+		self.Bind(EVT_SOCKET_FAILURE, self.socketFailureEvent)
 		
 		wx.CallAfter(self.initialize)
 		
@@ -460,21 +515,83 @@ class TrainManagerPanel(wx.Panel):
 			self.parent.disableReports()
 			
 		self.setExtraTrains()
-		self.connectToDispatcher()
+		self.parent.setTitle(connection="Not Connected")
 		
-	def connectToDispatcher(self):
+	def dispatchReport(self, _):
+		self.report.dispatchReport(self.roster, self.trainOrder)
+		
+	def connectToDispatch(self, _):
+		self.parent.setTitle(connection="Connecting...")
 		self.log.append("Connecting to dispatch at %s:%s" % (self.settings.dispatchip, self.settings.dispatchport))
 		self.listener = Listener(self.settings.dispatchip, self.settings.dispatchport)
-		if self.listener.failedSetup:
-			dlg = wx.MessageDialog(self, 'Unable to connect to dispatcher.\nNo train location information will be available.',
-	                               'Unable to connect',
-	                               wx.OK | wx.ICON_WARNING)
-			dlg.ShowModal()
-			dlg.Destroy()
+		self.listener.bind(self.trainReport, self.socketConnect, self.socketDisconnect, self.connectFailure)
+		self.listener.start()
+		
+	def socketConnect(self):  # thread context
+		evt = SocketConnectEvent()
+		wx.PostEvent(self, evt)
+
+	def socketConnectEvent(self, _):
+		self.parent.setTitle(connection="Connected")
+		self.log.append("Socket Connection successful")
+		self.parent.enableListenerDisconnect(True)
+		
+	def socketDisconnect(self):  # thread context
+		evt = SocketDisconnectEvent()
+		wx.PostEvent(self, evt)
+
+	def socketDisconnectEvent(self, _):
+		self.parent.setTitle(connection="Disconnected")
+		self.log.append("Socket disconnection complete")
+		self.parent.enableListenerDisconnect(False)
+		self.listener = None
+		
+	def connectFailure(self):  # thread context
+		evt = SocketFailureEvent()
+		wx.PostEvent(self, evt)
+
+	def socketFailureEvent(self, _):
+		dlg = wx.MessageDialog(self, 'Connection to Dispatcher failed.\nNo locomotive or block information is available',
+                               'Connection Failed',
+                               wx.OK | wx.ICON_ERROR)
+		dlg.ShowModal()
+		dlg.Destroy()
+		
+		self.parent.setTitle(connection="Connection Failed")
+		self.log.append("Error from socket connection request")
+		self.listener = None
+		
+	def disconnectFromDispatch(self, _):
+		self.log.append("Starting socket disconnection request")
+		self.listener.kill()
+		
+	def setupIP(self, _):
+		dlg = wx.TextEntryDialog(self, 'Enter/Modify IP Address', 'IP Address', self.settings.dispatchip)
+		rc = dlg.ShowModal()
+		if rc == wx.ID_OK:
+			newIP = dlg.GetValue()
+
+		dlg.Destroy()
+		
+		if rc != wx.ID_OK:
 			return
 		
-		self.listener.bind(self.trainReport)
-		self.listener.start()
+		self.settings.dispatchip = newIP
+		self.settings.setModified()
+		
+	def setupPort(self, _):
+		dlg = wx.TextEntryDialog(self, 'Enter/Modify IP Port Number', 'Port Number', self.settings.dispatchport)
+		rc = dlg.ShowModal()
+		if rc == wx.ID_OK:
+			newPort = dlg.GetValue()
+
+		dlg.Destroy()
+		
+		if rc != wx.ID_OK:
+			return
+		
+		self.settings.dispatchport = newPort
+		self.settings.setModified()
 		
 	def trainReport(self, train, loco, block):
 		# This method executes in thread context - don't touch the wxpython elements here
@@ -498,8 +615,11 @@ class TrainManagerPanel(wx.Panel):
 			return
 		tInfo["block"] = block
 		self.log.append("Setting block for train %s to %s" % (tid, block))
+		if tInfo["loco"] != loco and loco != "":
+			tInfo["loco"] = loco
+			self.log.append("Setting locomotive for train %s to %s" % (tid, loco))
 
-		self.activeTrainList.updateTrainBlock(tid, block)
+		self.activeTrainList.updateTrainBlock(tid, block, loco)
 		if tid == self.selectedTrain:
 			self.showInfo(self.selectedTrain)
 
@@ -593,8 +713,8 @@ class TrainManagerPanel(wx.Panel):
 	def enableExtraMode(self, flag=True):
 		if flag:
 			self.chExtra.Enable(True)
-			self.chExtra.SetSelection(0)
-			tid = self.chExtra.GetString(0)
+			tx = self.chExtra.GetSelection()
+			tid = self.chExtra.GetString(tx)
 			self.setSelectedTrain(tid)
 			self.chTrain.Enable(False)
 			self.bSkip.Enable(False)
@@ -1038,6 +1158,14 @@ class TrainManagerPanel(wx.Panel):
 		tid = self.chTrain.GetString(tx)
 		self.setSelectedTrain(tid)
 		
+	def onChExtra(self, _):
+		tx = self.chExtra.GetSelection()
+		if tx == wx.NOT_FOUND:
+			return
+		
+		tid = self.chExtra.GetString(tx)
+		self.setSelectedTrain(tid)
+		
 	def reportSelection(self, tx):
 		self.bRemove.Enable(tx is not None)
 		self.bReassign.Enable(tx is not None)
@@ -1063,12 +1191,14 @@ class TrainManagerPanel(wx.Panel):
 		if tid is None or tid == "":
 			self.stDescription.SetLabel("")
 			self.stStepsTower.SetLabel("")
+			self.stStepsLoc.SetLabel("")
 			self.stStepsStop.SetLabel("")
 			return
 		
 		if self.roster is None:
 			self.stDescription.SetLabel("Train Roster is empty")
 			self.stStepsTower.SetLabel("")
+			self.stStepsLoc.SetLabel("")
 			self.stStepsStop.SetLabel("")
 			return
 		else:
@@ -1077,15 +1207,24 @@ class TrainManagerPanel(wx.Panel):
 		if tInfo is None:
 			self.stDescription.SetLabel("Train %s is not in Train Roster" % tid)
 			self.stStepsTower.SetLabel("")
+			self.stStepsLoc.SetLabel("")
 			self.stStepsStop.SetLabel("")
 			return
 
 		descr = "%s   %sbound %s" % (tid, tInfo["dir"], tInfo["desc"])		
 		self.stDescription.SetLabel(descr)
+		locs = []
+		for step in tInfo["steps"]:
+			if step[2] == 0:
+				locs.append("")
+			else:
+				locs.append("(%2d)" % step[2])
 		towers = "\n".join([step[0] for step in tInfo["steps"]])
+		loc = "\n".join(locs)
 		stops  = "\n".join([step[1] for step in tInfo["steps"]])
 
 		self.stStepsTower.SetLabel(towers)
+		self.stStepsLoc.SetLabel(loc)
 		self.stStepsStop.SetLabel(stops)
 		# TODO - May have to limit how many lines we see here - or come up with other approach
 		
@@ -1229,7 +1368,9 @@ class TrainManagerPanel(wx.Panel):
 		self.report.TrainCards(self.roster, self.trainOrder)
 			
 	def onClose(self, _):
-		self.listener.kill()
+		if self.listener is not None:
+			self.listener.kill()
+			
 		self.settings.save()
 		self.Destroy()
 		
@@ -1286,13 +1427,16 @@ class DetailsDlg(wx.Dialog):
 		for stp in tinfo["steps"]:
 			st1 = wx.StaticText(self, wx.ID_ANY, stp[0], size=(80, -1))
 			st1.SetFont(labelFontBold)
-			st2 = wx.StaticText(self, wx.ID_ANY, stp[1])
+			st2 = wx.StaticText(self, wx.ID_ANY, "(%2d)" % stp[2] if stp[2] > 0 else "", size=(60, -1))
 			st2.SetFont(labelFontBold)
+			st3 = wx.StaticText(self, wx.ID_ANY, stp[1])
+			st3.SetFont(labelFontBold)
 			
 			hsz = wx.BoxSizer(wx.HORIZONTAL)
 			hsz.AddSpacer(120)
 			hsz.Add(st1)
 			hsz.Add(st2)
+			hsz.Add(st3)
 			
 			vsizer.Add(hsz)
 			vsizer.AddSpacer(2)

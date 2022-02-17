@@ -141,6 +141,7 @@ class Report:
 		css.addElement("table", {"border-collapse": "collapse", "border-spacing": "0", "width": "100%", "height": "103mm", "font-family": '"Times New Roman", Times, serif', "font-size": "16px"})
 		css.addElement("td.trainid", {"width": "36.4%", "padding-left": "20px", "font-size": "28px", "font-weight": "bold"})
 		css.addElement("td.firstcol", {"width": "36.4%", "padding-left": "20px"})
+		css.addElement("td.secondcol", {"width": "10%", "padding-left": "20px"})
 		css.addElement("td", {"text-align": "left", "padding": "6px"})
 		css.addElement("td.cardnumber", {"text-align": "right", "padding-right": "50px"})
 		
@@ -182,12 +183,13 @@ class Report:
 		trainIdRow = HTML.tr({}, HTML.td({"class": "trainid"}, tid), HTML.td())
 		emptyRow = HTML.tr({}, HTML.td({}, HTML.nbsp()))
 		descRow = HTML.tr({}, HTML.td({"class": "firstcol", "colspan": "2"}, "%sbound %s" % (tinfo["dir"], tinfo["desc"])))
-		cardNumberRow = HTML.tr({}, HTML.td({}, ""), HTML.td({"class": "cardnumber"}, "%d" % tx))
+		cardNumberRow = HTML.tr({}, HTML.td({}, ""), HTML.td({}, ""), HTML.td({"class": "cardnumber"}, "%d" % tx))
 
 		stepRows = []
 		for stp in tinfo["steps"]:
 			row = HTML.tr({},
 						HTML.td({"class": "firstcol"}, stp[0]),
+						HTML.td({"class": "secondcol"}, "" if stp[2] == 0 else ("(%2d)" % stp[2])),
 						HTML.td({}, stp[1])
 			)
 			stepRows.append(row)
@@ -205,6 +207,53 @@ class Report:
 		)
 		
 		return HTML.div({"class": "column"}, table)
+	
+	def dispatchReport(self, trains, order):
+		if not self.Initialized:
+			dlg = wx.MessageDialog(self.parent, "Unable to generate reports - initialization failed", 
+		                               "Report Initialization failed",
+		                               wx.OK | wx.ICON_ERROR)
+			dlg.ShowModal()
+			dlg.Destroy()
+			return
+			
+		css = HTML.StyleSheet()
+		css.addElement("table", {'width': '650px', 'border-spacing': '15px',  'margin-left': 'auto', 'margin-right': 'auto'})
+		css.addElement("table, th, td", { 'border': "1px solid black", 'border-collapse': 'collapse'})
+		css.addElement("td, th", {'text-align': 'center', 'width': '80px', 'overflow': 'hidden'})
+		
+		html  = HTML.starthtml()
+		html += HTML.head(HTML.style({'type': "text/css", 'media': "screen, print"}, css))
+		
+		html += HTML.startbody()
+	
+	
+		html += HTML.h1({'align': 'center'}, "Train Locomotive and Block Report")	
+		html += "<br><br>"
+
+		header = HTML.tr({},
+			HTML.th({}, "Train"),
+			HTML.th({}, "Loco"),
+			HTML.th({}, "Block"))
+
+		rows = []		
+		for tid in trains:
+			tinfo = trains.getTrain(tid)
+			row = HTML.tr({},
+						HTML.td({}, tid),
+						HTML.td({}, tinfo["loco"]),
+						HTML.td({}, tinfo["block"])
+			)
+			rows.append(row)
+
+		html += HTML.table({}, header, "".join(rows))
+		html += HTML.endbody()
+		html += HTML.endhtml()
+		
+		dlg = RptDlg(self.parent, self.backend, "Dispatch Report", html)
+		dlg.ShowModal()
+		dlg.Destroy()
+		
 	
 class ChooseCardsDlg(wx.Dialog):
 	def __init__(self, parent, order):

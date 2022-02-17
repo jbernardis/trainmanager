@@ -3,24 +3,20 @@ import threading
 
 class Listener():
 	def __init__(self, ip, port):
+		self.ip = ip
+		self.port = port
+		
 		self.failedSetup = False
 		self.isRunning = False
-		try:
-			self.skt = socket.create_connection((ip, port))
-		except TimeoutError:
-			self.failedSetup = True
-			return
-		
-		self.skt.settimeout(0.5)
 		
 		self.cbTrainID = None
+		self.cbConnect = None
+		self.cbDisconnect = None
+		self.cbFailure = None
 
 		self.thread = threading.Thread(target=self.run)
 		
 	def start(self):
-		if self.failedSetup:
-			return
-		
 		self.thread.start()
 		
 	def kill(self):
@@ -28,17 +24,31 @@ class Listener():
 			self.isRunning = False
 			self.thread.join()
 		
-	def bind(self, cb):
-		self.cbTrainID = cb
+	def bind(self, cbMessage, cbConnect, cbDisconnect, cbFailure):
+		self.cbTrainID = cbMessage
+		self.cbConnect = cbConnect
+		self.cbDisconnect = cbDisconnect
+		self.cbFailure = cbFailure
 		
 	def run(self):
+		try:
+			self.skt = socket.create_connection((self.ip, self.port), timeout=10)
+		except:  #TimeoutError:
+			self.failedSetup = True
+			if callable(self.cbFailure):
+				self.cbFailure()
+			return
+
+		if callable(self.cbConnect):
+			self.cbConnect()
+					
+		self.skt.settimeout(0.5)
+		
 		self.isRunning = True
 		while self.isRunning:
 			try:
 				b = str(self.skt.recv(1024), 'utf-8')
 				if len(b) == 0:
-					self.skt.close()
-					print("closing socket")
 					self.isRunning = False
 				bl = b.split("\r\n")
 
@@ -58,6 +68,13 @@ class Listener():
 								self.cbTrainID(train, loco, block)
 					
 		self.isRunning = False
+		try:
+			self.skt.close()
+		except:
+			pass
+		
+		if callable(self.cbDisconnect):
+			self.cbDisconnect()
 					
 
 

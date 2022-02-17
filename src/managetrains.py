@@ -39,7 +39,7 @@ class ManageTrainsDlg(wx.Dialog):
 				"extra": ti["extra"]
 				}
 			
-			steps = [[s[0], s[1]] for s in ti["steps"]]
+			steps = [[s[0], s[1], s[2]] for s in ti["steps"]]
 			info["steps"] = steps
 			
 			self.roster[t] = info
@@ -69,8 +69,6 @@ class ManageTrainsDlg(wx.Dialog):
 		self.stDirection.SetFont(textFontBold)
 		self.stDescription = wx.StaticText(self, wx.ID_ANY, "", size=(200, -1))
 		self.stDescription.SetFont(textFontBold)
-		self.stLocomotive = wx.StaticText(self, wx.ID_ANY, "", size=(200, -1))
-		self.stLocomotive.SetFont(textFontBold)
 		self.stExtra = wx.StaticText(self, wx.ID_ANY, "Extra: ", size=(200, -1))
 		self.stExtra.SetFont(textFontBold)
 		
@@ -78,8 +76,6 @@ class ManageTrainsDlg(wx.Dialog):
 		sz.Add(self.stDirection)
 		sz.AddSpacer(10)
 		sz.Add(self.stDescription)
-		sz.AddSpacer(10)
-		sz.Add(self.stLocomotive)
 		sz.AddSpacer(10)
 		sz.Add(self.stExtra)
 		sz.AddSpacer(50)
@@ -104,18 +100,6 @@ class ManageTrainsDlg(wx.Dialog):
 		self.teDesc = wx.TextCtrl(self, wx.ID_ANY, "", size=(200, -1))
 		self.teDesc.SetFont(textFont)
 		hsz.Add(self.teDesc)
-		
-		sz.Add(hsz)
-		sz.AddSpacer(10)
-		
-		hsz = wx.BoxSizer(wx.HORIZONTAL)
-		st = wx.StaticText(self, wx.ID_ANY, "Locomotive:", size=(120, -1))
-		st.SetFont(textFont)
-		hsz.Add(st, 0, wx.TOP, 5)
-		hsz.AddSpacer(5)
-		self.teLoco = wx.TextCtrl(self, wx.ID_ANY, "", size=(100, -1))
-		self.teLoco.SetFont(textFont)
-		hsz.Add(self.teLoco)
 		
 		sz.Add(hsz)
 		sz.AddSpacer(10)
@@ -148,7 +132,10 @@ class ManageTrainsDlg(wx.Dialog):
 		self.teTower = wx.TextCtrl(self, wx.ID_ANY, "", size=(100, -1))
 		self.teTower.SetFont(textFont)
 		
-		self.teStop = wx.TextCtrl(self, wx.ID_ANY, "", size=(300, -1))
+		self.teLoc = wx.TextCtrl(self, wx.ID_ANY, "", size=(40, -1))
+		self.teLoc.SetFont(textFont)
+		
+		self.teStop = wx.TextCtrl(self, wx.ID_ANY, "", size=(240, -1))
 		self.teStop.SetFont(textFont)
 		
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
@@ -157,6 +144,14 @@ class ManageTrainsDlg(wx.Dialog):
 		hsz.Add(st, 0, wx.TOP, 5)
 		hsz.AddSpacer(5)
 		hsz.Add(self.teTower)
+		
+		hsz.AddSpacer(5)
+		
+		st = wx.StaticText(self, wx.ID_ANY, "Loc: ")
+		st.SetFont(textFontBold)
+		hsz.Add(st, 0, wx.TOP, 5)
+		hsz.AddSpacer(5)
+		hsz.Add(self.teLoc)
 		
 		hsz.AddSpacer(5)
 		
@@ -320,6 +315,12 @@ class ManageTrainsDlg(wx.Dialog):
 		self.bDown.Enable(tx < len(self.selectedTrainInfo["steps"])-1)
 		
 		self.teTower.SetValue(self.selectedTrainInfo["steps"][tx][0])
+		vloc = self.selectedTrainInfo["steps"][tx][2]
+		if vloc == 0:
+			loc = ""
+		else:
+			loc = "%d" % vloc
+		self.teLoc.SetValue(loc)
 		self.teStop.SetValue(self.selectedTrainInfo["steps"][tx][1])
 		
 	def bAddPressed(self, _):
@@ -345,7 +346,7 @@ class ManageTrainsDlg(wx.Dialog):
 		self.roster[trainID] = {
 			'dir': "East" if self.cbEast.IsChecked() else "West",
 			'desc': self.teDesc.GetValue(),
-			'loco': self.teLoco.GetValue().strip(),
+			'loco': None,
 			'extra': self.cbExtra.IsChecked(),
 			'steps': [],
 			'block': None
@@ -367,12 +368,6 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		self.selectedTrainInfo["desc"] = self.teDesc.GetValue()
 		self.stDescription.SetLabel(self.selectedTrainInfo["desc"])
-		
-		loco = self.teLoco.GetValue().strip()
-		self.stLocomotive.SetLabel("Loco: %s" % loco)
-		if loco == "":
-			loco = None
-		self.selectedTrainInfo["loco"] = loco
 		
 		self.selectedTrainInfo["extra"] = self.cbExtra.IsChecked()
 
@@ -405,7 +400,16 @@ class ManageTrainsDlg(wx.Dialog):
 	
 	def bAddStepPressed(self, _):
 		steps = self.selectedTrainInfo["steps"]
-		steps.append([self.teTower.GetValue(), self.teStop.GetValue()])
+		loc = self.teLoc.GetValue()
+		if loc.strip() == "":
+			vloc = 0
+		else:
+			try:
+				vloc = int(loc)
+			except:
+				vloc = 0
+			
+		steps.append([self.teTower.GetValue(), self.teStop.GetValue(), vloc])
 		oldct = self.lcSteps.GetItemCount()
 		self.lcSteps.SetItemCount(oldct+1)
 		self.lcSteps.setSelection(oldct)
@@ -417,6 +421,14 @@ class ManageTrainsDlg(wx.Dialog):
 		step = self.selectedTrainInfo["steps"][self.selectedStep]
 		step[0] = self.teTower.GetValue()
 		step[1] = self.teStop.GetValue()
+		loc = self.teLoc.GetValue()
+		if loc.strip() == "":
+			step[2] = 0
+		else:
+			try:
+				step[2] = int(loc)
+			except:
+				step[2] = 0
 		
 		self.lcSteps.RefreshItem(self.selectedStep)
 		self.setModified()
@@ -450,10 +462,13 @@ class ManageTrainsDlg(wx.Dialog):
 		steps = self.selectedTrainInfo["steps"]
 		tower = steps[i1][0]
 		stop = steps[i1][1]
+		loc = steps[i1][2]
 		steps[i1][0] = steps[i2][0]
 		steps[i1][1] = steps[i2][1]
+		steps[i1][2] = steps[i2][2]
 		steps[i2][0] = tower
 		steps[i2][1] = stop
+		steps[i2][2] = loc
 		
 		self.lcSteps.RefreshItems(i2, i1)
 		self.lcSteps.setSelection(i2)
@@ -468,7 +483,6 @@ class ManageTrainsDlg(wx.Dialog):
 			self.cbEast.SetValue(False)
 			self.cbExtra.SetValue(False)
 			self.teDesc.SetValue("")
-			self.teLoco.SetValue("")			
 			self.lcSteps.setData([])
 			return
 		
@@ -489,12 +503,6 @@ class ManageTrainsDlg(wx.Dialog):
 			self.cbExtra.SetValue(False)
 			self.selectedTrainInfo['extra'] = False
 		self.stExtra.SetLabel("Extra: %s" % str(self.selectedTrainInfo['extra']))
-		
-		loco = self.selectedTrainInfo["loco"]
-		if loco is None:
-			loco = ""
-		self.teLoco.SetValue(loco)
-		self.stLocomotive.SetLabel("Loco: %s" % loco)
 		
 		self.lcSteps.setData(self.selectedTrainInfo["steps"])
 		
@@ -582,9 +590,11 @@ class StepsList(wx.ListCtrl):
 			)
 
 		self.InsertColumn(0, "Tower")
-		self.InsertColumn(1, "Stop")
+		self.InsertColumn(1, "Loc")
+		self.InsertColumn(2, "Stop")
 		self.SetColumnWidth(0, 150)
-		self.SetColumnWidth(1, 400)
+		self.SetColumnWidth(1, 50)
+		self.SetColumnWidth(2, 400)
 
 		self.SetItemCount(0)
 		self.selected = None
@@ -640,6 +650,8 @@ class StepsList(wx.ListCtrl):
 		if col == 0:
 			return self.steps[item][0]
 		elif col == 1:
+			return "%2d" % self.steps[item][2] if self.steps[item][2] != 0 else ""
+		elif col == 2:
 			return self.steps[item][1]
 
 	def OnGetItemAttr(self, item):

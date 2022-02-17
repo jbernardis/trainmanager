@@ -1,273 +1,323 @@
 {
     "11": {
-        "block": "C50",
+        "block": null,
         "desc": "Express Passenger",
         "dir": "West",
         "extra": false,
-        "loco": "1419",
+        "loco": null,
         "steps": [
             [
                 "CLIFF",
-                "Green Mountain"
+                "Green Mountain",
+                2
             ],
             [
                 "BANK",
-                ""
+                "",
+                4
             ],
             [
                 "NASSAU",
-                "Wilson City (N31 or N32)"
+                "Wilson City (N31 or N32)",
+                5
             ],
             [
                 "SHORE",
-                ""
+                "",
+                99
             ],
             [
                 "DELL",
-                ""
+                "",
+                1
             ],
             [
                 "LATHAM",
-                ""
+                "",
+                0
             ],
             [
                 "YARD",
-                "Koehlstadt"
+                "Koehlstadt",
+                0
             ]
         ]
     },
     "12": {
-        "block": "Y51",
+        "block": null,
         "desc": "Express Passenger",
         "dir": "East",
         "extra": false,
-        "loco": "069",
+        "loco": null,
         "steps": [
             [
                 "YARD",
-                "Koehlstadt"
+                "Koehlstadt",
+                0
             ],
             [
                 "LATHAM",
-                ""
+                "",
+                0
             ],
             [
                 "DELL",
-                ""
+                "",
+                0
             ],
             [
                 "SHORE",
-                ""
+                "",
+                0
             ],
             [
                 "NASSAU",
-                "Wilson City (N41 or N42)"
+                "Wilson City (N41 or N42)",
+                0
             ],
             [
                 "BANK",
-                ""
+                "",
+                0
             ],
             [
                 "CLIFF",
-                ""
+                "",
+                0
             ]
         ]
     },
     "17": {
-        "block": "P30",
+        "block": null,
         "desc": "Express Passenger",
         "dir": "West",
         "extra": false,
-        "loco": "914",
+        "loco": "069",
         "steps": [
             [
                 "CLIFF",
-                ""
+                "",
+                0
             ],
             [
                 "BANK",
-                ""
+                "",
+                0
             ],
             [
                 "NASSAU",
-                "Wilson City (N31 or N32)"
+                "Wilson City (N31 or N32)",
+                0
             ],
             [
                 "PORT",
-                ""
+                "",
+                0
             ],
             [
                 "YARD",
-                "Koehlstadt (Y50)"
+                "Koehlstadt (Y50)",
+                0
             ]
         ]
     },
     "18": {
-        "block": "C12",
+        "block": null,
         "desc": "Express Passenger",
         "dir": "East",
         "extra": false,
-        "loco": "68",
+        "loco": null,
         "steps": [
             [
                 "YARD",
-                "Koehlstadt (Y50)"
+                "Koehlstadt (Y50)",
+                0
             ],
             [
                 "PORT",
-                ""
+                "",
+                0
             ],
             [
                 "NASSAU",
-                "Wilson City (N41 or N42)"
+                "Wilson City (N41 or N42)",
+                0
             ],
             [
                 "BANK",
-                ""
+                "",
+                0
             ],
             [
                 "CLIFF",
-                "Green Mountain"
+                "Green Mountain",
+                0
             ]
         ]
     },
     "21": {
-        "block": "P11",
+        "block": null,
         "desc": "Local Passenger",
         "dir": "West",
         "extra": false,
-        "loco": "3408",
+        "loco": null,
         "steps": [
             [
                 "NASSAU",
-                "From Coard Yard to"
+                "From Coard Yard to",
+                0
             ],
             [
                 "",
-                "Wilson City (N31 or N32)"
+                "Wilson City (N31 or N32)",
+                0
             ],
             [
                 "SHORE",
-                "Bortell"
+                "Bortell",
+                0
             ],
             [
                 "DELL",
-                "Loland"
+                "Loland",
+                0
             ],
             [
                 "",
-                "LaPorte"
+                "LaPorte",
+                0
             ],
             [
                 "LATHAM",
-                "Carlton"
+                "Carlton",
+                0
             ],
             [
                 "PORT",
-                "Southport (P2)"
+                "Southport (P2)",
+                0
             ]
         ]
     },
     "22": {
-        "block": "P5",
+        "block": null,
         "desc": "Local Passenger",
         "dir": "East",
         "extra": false,
-        "loco": "5024",
+        "loco": null,
         "steps": [
             [
                 "PORT",
-                "Southport"
+                "Southport",
+                0
             ],
             [
                 "LATHAM",
-                "Carlton"
+                "Carlton",
+                0
             ],
             [
                 "DELL",
-                "Laporte"
+                "Laporte",
+                0
             ],
             [
                 "",
-                "Loland"
+                "Loland",
+                0
             ],
             [
                 "SHORE",
-                "Bortell"
+                "Bortell",
+                0
             ],
             [
                 "NASSAU",
-                "Wilson City (N41 or N42)"
+                "Wilson City (N41 or N42)",
+                0
             ],
             [
                 "",
-                "To Coach Yard"
+                "To Coach Yard",
+                0
             ]
         ]
     },
     "43": {
-        "block": "C31",
+        "block": null,
         "desc": "Local Passenger",
         "dir": "West",
         "extra": false,
-        "loco": "1921",
+        "loco": null,
         "steps": [
             [
                 "CLIFF",
-                "Green Mountain"
+                "Green Mountain",
+                0
             ],
             [
                 "",
-                "Clivedon"
+                "Clivedon",
+                0
             ],
             [
                 "",
-                "Spikes Peak"
+                "Spikes Peak",
+                0
             ],
             [
                 "BANK",
-                "Martinsville"
+                "Martinsville",
+                0
             ],
             [
                 "NASSAU",
-                "Wilson City (N31 or N32)"
+                "Wilson City (N31 or N32)",
+                0
             ],
             [
                 "",
-                "To Coach Yard"
+                "To Coach Yard",
+                0
             ]
         ]
     },
     "44": {
-        "block": "N42",
+        "block": null,
         "desc": "Local Passenger",
         "dir": "East",
         "extra": false,
-        "loco": "2681",
+        "loco": null,
         "steps": [
             [
                 "NASSAU",
-                "From Coach Yard to"
+                "From Coach Yard to",
+                0
             ],
             [
                 "",
-                "Wilson City (N41 or N42)"
+                "Wilson City (N41 or N42)",
+                0
             ],
             [
                 "BANK",
-                "Martinsville"
+                "Martinsville",
+                0
             ],
             [
                 "CLIFF",
-                "Spikes Peak"
+                "Spikes Peak",
+                0
             ],
             [
                 "",
-                "Clivedon"
+                "Clivedon",
+                0
             ],
             [
                 "",
-                "Green Mountain"
+                "Green Mountain",
+                0
             ]
         ]
     },
@@ -276,27 +326,32 @@
         "desc": "Local Passenger (RDC)",
         "dir": "West",
         "extra": false,
-        "loco": "6137",
+        "loco": null,
         "steps": [
             [
                 "NASSAU",
-                "From Coach Yard to"
+                "From Coach Yard to",
+                0
             ],
             [
                 "",
-                "Wilson City (N31 or N32)"
+                "Wilson City (N31 or N32)",
+                0
             ],
             [
                 "",
-                "Richards"
+                "Richards",
+                0
             ],
             [
                 "",
-                "Radstock"
+                "Radstock",
+                0
             ],
             [
                 "PORT",
-                "Southport"
+                "Southport",
+                0
             ]
         ]
     },
@@ -305,27 +360,32 @@
         "desc": "Local Passenger",
         "dir": "East",
         "extra": false,
-        "loco": "375",
+        "loco": null,
         "steps": [
             [
                 "PORT",
-                "Southport"
+                "Southport",
+                0
             ],
             [
                 "",
-                "Radstock"
+                "Radstock",
+                0
             ],
             [
                 "",
-                "Richards"
+                "Richards",
+                0
             ],
             [
                 "NASSAU",
-                "Wilson City (N41 or N42)"
+                "Wilson City (N41 or N42)",
+                0
             ],
             [
                 "",
-                "To Coach Yard"
+                "To Coach Yard",
+                0
             ]
         ]
     },
@@ -334,32 +394,36 @@
         "desc": "Local Passenger (RDC)",
         "dir": "West",
         "extra": false,
-        "loco": "6118",
+        "loco": null,
         "steps": [
             [
                 "PORT",
-                "Southport"
+                "Southport",
+                0
             ],
             [
                 "YARD",
-                "Koehlstadt"
+                "Koehlstadt",
+                0
             ]
         ]
     },
     "64": {
-        "block": "Y52",
+        "block": null,
         "desc": "Express Passenger (RDC)",
         "dir": "East",
         "extra": false,
-        "loco": "6118",
+        "loco": null,
         "steps": [
             [
                 "YARD",
-                "Koehlstadt"
+                "Koehlstadt",
+                0
             ],
             [
                 "PORT",
-                "Southport"
+                "Southport",
+                0
             ]
         ]
     },
@@ -367,211 +431,246 @@
         "block": null,
         "desc": "Local Passenger",
         "dir": "East",
-        "extra": true,
-        "loco": "2681",
+        "extra": false,
+        "loco": null,
         "steps": [
             [
                 "CLIFF",
-                ""
+                "",
+                0
             ]
         ]
     },
     "71": {
-        "block": "H34",
+        "block": null,
         "desc": "Express Passenger",
         "dir": "West",
         "extra": false,
-        "loco": "069",
+        "loco": null,
         "steps": [
             [
                 "HYDE",
-                ""
+                "",
+                0
             ],
             [
                 "SHORE",
-                ""
+                "",
+                0
             ],
             [
                 "DELL",
-                ""
+                "",
+                0
             ],
             [
                 "LATHAM",
-                ""
+                "",
+                0
             ],
             [
                 "PORT",
-                "Southport"
+                "Southport",
+                0
             ]
         ]
     },
     "72": {
-        "block": "P4",
+        "block": null,
         "desc": "Express Passenger",
         "dir": "East",
         "extra": false,
-        "loco": "5641",
+        "loco": null,
         "steps": [
             [
                 "PORT",
-                "Southport"
+                "Southport",
+                0
             ],
             [
                 "LATHAM",
-                ""
+                "",
+                0
             ],
             [
                 "DELL",
-                ""
+                "",
+                0
             ],
             [
                 "SHORE",
-                ""
+                "",
+                0
             ],
             [
                 "HYDE",
-                ""
+                "",
+                0
             ]
         ]
     },
     "73": {
-        "block": "H12",
+        "block": null,
         "desc": "Loop Passenger",
         "dir": "West",
         "extra": false,
-        "loco": "860",
+        "loco": null,
         "steps": [
             [
                 "HYDE",
-                ""
+                "",
+                0
             ],
             [
                 "SHORE",
-                ""
+                "",
+                0
             ],
             [
                 "DELL",
-                ""
+                "",
+                0
             ],
             [
                 "HYDE",
-                ""
+                "",
+                0
             ]
         ]
     },
     "81": {
-        "block": "C52",
+        "block": null,
         "desc": "Express Passenger",
         "dir": "West",
         "extra": false,
-        "loco": "5450",
+        "loco": null,
         "steps": [
             [
                 "CLIFF",
-                ""
+                "",
+                0
             ],
             [
                 "BANK",
-                ""
+                "",
+                0
             ],
             [
                 "NASSAU",
-                "Wilson City (N31 or N32)"
+                "Wilson City (N31 or N32)",
+                0
             ],
             [
                 "SHORE",
-                ""
+                "",
+                0
             ],
             [
                 "DELL",
-                ""
+                "",
+                0
             ],
             [
                 "HYDE",
-                ""
+                "",
+                0
             ]
         ]
     },
     "82": {
-        "block": "H42",
+        "block": null,
         "desc": "Express Passenger",
         "dir": "East",
         "extra": false,
-        "loco": "9669",
+        "loco": null,
         "steps": [
             [
                 "HYDE",
-                ""
+                "",
+                0
             ],
             [
                 "DELL",
-                ""
+                "",
+                0
             ],
             [
                 "SHORE",
-                ""
+                "",
+                0
             ],
             [
                 "NASSAU",
-                "Wilson City (N41 or N42)"
+                "Wilson City (N41 or N42)",
+                0
             ],
             [
                 "BANK",
-                ""
+                "",
+                0
             ],
             [
                 "CLIFF",
-                "Green Mountain"
+                "Green Mountain",
+                0
             ]
         ]
     },
     "84": {
-        "block": "H43",
+        "block": null,
         "desc": "Loop Passenger",
         "dir": "East",
         "extra": false,
-        "loco": "083",
+        "loco": null,
         "steps": [
             [
                 "HYDE",
-                ""
+                "",
+                0
             ],
             [
                 "DELL",
-                ""
+                "",
+                0
             ],
             [
                 "SHORE",
-                ""
+                "",
+                0
             ],
             [
                 "HYDE",
-                ""
+                "",
+                0
             ]
         ]
     },
     "91": {
-        "block": "N25",
+        "block": null,
         "desc": "Express Passenger",
         "dir": "West",
         "extra": false,
-        "loco": "493",
+        "loco": null,
         "steps": [
             [
                 "",
-                "Harpers Ferry"
+                "Harpers Ferry",
+                0
             ],
             [
                 "",
-                "Rocky Hill"
+                "Rocky Hill",
+                0
             ],
             [
                 "NASSAU",
-                "Wilson City (N31 or N32)"
+                "Wilson City (N31 or N32)",
+                8
             ],
             [
                 "PORT",
-                "Southport"
+                "Southport",
+                12
             ]
         ]
     },
@@ -580,23 +679,27 @@
         "desc": "Express Passenger",
         "dir": "East",
         "extra": false,
-        "loco": "3819",
+        "loco": null,
         "steps": [
             [
                 "PORT",
-                "Southport"
+                "Southport",
+                0
             ],
             [
                 "NASSAU",
-                "Wilson City (N41 or N42)"
+                "Wilson City (N41 or N42)",
+                0
             ],
             [
                 "",
-                "Rocky Hill"
+                "Rocky Hill",
+                0
             ],
             [
                 "",
-                "Harpers Ferry"
+                "Harpers Ferry",
+                0
             ]
         ]
     },
@@ -605,80 +708,110 @@
         "desc": "Local Passenger",
         "dir": "West",
         "extra": false,
-        "loco": "493",
+        "loco": null,
         "steps": [
             [
                 "",
-                "Harpers Ferry"
+                "Harpers Ferry",
+                0
             ],
             [
                 "",
-                "Rocky Hill"
+                "Rocky Hill",
+                0
             ],
             [
                 "NASSAU",
-                "Wilson City (N31 or N32)"
+                "Wilson City (N31 or N32)",
+                0
             ],
             [
                 "SHORE",
-                "Bortell"
+                "Bortell",
+                0
             ],
             [
                 "DELL",
-                "Laporte"
+                "Laporte",
+                0
             ],
             [
                 "",
-                "Loland"
+                "Loland",
+                0
             ],
             [
                 "LATHAM",
-                "Carlton"
+                "Carlton",
+                0
             ],
             [
                 "YARD",
-                "Koehlstadt"
+                "Koehlstadt",
+                0
             ]
         ]
     },
     "96": {
-        "block": "Y53",
+        "block": null,
         "desc": "Local Passenger",
         "dir": "East",
         "extra": false,
-        "loco": "427",
+        "loco": null,
         "steps": [
             [
                 "YARD",
-                "Koehlstadt"
+                "Koehlstadt",
+                0
             ],
             [
                 "LATHAM",
-                "Carlton"
+                "Carlton",
+                0
             ],
             [
                 "DELL",
-                "LaPorte"
+                "LaPorte",
+                0
             ],
             [
                 "",
-                "Loland"
+                "Loland",
+                0
             ],
             [
                 "SHORE",
-                "Bortell"
+                "Bortell",
+                0
             ],
             [
                 "NASSAU",
-                "Wilson City (N41 or N42)"
+                "Wilson City (N41 or N42)",
+                0
             ],
             [
                 "",
-                "Rocky Hill"
+                "Rocky Hill",
+                0
             ],
             [
                 "",
-                "Harpers Ferry"
+                "Harpers Ferry",
+                0
+            ]
+        ]
+    },
+    "97": {
+        "block": null,
+        "desc": "Local Passenger",
+        "dir": "West",
+        "extra": false,
+        "loco": null,
+        "steps": [
+            [
+                "HYDE",
+                "",
+                0
             ]
         ]
     },
@@ -687,181 +820,211 @@
         "desc": "Express Passenger",
         "dir": "West",
         "extra": true,
-        "loco": "1419",
+        "loco": null,
         "steps": [
             [
                 "HYDE",
-                ""
+                "",
+                0
             ]
         ]
     },
     "CFHY": {
-        "block": "C41",
+        "block": null,
         "desc": "Unit Freight",
         "dir": "West",
         "extra": false,
-        "loco": "5840",
+        "loco": null,
         "steps": [
             [
                 "CLIFF",
-                ""
+                "",
+                0
             ],
             [
                 "BANK",
-                ""
+                "",
+                0
             ],
             [
                 "NASSAU",
-                ""
+                "",
+                0
             ],
             [
                 "SHORE",
-                ""
+                "",
+                0
             ],
             [
                 "DELL",
-                ""
+                "",
+                0
             ],
             [
                 "HYDE",
-                ""
+                "",
+                0
             ]
         ]
     },
     "HEX": {
-        "block": "H40",
+        "block": null,
         "desc": "Empty Coal Hoppers",
         "dir": "East",
         "extra": false,
-        "loco": "7600",
+        "loco": null,
         "steps": [
             [
                 "HYDE",
-                ""
+                "",
+                0
             ],
             [
                 "DELL",
-                ""
+                "",
+                0
             ],
             [
                 "SHORE",
-                ""
+                "",
+                0
             ],
             [
                 "HYDE",
-                ""
+                "",
+                0
             ]
         ]
     },
     "HWX": {
-        "block": "H32",
+        "block": null,
         "desc": "Loaded Coal Hoppers",
         "dir": "West",
         "extra": false,
-        "loco": "3809",
+        "loco": null,
         "steps": [
             [
                 "HYDE",
-                ""
+                "",
+                0
             ],
             [
                 "SHORE",
-                ""
+                "",
+                0
             ],
             [
                 "DELL",
-                ""
+                "",
+                0
             ],
             [
                 "HYDE",
-                ""
+                "",
+                0
             ]
         ]
     },
     "HYCF": {
-        "block": "C42",
+        "block": null,
         "desc": "Unit Freight",
         "dir": "East",
         "extra": false,
-        "loco": "3648",
+        "loco": null,
         "steps": [
             [
                 "HYDE",
-                ""
+                "",
+                0
             ],
             [
                 "DELL",
-                ""
+                "",
+                0
             ],
             [
                 "SHORE",
-                ""
+                "",
+                0
             ],
             [
                 "NASSAU",
-                ""
+                "",
+                0
             ],
             [
                 "BANK",
-                ""
+                "",
+                0
             ],
             [
                 "CLIFF",
-                ""
+                "",
+                0
             ]
         ]
     },
     "HYYD": {
-        "block": "H33",
+        "block": null,
         "desc": "Unit Freight",
         "dir": "West",
         "extra": false,
-        "loco": "6070",
+        "loco": null,
         "steps": [
             [
                 "HYDE",
-                ""
+                "",
+                0
             ],
             [
                 "SHORE",
-                ""
+                "",
+                0
             ],
             [
                 "DELL",
-                ""
+                "",
+                0
             ],
             [
                 "LATHAM",
-                ""
+                "",
+                0
             ],
             [
                 "YARD",
-                ""
+                "",
+                0
             ]
         ]
     },
     "PBCX": {
-        "block": "H30",
+        "block": null,
         "desc": "Pate Brothers Circus",
         "dir": "West",
         "extra": false,
-        "loco": "4023",
+        "loco": null,
         "steps": [
             [
                 "HYDE",
-                ""
+                "",
+                0
             ],
             [
                 "SHORE",
-                ""
+                "",
+                0
             ],
             [
                 "DELL",
-                ""
+                "",
+                0
             ],
             [
                 "HYDE",
-                ""
+                "",
+                0
             ]
         ]
     },
@@ -870,27 +1033,32 @@
         "desc": "Unit Freight",
         "dir": "East",
         "extra": false,
-        "loco": "326",
+        "loco": null,
         "steps": [
             [
                 "YARD",
-                ""
+                "",
+                0
             ],
             [
                 "LATHAM",
-                ""
+                "",
+                0
             ],
             [
                 "DELL",
-                ""
+                "",
+                0
             ],
             [
                 "SHORE",
-                ""
+                "",
+                0
             ],
             [
                 "HYDE",
-                ""
+                "",
+                0
             ]
         ]
     }

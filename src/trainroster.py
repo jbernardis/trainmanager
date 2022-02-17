@@ -11,7 +11,9 @@ class TrainRoster:
 			trn = self.trains[tid]
 			if 'extra' not in trn:
 				trn['extra'] = False
+
 			trn["block"] = None
+			trn["loco"] = None
 			if len(trn["steps"]) > 0:
 				if trn["steps"][0][0] == "":
 					trn["origin"] = trn["steps"][0][1]

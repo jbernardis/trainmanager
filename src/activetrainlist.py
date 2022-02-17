@@ -97,10 +97,12 @@ class ActiveTrainList(wx.ListCtrl):
 				self.RefreshItem(tx)
 				return
 			
-	def updateTrainBlock(self, tid, block):	
+	def updateTrainBlock(self, tid, block, loco):	
 		for tx in range(len(self.activeTrains)):
 			if self.activeTrains[tx]["tid"] == tid:
 				self.activeTrains[tx]["block"] = block
+				if loco is not None:
+					self.activeTrains[tx]["loco"] = loco
 				self.RefreshItem(tx)
 				return
 		
