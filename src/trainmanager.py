@@ -1351,7 +1351,7 @@ class TrainManagerPanel(wx.Panel):
 		if rc != wx.ID_OK:
 			return
 		
-		for tid in self.trainOrder:
+		for tid in list(self.trainOrder) + self.extraTrains:
 			tinfo = self.roster.getTrain(tid)
 			if tinfo["loco"] != result[tid]:
 				self.log.append("Assigned loco %s to train %s (old value %s)" % (result[tid], tid, tinfo["loco"]))

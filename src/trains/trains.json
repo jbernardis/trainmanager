@@ -92,7 +92,7 @@
         "desc": "Express Passenger",
         "dir": "West",
         "extra": false,
-        "loco": "069",
+        "loco": null,
         "steps": [
             [
                 "CLIFF",
@@ -820,7 +820,7 @@
         "desc": "Express Passenger",
         "dir": "West",
         "extra": true,
-        "loco": null,
+        "loco": "083",
         "steps": [
             [
                 "HYDE",
