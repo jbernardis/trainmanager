@@ -133,13 +133,13 @@ class Report:
 			return
 
 		css = HTML.StyleSheet()
-		css.addElement("@media print", { ".pagebreak": "{page-break-before: always}" })
+		css.addElement("div.page", {"page-break-inside": "avoid"})
 		css.addElement("*", {"box-sizing": "border-box"})
 		css.addElement(".row", {"margin-left": "-5px", "margin-right": "-5px"})
 		css.addElement(".column", {"float": "left", "width": "138mm", "padding": "1px"})
 		css.addElement(".row::after", {"content": '""', "clear": "both", "display": "table"})
-		css.addElement("table", {"border-collapse": "collapse", "border-spacing": "0", "width": "100%", "height": "103mm", "font-family": '"Times New Roman", Times, serif', "font-size": "16px"})
-		css.addElement("td.trainid", {"width": "36.4%", "padding-left": "20px", "font-size": "28px", "font-weight": "bold"})
+		css.addElement("table", {"border-collapse": "collapse", "border-spacing": "0", "width": "100%", "height": "99mm", "font-family": '"Times New Roman", Times, serif', "font-size": "16px"})
+		css.addElement("td.trainid", {"width": "36.4%", "padding-left": "20px", "padding-top": "10px", "font-size": "28px", "font-weight": "bold"})
 		css.addElement("td.firstcol", {"width": "36.4%", "padding-left": "20px"})
 		css.addElement("td.secondcol", {"width": "10%", "padding-left": "20px"})
 		css.addElement("td", {"text-align": "left", "padding": "6px"})
@@ -159,16 +159,20 @@ class Report:
 			
 		nCards = len(cards)
 		
+		divs = []
 		for i in range(0, nCards-1, 2):
-			if i != 0:
-				html += HTML.div({"class" : "pagebreak"})
-
-			html += HTML.div({"class": "row"}, cards[i], cards[i+1])
+			divs.append(HTML.div({"class": "row"}, cards[i], cards[i+1]))
 			
 		if nCards%2 != 0:
-			if nCards != 1:
-				html += HTML.div({"class" : "pagebreak"})
-			html += HTML.div({"class": "row"}, cards[-1])
+			divs.append(HTML.div({"class": "row"}, cards[-1]))
+			
+		for dx in range(0, len(divs)-1, 2):
+			html += HTML.div({"class": "page"}, divs[dx], HTML.p({}, HTML.nbsp()), divs[dx+1])
+			
+		remaining = len(divs) - (dx + 2)
+		
+		if remaining > 0:
+			html += HTML.div({"class": "page"}, divs[-1])
 
 		html += HTML.endbody()
 		html += HTML.endhtml()
@@ -182,7 +186,7 @@ class Report:
 	def formatTrainCard(self, tid, tinfo, tx):
 		trainIdRow = HTML.tr({}, HTML.td({"class": "trainid"}, tid), HTML.td())
 		emptyRow = HTML.tr({}, HTML.td({}, HTML.nbsp()))
-		descRow = HTML.tr({}, HTML.td({"class": "firstcol", "colspan": "2"}, "%sbound %s" % (tinfo["dir"], tinfo["desc"])))
+		descRow = HTML.tr({}, HTML.td({"class": "firstcol", "colspan": "3"}, "%sbound %s" % (tinfo["dir"], tinfo["desc"])))
 		cardNumberRow = HTML.tr({}, HTML.td({}, ""), HTML.td({}, ""), HTML.td({"class": "cardnumber"}, "%d" % tx))
 
 		stepRows = []
@@ -195,7 +199,7 @@ class Report:
 			stepRows.append(row)
 			
 		nRows = len(stepRows)
-		nEmpty = 9 - nRows
+		nEmpty = 8 - nRows
 		
 		table = HTML.table({},
 			trainIdRow,
