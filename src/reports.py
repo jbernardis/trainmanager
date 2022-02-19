@@ -165,14 +165,15 @@ class Report:
 			
 		if nCards%2 != 0:
 			divs.append(HTML.div({"class": "row"}, cards[-1]))
-			
-		for dx in range(0, len(divs)-1, 2):
-			html += HTML.div({"class": "page"}, divs[dx], HTML.p({}, HTML.nbsp()), divs[dx+1])
-			
-		remaining = len(divs) - (dx + 2)
-		
-		if remaining > 0:
-			html += HTML.div({"class": "page"}, divs[-1])
+
+		dx = 0		
+		while dx < len(divs):
+			if dx == len(divs)-1:
+				html += HTML.div({"class": "page"}, divs[dx])
+			else:
+				html += HTML.div({"class": "page"}, divs[dx], HTML.p({}, HTML.nbsp()), divs[dx+1])
+				
+			dx += 2
 
 		html += HTML.endbody()
 		html += HTML.endhtml()
