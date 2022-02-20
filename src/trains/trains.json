@@ -452,20 +452,6 @@
             ]
         ]
     },
-    "68": {
-        "block": null,
-        "desc": "Local Passenger",
-        "dir": "East",
-        "extra": true,
-        "loco": null,
-        "steps": [
-            [
-                "YARD",
-                "",
-                0
-            ]
-        ]
-    },
     "71": {
         "block": null,
         "desc": "Express Passenger",

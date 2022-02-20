@@ -135,13 +135,13 @@ class Report:
 		css = HTML.StyleSheet()
 		css.addElement("div.page", {"page-break-inside": "avoid"})
 		css.addElement("*", {"box-sizing": "border-box"})
-		css.addElement(".row", {"margin-left": "-5px", "margin-right": "-5px"})
+		css.addElement(".row", {"margin-left": "-5px", "margin-right": "-5px", "height": "107mm"})
 		css.addElement(".column", {"float": "left", "width": "138mm", "padding": "1px"})
 		css.addElement(".row::after", {"content": '""', "clear": "both", "display": "table"})
 		css.addElement("table", {"border-collapse": "collapse", "border-spacing": "0", "width": "100%", "height": "99mm", "font-family": '"Times New Roman", Times, serif', "font-size": "16px"})
-		css.addElement("td.trainid", {"width": "36.4%", "padding-left": "20px", "padding-top": "10px", "font-size": "28px", "font-weight": "bold"})
-		css.addElement("td.firstcol", {"width": "36.4%", "padding-left": "20px"})
-		css.addElement("td.secondcol", {"width": "10%", "padding-left": "20px"})
+		css.addElement("td.trainid", {"width": "36.4%", "padding-left": "50px", "padding-top": "10px", "font-size": "28px", "font-weight": "bold"})
+		css.addElement("td.firstcol", {"width": "36.4%", "padding-left": "50px"})
+		css.addElement("td.secondcol", {"width": "10%"})
 		css.addElement("td", {"text-align": "left", "padding": "6px"})
 		css.addElement("td.cardnumber", {"text-align": "right", "padding-right": "50px"})
 		
@@ -171,7 +171,8 @@ class Report:
 			if dx == len(divs)-1:
 				html += HTML.div({"class": "page"}, divs[dx])
 			else:
-				html += HTML.div({"class": "page"}, divs[dx], HTML.p({}, HTML.nbsp()), divs[dx+1])
+				html += HTML.div({"class": "page"}, divs[dx], divs[dx+1])
+				#HTML.p({}, HTML.nbsp()), 
 				
 			dx += 2
 

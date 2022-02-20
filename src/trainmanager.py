@@ -733,7 +733,7 @@ class TrainManagerPanel(wx.Panel):
 			self.setSelectedTrain(tid)
 			self.bSkip.Enable(len(self.pendingTrains) > 0)
 			self.cbExtra.SetValue(False)
-			if len(self.pendingTrains) > 0 and (len(self.pactiveEngineers) > 0 or self.cbATC.IsChecked()):
+			if len(self.pendingTrains) > 0 and (len(self.activeEngineers) > 0 or self.cbATC.IsChecked()):
 				self.bAssign.Enable(True)
 			else:
 				self.bAssign.Enable(False)
