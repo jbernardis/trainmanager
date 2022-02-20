@@ -243,8 +243,8 @@ class MainFrame(wx.Frame):
 		self.menuReports.Enable(MENU_REPORT_OP_WORKSHEET, False)
 		
 	def enableListenerDisconnect(self, flag=True):
-		self.menuDispatch.Enable(MENU_DISPATCH_DISCONNECT(flag))
-		self.menuDispatch.Enable(MENU_DISPATCH_CONNECT(not flag))
+		self.menuDispatch.Enable(MENU_DISPATCH_DISCONNECT, flag)
+		self.menuDispatch.Enable(MENU_DISPATCH_CONNECT, not flag)
 	
 	def onClose(self, _):
 		self.panel.onClose(None)
@@ -253,6 +253,7 @@ class MainFrame(wx.Frame):
 class TrainManagerPanel(wx.Panel):
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent, wx.ID_ANY, style=wx.TAB_TRAVERSAL)
+		self.SetBackgroundColour(wx.Colour(250, 250, 250))
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 		self.parent = parent
 		
@@ -287,7 +288,6 @@ class TrainManagerPanel(wx.Panel):
 		self.chTrain.SetSelection(0)
 		self.chTrain.SetFont(textFont)
 		self.Bind(wx.EVT_CHOICE, self.onChoiceTID, self.chTrain)
-
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		st = wx.StaticText(boxTrain, wx.ID_ANY, "Scheduled: ", size=(120, -1))
@@ -602,27 +602,33 @@ class TrainManagerPanel(wx.Panel):
 		tid = evt.train
 		loco = evt.loco
 		block = evt.block
+		self.log.append("Train report: Train(%s) Loco(%s) Blk(%s)" % (tid, loco, block))
 
 		if tid is None or tid == "":
 			if loco is not None:
+				self.log.append("Trying to identify train by loco id")
 				tid = self.roster.getTrainByLoco(loco)
 						
 		if tid is None or tid == "":
+			self.log.append("Unable to determine train ID")
 			return 
 		
 		tInfo = self.roster.getTrain(tid)
 		if tInfo is None:
+			self.log.append("Ignoring train report for train (%s) - unknown train" % tid)
 			return
+		
 		tInfo["block"] = block
 		self.log.append("Setting block for train %s to %s" % (tid, block))
+		desc = None
 		if tInfo["loco"] != loco and loco != "":
 			tInfo["loco"] = loco
+			desc = self.locos.getLoco(loco)
 			self.log.append("Setting locomotive for train %s to %s" % (tid, loco))
 
-		self.activeTrainList.updateTrainBlock(tid, block, loco)
+		self.activeTrainList.updateTrain(tid, loco, desc, block)
 		if tid == self.selectedTrain:
 			self.showInfo(self.selectedTrain)
-
 
 	def onOpenTrain(self, _):
 		if self.activeTrainList.count() > 0:
@@ -718,14 +724,19 @@ class TrainManagerPanel(wx.Panel):
 			self.setSelectedTrain(tid)
 			self.chTrain.Enable(False)
 			self.bSkip.Enable(False)
+			self.bAssign.Enable(len(self.activeEngineers) > 0 or self.cbATC.IsChecked())
 		else:
 			self.chExtra.Enable(False)
 			self.chTrain.Enable(True)
 			tx = self.chTrain.GetSelection()
 			tid = self.chTrain.GetString(tx)
 			self.setSelectedTrain(tid)
-			self.bSkip.Enable(True)
+			self.bSkip.Enable(len(self.pendingTrains) > 0)
 			self.cbExtra.SetValue(False)
+			if len(self.pendingTrains) > 0 and (len(self.pactiveEngineers) > 0 or self.cbATC.IsChecked()):
+				self.bAssign.Enable(True)
+			else:
+				self.bAssign.Enable(False)
 
 		
 	def onOpenLocos(self, _):
@@ -961,11 +972,10 @@ class TrainManagerPanel(wx.Panel):
 
 		
 	def onCbATC(self, _):
-		if len(self.pendingTrains) == 0:
-			return
-		
-		if len(self.activeEngineers) == 0:
-			self.bAssign.Enable(self.cbATC.IsChecked())
+		if self.cbATC.IsChecked():
+			self.bAssign.Enable(len(self.pendingTrains) > 0 or self.cbExtra.IsChecked())
+		else:
+			self.bAssign.Enable(len(self.activeEngineers) > 0 and (len(self.pendingTrains) > 0 or self.cbExtra.IsChecked()))
 		
 	def bAssignPressed(self, _):
 		if self.cbExtra.IsChecked():
@@ -985,6 +995,15 @@ class TrainManagerPanel(wx.Panel):
 			eng = "ATC"
 		else:
 			eng = self.selectedEngineer
+			
+		dlg = wx.MessageDialog(self, "This will assign engineer %s to train %s.\nPress \"Yes\" to proceed, or \"No\" to cancel." % (eng, tid),
+							'Train/Engineer Assign',
+							wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
+		rc = dlg.ShowModal()
+		dlg.Destroy()
+			
+		if rc != wx.ID_YES:
+			return
 
 		if tInfo["loco"] is None:
 			loco = ""
@@ -1018,6 +1037,7 @@ class TrainManagerPanel(wx.Panel):
 				self.bAssign.Enable(False)
 				self.bSkip.Enable(False)
 				self.showInfo(None)
+				self.setSelectedTrain(None)
 			else:
 				self.chTrain.SetSelection(0)
 				self.setSelectedTrain(self.chTrain.GetString(0))
@@ -1042,7 +1062,10 @@ class TrainManagerPanel(wx.Panel):
 		t = self.activeTrainList.getSelection()
 		if t is None:
 			return
-
+		
+		self.reassignTrain(t)
+		
+	def reassignTrain(self, t):
 		engActive = self.activeTrainList.getEngineers()	
 		if t["engineer"] != "ATC":
 			eng = ["ATC"]
@@ -1112,9 +1135,16 @@ class TrainManagerPanel(wx.Panel):
 		dlg = DetailsDlg(self, tid, tinfo, desc, t["engineer"])
 		dlg.Show()
 		
-	def bSkipPressed(self, _):
+	def bSkipPressed(self, _):		
 		tInfo = self.roster.getTrain(self.selectedTrain)
 		if tInfo is None:
+			return
+
+		dlg = wx.MessageDialog(self, "This removes train %s from the schedule\nPress OK to continue, or Cancel" % self.selectedTrain,
+							'Skip Train', wx.OK | wx.CANCEL | wx.OK_DEFAULT | wx.ICON_QUESTION)
+		rc = dlg.ShowModal()
+		dlg.Destroy()
+		if rc == wx.ID_CANCEL:
 			return
 		
 		self.log.append("Skipped train %s" % self.selectedTrain)
@@ -1132,23 +1162,92 @@ class TrainManagerPanel(wx.Panel):
 			
 	def bRemovePressed(self, _):
 		t = self.activeTrainList.getSelection()
-		if t is not None:
-			self.log.append("Removed train %s from active list" % t["tid"])
-			self.activeTrainList.delSelected()
-			if t["engineer"] in self.allPresentEngineers:
-				self.log.append("Returned engineer %s to pool" % t["engineer"])
-				if t["engineer"] not in self.activeEngineers:
-					self.activeEngineers.append(t["engineer"])
-				self.chEngineer.Enable(True)
-				self.chEngineer.SetItems(self.activeEngineers)
-				self.chEngineer.SetSelection(0)
-				self.selectedEngineer = self.chEngineer.GetString(0)
-				
-			if len(self.pendingTrains) > 0 and (len(self.activeEngineers) > 0 or self.cbATC.IsChecked()):
-				self.bAssign.Enable(True)
-				
-			self.bRemove.Enable(False)
-			self.bReassign.Enable(False)
+		if t is None:
+			return
+	
+		self.removeActiveTrain(t)
+		
+	def returnActiveTrain(self, t):
+		dlg = wx.MessageDialog(self, "This removes train %s (and its engineer) from the\nactive list, and places it back to the top of the schedule.\nThis cannot be undone.\n\nPress OK to continue, or Cancel" % t["tid"],
+							'Return Train', wx.OK | wx.CANCEL | wx.OK_DEFAULT | wx.ICON_QUESTION)
+		rc = dlg.ShowModal()
+		dlg.Destroy()
+		if rc == wx.ID_CANCEL:
+			return
+
+		self.log.append("Retruned train %s from active list" % t["tid"])
+		self.activeTrainList.delSelected()
+		self.pendingTrains = [t["tid"]] + self.pendingTrains
+		self.chTrain.SetItems(self.pendingTrains)
+
+		self.chTrain.SetSelection(0)
+		tid = self.chTrain.GetString(0)
+		self.setSelectedTrain(tid)
+		
+		if t["engineer"] in self.allPresentEngineers:
+			self.log.append("Returned engineer %s to head of pool" % t["engineer"])
+			if t["engineer"] not in self.activeEngineers:
+				self.activeEngineers = [t["engineer"]] + self.activeEngineers
+			self.chEngineer.Enable(True)
+			self.chEngineer.SetItems(self.activeEngineers)
+			self.chEngineer.SetSelection(0)
+			self.selectedEngineer = self.chEngineer.GetString(0)
+			
+		if len(self.pendingTrains) > 0 and (len(self.activeEngineers) > 0 or self.cbATC.IsChecked()):
+			self.bAssign.Enable(True)
+			
+		self.bRemove.Enable(False)
+		self.bReassign.Enable(False)
+		
+	def removeActiveTrain(self, t):
+		dlg = wx.MessageDialog(self, "This indicates that train %s has reached its destination.\nThis cannot be undone.\n\nPress OK to continue, or Cancel" % t["tid"],
+							'Remove Train', wx.OK | wx.CANCEL | wx.OK_DEFAULT | wx.ICON_QUESTION)
+		rc = dlg.ShowModal()
+		dlg.Destroy()
+		if rc == wx.ID_CANCEL:
+			return
+
+		self.log.append("Removed train %s from active list" % t["tid"])
+		self.activeTrainList.delSelected()
+		if t["engineer"] in self.allPresentEngineers:
+			self.log.append("Returned engineer %s to pool" % t["engineer"])
+			if t["engineer"] not in self.activeEngineers:
+				self.activeEngineers.append(t["engineer"])
+			self.chEngineer.Enable(True)
+			self.chEngineer.SetItems(self.activeEngineers)
+			self.chEngineer.SetSelection(0)
+			self.selectedEngineer = self.chEngineer.GetString(0)
+			
+		if len(self.pendingTrains) > 0 and (len(self.activeEngineers) > 0 or self.cbATC.IsChecked()):
+			self.bAssign.Enable(True)
+			
+		self.bRemove.Enable(False)
+		self.bReassign.Enable(False)
+		
+	def changeLoco(self, t):
+		dlg = wx.SingleChoiceDialog(
+				self, 'Choose a Locomotive', 'Change Locomotive',
+				self.locos.getLocoList(),
+				wx.CHOICEDLG_STYLE
+				)
+
+		rc = dlg.ShowModal()
+		if rc == wx.ID_OK:
+			loco = dlg.GetStringSelection()
+
+		dlg.Destroy()
+		
+		if rc != wx.ID_OK:
+			return
+		
+		tid = t["tid"]
+		
+		desc = self.locos.getLoco(loco)
+		self.activeTrainList.updateTrain(tid, loco, desc, None)
+		
+		tinfo = self.roster.getTrain(tid)
+		if tinfo is not None:
+			tinfo["loco"] = loco
 		
 	def onChoiceTID(self, _):
 		tx = self.chTrain.GetSelection()

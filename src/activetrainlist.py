@@ -1,5 +1,11 @@
 import wx
 
+MENU_REMOVE_TRAIN    = 1100
+MENU_CHANGE_ENGINEER = 1101
+MENU_CHANGE_LOCO     = 1102
+MENU_SHOW_DETAILS    = 1103
+MENU_RETURN_TRAIN    = 1104
+
 class ActiveTrainList(wx.ListCtrl):
 	def __init__(self, parent):
 		self.parent = parent
@@ -45,7 +51,43 @@ class ActiveTrainList(wx.ListCtrl):
 		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnItemActivated)
 		self.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.OnItemDeselected)
 		self.Bind(wx.EVT_LIST_CACHE_HINT, self.OnItemHint)
-			
+
+		self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.onRightClick, self)	
+		
+	def onRightClick(self, evt):
+		self.itemSelected = self.GetFirstSelected()
+		if self.itemSelected == wx.NOT_FOUND:
+			return
+
+		menu = wx.Menu()
+		menu.Append( MENU_REMOVE_TRAIN, "Remove Train" )
+		menu.Append( MENU_CHANGE_ENGINEER, "Change Engineer" )
+		menu.Append( MENU_CHANGE_LOCO, "Change Locomotive" )
+		menu.Append( MENU_SHOW_DETAILS, "Show Train Details" )
+		menu.Append( MENU_RETURN_TRAIN, "Return Train to Schedule" )
+		self.Bind(wx.EVT_MENU, self.onRemoveTrain, id=MENU_REMOVE_TRAIN)
+		self.Bind(wx.EVT_MENU, self.onChangeEngineer, id=MENU_CHANGE_ENGINEER)
+		self.Bind(wx.EVT_MENU, self.onShowDetails, id=MENU_SHOW_DETAILS)
+		self.Bind(wx.EVT_MENU, self.onChangeLoco, id=MENU_CHANGE_LOCO)
+		self.Bind(wx.EVT_MENU, self.onReturnTrain, id=MENU_RETURN_TRAIN)
+		self.PopupMenu( menu, evt.GetPoint() )
+		menu.Destroy()
+		
+	def onRemoveTrain(self, evt):
+		self.parent.removeActiveTrain(self.activeTrains[self.itemSelected])
+		
+	def onChangeEngineer(self, evt):
+		self.parent.reassignTrain(self.activeTrains[self.itemSelected])
+		
+	def onChangeLoco(self, evt):
+		self.parent.changeLoco(self.activeTrains[self.itemSelected])
+		
+	def onShowDetails(self, evt):
+		self.parent.showDetails(self.activeTrains[self.itemSelected])
+		
+	def onReturnTrain(self, evt):
+		self.parent.returnActiveTrain(self.activeTrains[self.itemSelected])
+
 	def clear(self):
 		self.SetItemCount(0)
 		self.activeTrains = []
@@ -91,18 +133,11 @@ class ActiveTrainList(wx.ListCtrl):
 	def updateTrain(self, tid, loco, desc, block):
 		for tx in range(len(self.activeTrains)):
 			if self.activeTrains[tx]["tid"] == tid:
-				self.activeTrains[tx]["loco"] = loco
-				self.activeTrains[tx]["desc"] = desc
-				self.activeTrains[tx]["block"] = block
-				self.RefreshItem(tx)
-				return
-			
-	def updateTrainBlock(self, tid, block, loco):	
-		for tx in range(len(self.activeTrains)):
-			if self.activeTrains[tx]["tid"] == tid:
-				self.activeTrains[tx]["block"] = block
 				if loco is not None:
 					self.activeTrains[tx]["loco"] = loco
+				if block is not None:
+					self.activeTrains[tx]["block"] = block
+				self.activeTrains[tx]["desc"] = desc
 				self.RefreshItem(tx)
 				return
 		
