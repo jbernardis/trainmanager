@@ -1,5 +1,4 @@
 import wx
-import os
 
 wildcardTxt = "TXT file (*.txt)|*.txt|"	 \
 		   "All files (*.*)|*.*"
@@ -376,4 +375,3 @@ class ManageEngineersDlg(wx.Dialog):
 				return
 
 		self.EndModal(wx.ID_CANCEL)
-

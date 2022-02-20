@@ -1,5 +1,3 @@
-
-
 class Order():
 	def __init__(self, fn):
 		with open(fn, "r") as x:

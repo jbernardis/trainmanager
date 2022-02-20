@@ -24,4 +24,3 @@ class Locomotives:
 	
 	def setDescription(self, lId, desc):
 		self.locos[lId] = desc
-			

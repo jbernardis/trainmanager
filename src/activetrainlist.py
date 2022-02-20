@@ -11,7 +11,7 @@ class ActiveTrainList(wx.ListCtrl):
 		self.parent = parent
 		
 		wx.ListCtrl.__init__(
-			self, parent, wx.ID_ANY, size=(1005, 240),
+			self, parent, wx.ID_ANY, size=(1050, 360),
 			style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_VRULES|wx.LC_SINGLE_SEL
 			)
 		
@@ -31,6 +31,7 @@ class ActiveTrainList(wx.ListCtrl):
 		self.SetColumnWidth(1, 80)
 		self.SetColumnWidth(2, 120)
 		self.SetColumnWidth(3, 120)
+		self.SetColumnWidth(4, 120)
 		self.SetColumnWidth(5, 80)
 		self.SetColumnWidth(6, 360)
 		self.SetColumnWidth(7, 80)
@@ -129,6 +130,9 @@ class ActiveTrainList(wx.ListCtrl):
 				return tr
 			
 		return None
+	
+	def hasTrain(self, tid):
+		return self.getTrainByTid(tid) is not None
 	
 	def updateTrain(self, tid, loco, desc, block):
 		for tx in range(len(self.activeTrains)):

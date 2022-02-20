@@ -25,9 +25,7 @@ class ViewLogDlg(wx.Dialog):
 		
 		self.SetSizer(hsizer)
 		self.Layout()
-		self.Fit();
-		
+		self.Fit();		
 		
 	def onClose(self, _):
 		self.EndModal(wx.ID_OK)
-

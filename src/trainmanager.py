@@ -31,7 +31,6 @@ MENU_FILE_SAVE_LOG = 112
 MENU_FILE_EXIT = 199
 MENU_MANAGE_TRAINS = 200
 MENU_MANAGE_ENGINEERS = 201
-MENU_MANAGE_RESET_ORDER = 202
 MENU_MANAGE_ASSIGN_LOCOS = 203
 MENU_MANAGE_LOCOS = 204
 MENU_MANAGE_ORDER = 205
@@ -124,9 +123,6 @@ class MainFrame(wx.Frame):
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ORDER, "Manage Train Order", helpString="Add/remove trains and modify sequence")
 		i.SetFont(font)
 		self.menuManage.Append(i)
-		i = wx.MenuItem(self.menuManage, MENU_MANAGE_RESET_ORDER, "Reset Train Order", helpString="Reset Train Order back to the beginning")
-		i.SetFont(font)
-		self.menuManage.Append(i)
 		
 		self.menuReports = wx.Menu()
 		i = wx.MenuItem(self.menuReports, MENU_REPORT_OP_WORKSHEET, "Operating Worksheet", helpString="Print an Operating Worksheet")
@@ -178,7 +174,6 @@ class MainFrame(wx.Frame):
 		
 		self.Bind(wx.EVT_MENU, self.panel.onManageTrains, id=MENU_MANAGE_TRAINS)
 		self.Bind(wx.EVT_MENU, self.panel.onManageEngineers, id=MENU_MANAGE_ENGINEERS)
-		self.Bind(wx.EVT_MENU, self.panel.onResetOrder, id=MENU_MANAGE_RESET_ORDER)
 		self.Bind(wx.EVT_MENU, self.panel.onManageOrder, id=MENU_MANAGE_ORDER)
 		self.Bind(wx.EVT_MENU, self.panel.onAssignLocos, id=MENU_MANAGE_ASSIGN_LOCOS)
 		self.Bind(wx.EVT_MENU, self.panel.onManageLocos, id=MENU_MANAGE_LOCOS)
@@ -195,8 +190,6 @@ class MainFrame(wx.Frame):
 		self.SetSizer(sizer)
 		self.Layout()
 		self.Fit();
-		
-
 		
 	def setTitle(self, train=None, order=None, engineer=None, loco=None, connection=None):
 		if train is not None:
@@ -298,7 +291,6 @@ class TrainManagerPanel(wx.Panel):
 		
 		bsizer.AddSpacer(10)
 
-
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		self.cbExtra = wx.CheckBox(boxTrain, wx.ID_ANY, "Run Extra")
 		self.cbExtra.SetFont(textFontBold)
@@ -322,7 +314,6 @@ class TrainManagerPanel(wx.Panel):
 		bsizer.Add(sz)
 		bsizer.AddSpacer(20)
 		self.Bind(wx.EVT_CHOICE, self.onChExtra, self.chExtra)
-
 		
 		bhsizer = wx.BoxSizer(wx.HORIZONTAL)
 		bhsizer.AddSpacer(20)
@@ -333,7 +324,6 @@ class TrainManagerPanel(wx.Panel):
 		vsizerl.Add(boxTrain)
 		
 		vsizerl.AddSpacer(20)
-
 
 		boxEng = wx.StaticBox(self, wx.ID_ANY, "Engineer")
 		boxEng.SetFont(labelFontBold)
@@ -374,6 +364,24 @@ class TrainManagerPanel(wx.Panel):
 		boxEng.SetSizer(bhsizer)
 		
 		vsizerl.Add(boxEng)
+
+		btnsizer = wx.BoxSizer(wx.HORIZONTAL)
+		
+		self.bAssign = wx.Button(self, wx.ID_ANY, "Assign\nTrain/Engineer", size=BTNSZ)
+		self.bAssign.SetFont(btnFont)
+		self.Bind(wx.EVT_BUTTON, self.bAssignPressed, self.bAssign)
+		btnsizer.Add(self.bAssign)
+		self.bAssign.Enable(len(self.activeEngineers) != 0 and len(self.pendingTrains) != 0)
+		
+		btnsizer.AddSpacer(30)
+		
+		self.bSkip = wx.Button(self, wx.ID_ANY, "Skip\nTrain", size=BTNSZ)
+		self.bSkip.SetFont(btnFont)
+		self.Bind(wx.EVT_BUTTON, self.bSkipPressed, self.bSkip)
+		btnsizer.Add(self.bSkip)
+
+		vsizerl.AddSpacer(20)
+		vsizerl.Add(btnsizer, 1, wx.ALIGN_CENTER_HORIZONTAL)
 
 		vsizerr = wx.BoxSizer(wx.VERTICAL)
 		vsizerr.AddSpacer(20)
@@ -427,48 +435,6 @@ class TrainManagerPanel(wx.Panel):
 		
 		wsizer = wx.BoxSizer(wx.VERTICAL)
 		wsizer.Add(hsizer)
-		wsizer.AddSpacer(20)
-		
-		btnsizer = wx.BoxSizer(wx.HORIZONTAL)
-		
-		self.bAssign = wx.Button(self, wx.ID_ANY, "Assign\nTrain/Engineer", size=BTNSZ)
-		self.bAssign.SetFont(btnFont)
-		self.Bind(wx.EVT_BUTTON, self.bAssignPressed, self.bAssign)
-		btnsizer.Add(self.bAssign)
-		self.bAssign.Enable(len(self.activeEngineers) != 0 and len(self.pendingTrains) != 0)
-		
-		btnsizer.AddSpacer(30)
-		
-		self.bSkip = wx.Button(self, wx.ID_ANY, "Skip\nTrain", size=BTNSZ)
-		self.bSkip.SetFont(btnFont)
-		self.Bind(wx.EVT_BUTTON, self.bSkipPressed, self.bSkip)
-		btnsizer.Add(self.bSkip)
-		
-		btnsizer.AddSpacer(30)
-		
-		self.bRemove = wx.Button(self, wx.ID_ANY, "Remove\nActive Train", size=BTNSZ)
-		self.bRemove.SetFont(btnFont)
-		self.Bind(wx.EVT_BUTTON, self.bRemovePressed, self.bRemove)
-		btnsizer.Add(self.bRemove)
-		self.bRemove.Enable(False)
-
-		btnsizer.AddSpacer(30)
-		
-		self.bReassign = wx.Button(self, wx.ID_ANY, "Change\nEngineer", size=BTNSZ)
-		self.bReassign.SetFont(btnFont)
-		self.Bind(wx.EVT_BUTTON, self.bReassignPressed, self.bReassign)
-		btnsizer.Add(self.bReassign)
-		self.bReassign.Enable(False)
-
-		btnsizer.AddSpacer(30)
-		
-		self.bShowDetails = wx.Button(self, wx.ID_ANY, "Show Train\nDetails", size=BTNSZ)
-		self.bShowDetails.SetFont(btnFont)
-		self.Bind(wx.EVT_BUTTON, self.bShowDetailsPressed, self.bShowDetails)
-		btnsizer.Add(self.bShowDetails)
-		self.bShowDetails.Enable(False)
-		
-		wsizer.Add(btnsizer, 1, wx.ALIGN_CENTER_HORIZONTAL)
 		wsizer.AddSpacer(20)
 		
 		self.activeTrainList = ActiveTrainList(self)
@@ -684,8 +650,6 @@ class TrainManagerPanel(wx.Panel):
 		
 		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.activeEngineers) > 0)
 		self.bSkip.Enable(len(self.pendingTrains) > 0)
-		self.bRemove.Enable(False)
-		self.bReassign.Enable(False)
 
 		self.activeTrainList.clear()
 		self.cbATC.SetValue(False)
@@ -737,8 +701,7 @@ class TrainManagerPanel(wx.Panel):
 				self.bAssign.Enable(True)
 			else:
 				self.bAssign.Enable(False)
-
-		
+	
 	def onOpenLocos(self, _):
 		dlg = wx.FileDialog(
 			self, message="Choose a locomotive file",
@@ -839,8 +802,6 @@ class TrainManagerPanel(wx.Panel):
 		self.activeTrainList.clear()
 		self.cbATC.SetValue(False)
 		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.activeEngineers) > 0)
-		self.bRemove.Enable(False)
-		self.bReassign.Enable(False)
 		
 		if len(self.activeEngineers) > 0:
 			self.chEngineer.SetSelection(0)
@@ -849,23 +810,6 @@ class TrainManagerPanel(wx.Panel):
 			self.chEngineer.SetSelection(wx.NOT_FOUND)
 			self.selectedEngineer = None
 			
-	def onResetOrder(self, _):
-		if self.activeTrainList.count() > 0:
-			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
-	                               'Data will be lost',
-	                               wx.YES_NO | wx.ICON_WARNING)
-			rc = dlg.ShowModal()
-			dlg.Destroy()
-			if rc != wx.ID_YES:
-				return
-			
-		if self.trainOrder is None:
-			self.pendingTrains = []
-		else:
-			self.pendingTrains = [x for x in self.trainOrder]
-			
-		self.setTrainOrder()
-		
 	def onOpenOrder(self, _):
 		if self.activeTrainList.count() > 0:
 			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
@@ -912,7 +856,7 @@ class TrainManagerPanel(wx.Panel):
 			
 		self.setTrainOrder()
 				
-	def setTrainOrder(self):
+	def setTrainOrder(self, preserveActive=False):
 		self.log.append("Setting train order to %s" % str(self.pendingTrains))
 		self.chTrain.SetItems(self.pendingTrains)
 		if len(self.pendingTrains) > 0:
@@ -930,10 +874,10 @@ class TrainManagerPanel(wx.Panel):
 		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.activeEngineers) > 0)
 		self.bSkip.Enable(len(self.pendingTrains) > 0)
 
-		self.activeTrainList.clear()
+		if not preserveActive:
+			self.activeTrainList.clear()
+			
 		self.cbATC.SetValue(False)
-		self.bRemove.Enable(False)
-		self.bReassign.Enable(False)
 		
 		if len(self.pendingTrains) > 0:
 			self.chTrain.SetSelection(0)
@@ -948,8 +892,7 @@ class TrainManagerPanel(wx.Panel):
 		dlg = ViewLogDlg(self, self.log)
 		dlg.ShowModal()
 		dlg.Destroy()
-		
-			
+					
 	def onClearLog(self, _):
 		self.log.clear()
 		
@@ -969,7 +912,6 @@ class TrainManagerPanel(wx.Panel):
 		with open(path, "w") as ofp:
 			for ln in self.log:
 				ofp.write("%s\n" % ln)
-
 		
 	def onCbATC(self, _):
 		if self.cbATC.IsChecked():
@@ -1057,13 +999,6 @@ class TrainManagerPanel(wx.Panel):
 		else:
 			self.cbATC.SetValue(False)
 			self.bAssign.Enable(len(self.pendingTrains) != 0 and len(self.activeEngineers) != 0)
-
-	def bReassignPressed(self, _):
-		t = self.activeTrainList.getSelection()
-		if t is None:
-			return
-		
-		self.reassignTrain(t)
 		
 	def reassignTrain(self, t):
 		engActive = self.activeTrainList.getEngineers()	
@@ -1112,13 +1047,6 @@ class TrainManagerPanel(wx.Panel):
 		self.activeTrainList.setNewEngineer(neng)
 		self.log.append("Reassigned train %s from %s to %s" % (t["tid"], oeng, neng))
 		
-	def bShowDetailsPressed(self, _):
-		t = self.activeTrainList.getSelection()
-		if t is None:
-			return
-		
-		self.showDetails(t)
-		
 	def showDetails(self, t):
 		if t is None:
 			return
@@ -1159,13 +1087,6 @@ class TrainManagerPanel(wx.Panel):
 		else:
 			self.chTrain.SetSelection(0)
 			self.setSelectedTrain(self.chTrain.GetString(0))
-			
-	def bRemovePressed(self, _):
-		t = self.activeTrainList.getSelection()
-		if t is None:
-			return
-	
-		self.removeActiveTrain(t)
 		
 	def returnActiveTrain(self, t):
 		dlg = wx.MessageDialog(self, "This removes train %s (and its engineer) from the\nactive list, and places it back to the top of the schedule.\nThis cannot be undone.\n\nPress OK to continue, or Cancel" % t["tid"],
@@ -1193,11 +1114,10 @@ class TrainManagerPanel(wx.Panel):
 			self.chEngineer.SetSelection(0)
 			self.selectedEngineer = self.chEngineer.GetString(0)
 			
+		self.chTrain.Enable(len(self.pendingTrains) > 0)
+			
 		if len(self.pendingTrains) > 0 and (len(self.activeEngineers) > 0 or self.cbATC.IsChecked()):
 			self.bAssign.Enable(True)
-			
-		self.bRemove.Enable(False)
-		self.bReassign.Enable(False)
 		
 	def removeActiveTrain(self, t):
 		dlg = wx.MessageDialog(self, "This indicates that train %s has reached its destination.\nThis cannot be undone.\n\nPress OK to continue, or Cancel" % t["tid"],
@@ -1220,9 +1140,6 @@ class TrainManagerPanel(wx.Panel):
 			
 		if len(self.pendingTrains) > 0 and (len(self.activeEngineers) > 0 or self.cbATC.IsChecked()):
 			self.bAssign.Enable(True)
-			
-		self.bRemove.Enable(False)
-		self.bReassign.Enable(False)
 		
 	def changeLoco(self, t):
 		dlg = wx.SingleChoiceDialog(
@@ -1266,9 +1183,7 @@ class TrainManagerPanel(wx.Panel):
 		self.setSelectedTrain(tid)
 		
 	def reportSelection(self, tx):
-		self.bRemove.Enable(tx is not None)
-		self.bReassign.Enable(tx is not None)
-		self.bShowDetails.Enable(tx is not None)
+		pass
 		
 	def reportDoubleClick(self, tx):
 		self.reportSelection(tx)
@@ -1345,15 +1260,6 @@ class TrainManagerPanel(wx.Panel):
 		self.stLocoInfo.SetLabel("%-40.40s %s" % (locoString, blockString))
 				
 	def onManageOrder(self, _):
-		if self.activeTrainList.count() > 0:
-			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
-	                               'Data will be lost',
-	                               wx.YES_NO | wx.ICON_WARNING)
-			rc = dlg.ShowModal()
-			dlg.Destroy()
-			if rc != wx.ID_YES:
-				return
-			
 		dlg = ManageOrderDlg(self, self.trainOrder, self.roster, self.settings)
 		rc = dlg.ShowModal()
 		
@@ -1365,13 +1271,15 @@ class TrainManagerPanel(wx.Panel):
 		if rc != wx.ID_OK:
 			return
 		
+		neworder = [t for t in norder if not self.activeTrainList.hasTrain(t)]
+		
 		if self.trainOrder is None:
-			self.pendingTrains = [x for x in norder]
+			self.pendingTrains = [x for x in neworder]
 		else:
-			self.trainOrder.setNewOrder(norder)
+			self.trainOrder.setNewOrder(neworder)
 			self.pendingTrains = [x for x in self.trainOrder]
 			
-		self.setTrainOrder()
+		self.setTrainOrder(preserveActive=True)
 
 	def onManageTrains(self, _):
 		dlg = ManageTrainsDlg(self, self.roster, self.locos, self.settings)
@@ -1384,7 +1292,6 @@ class TrainManagerPanel(wx.Panel):
 		# just re-read the file
 		self.loadTrainFile(os.path.join(self.settings.traindir, self.settings.trainfile))
 		self.setExtraTrains()
-
 		
 	def onManageEngineers(self, _):
 		currentEngineers = self.activeTrainList.getEngineers()
@@ -1467,6 +1374,15 @@ class TrainManagerPanel(wx.Panel):
 		self.report.TrainCards(self.roster, self.trainOrder)
 			
 	def onClose(self, _):
+		if self.activeTrainList.count() > 0:
+			dlg = wx.MessageDialog(self, 'Trains are still active.\nPress "Yes" to exit program, or "No" to cancel.',
+	                               'Active Trains',
+	                               wx.YES_NO | wx.ICON_QUESTION)
+			rc = dlg.ShowModal()
+			dlg.Destroy()
+			if rc != wx.ID_YES:
+				return
+			
 		if self.listener is not None:
 			self.listener.kill()
 			
@@ -1478,7 +1394,6 @@ class DetailsDlg(wx.Dialog):
 		wx.Dialog.__init__(self, parent, wx.ID_ANY, "Train Details")
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 
-		labelFont = wx.Font(wx.Font(12, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.NORMAL, faceName="Monospace"))
 		labelFontBold = wx.Font(wx.Font(12, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD, faceName="Monospace"))
 		labelFontLargeBold = wx.Font(wx.Font(16, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD, faceName="Monospace"))
 		
@@ -1569,16 +1484,12 @@ class DetailsDlg(wx.Dialog):
 	def onClose(self, _):
 		self.Destroy()
 
-
-
-
 class App(wx.App):
 	def OnInit(self):
 		self.frame = MainFrame()
 		self.frame.Show()
 		self.SetTopWindow(self.frame)
 		return True
-
 
 app = App(False)
 app.MainLoop()

@@ -3,7 +3,6 @@ import wx
 import os
 import wx.html2 as webview
 
-# WebView Backends
 backends = [
 	webview.WebViewBackendEdge,
 	webview.WebViewBackendIE,
@@ -182,8 +181,6 @@ class Report:
 		dlg = RptDlg(self.parent, self.backend, "Train Cards", html)
 		dlg.ShowModal()
 		dlg.Destroy()
-		
-
 
 	def formatTrainCard(self, tid, tinfo, tx):
 		trainIdRow = HTML.tr({}, HTML.td({"class": "trainid"}, tid), HTML.td())
@@ -259,7 +256,6 @@ class Report:
 		dlg = RptDlg(self.parent, self.backend, "Dispatch Report", html)
 		dlg.ShowModal()
 		dlg.Destroy()
-		
 	
 class ChooseCardsDlg(wx.Dialog):
 	def __init__(self, parent, order):
@@ -433,10 +429,7 @@ class RptDlg(wx.Dialog):
 		
 	def onBtn(self, _):
 		self.wv.Print()
-
 		
 	def onClose(self, _):
 		self.EndModal(wx.ID_OK)
-
-
 	
