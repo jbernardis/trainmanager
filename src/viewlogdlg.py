@@ -47,9 +47,13 @@ class ViewLogDlg(wx.Dialog):
 		self.bNext = wx.Button(self, wx.ID_ANY, "Next", size=BTNSZ)
 		self.bNext.SetFont(btnFont)
 		bsizer.Add(self.bNext)
+		self.bSave = wx.Button(self, wx.ID_ANY, "Save", size=BTNSZ)
+		self.bSave.SetFont(btnFont)
+		bsizer.AddSpacer(30)
+		bsizer.Add(self.bSave)
 		self.Bind(wx.EVT_BUTTON, self.onBFind, self.bFind)
 		self.Bind(wx.EVT_BUTTON, self.onBNext, self.bNext)
-		
+		self.Bind(wx.EVT_BUTTON, self.parent.onSaveLog, self.bSave)
 		
 		sz = wx.BoxSizer(wx.VERTICAL)
 		sz.Add(hsizer)

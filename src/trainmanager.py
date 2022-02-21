@@ -901,7 +901,7 @@ class TrainManagerPanel(wx.Panel):
 			defaultFile="", wildcard=wildcardLog, style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
 		if dlg.ShowModal() != wx.ID_OK:
 			dlg.Destroy()
-			return False
+			return
 		
 		path = dlg.GetPath()
 		dlg.Destroy()
