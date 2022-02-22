@@ -2,7 +2,7 @@ import configparser
 import os
 import wx
 
-INIFILE = "trainmanager.ini"
+INIFILE = "traintracker.ini"
 
 def parseBoolean(val, defaultVal):
 	lval = val.lower();
@@ -20,7 +20,7 @@ class Settings:
 		self.parent = parent
 		
 		self.inifile = os.path.join(folder, INIFILE)
-		self.section = "trainmanager"	
+		self.section = "traintracker"	
 		
 		self.traindir = os.path.join(os.getcwd(), "trains")
 		self.trainfile = "trains.json"

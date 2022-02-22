@@ -65,7 +65,7 @@ class MainFrame(wx.Frame):
 		font = wx.Font(wx.Font(14, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
 
 		icon = wx.Icon()
-		icon.CopyFromBitmap(wx.Bitmap("trainmanager.ico", wx.BITMAP_TYPE_ANY))
+		icon.CopyFromBitmap(wx.Bitmap("traintracker.ico", wx.BITMAP_TYPE_ANY))
 		self.SetIcon(icon)
 
 		self.CreateStatusBar()
@@ -162,7 +162,7 @@ class MainFrame(wx.Frame):
 		self.menuBar = menuBar
 
 		sizer = wx.BoxSizer(wx.HORIZONTAL)		
-		self.panel = TrainManagerPanel(self)
+		self.panel = TrainTrackerPanel(self)
 		sizer.Add(self.panel)
 		
 		self.Bind(wx.EVT_MENU, self.panel.onOpenTrain, id=MENU_FILE_LOAD_TRAIN)
@@ -209,7 +209,7 @@ class MainFrame(wx.Frame):
 		if connection is not None:
 			self.connection = connection
 			
-		title = "Train Manager"
+		title = "Train Tracker"
 		if self.trainfile is not None:
 			title += " - %s" % self.trainfile
 		else:
@@ -245,7 +245,7 @@ class MainFrame(wx.Frame):
 		self.panel.onClose(None)
 		self.Destroy()
 		
-class TrainManagerPanel(wx.Panel):
+class TrainTrackerPanel(wx.Panel):
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent, wx.ID_ANY, style=wx.TAB_TRAVERSAL)
 		self.SetBackgroundColour(wx.Colour(250, 250, 250))
