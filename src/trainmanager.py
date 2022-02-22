@@ -51,6 +51,8 @@ wildcardLog = "Log file (*.log)|*.log|"	 \
 		   "All files (*.*)|*.*"
 
 (TrainLocationEvent, EVT_TRAINLOC) = newevent.NewEvent()  
+(ClockEvent, EVT_CLOCK) = newevent.NewEvent()  
+(BreakerEvent, EVT_BREAKER) = newevent.NewEvent()  
 (SocketConnectEvent, EVT_SOCKET_CONNECT) = newevent.NewEvent()
 (SocketDisconnectEvent, EVT_SOCKET_DISCONNECT) = newevent.NewEvent()
 (SocketFailureEvent, EVT_SOCKET_FAILURE) = newevent.NewEvent()
@@ -452,6 +454,8 @@ class TrainManagerPanel(wx.Panel):
 		self.Fit()
 		
 		self.Bind(EVT_TRAINLOC, self.setTrainLocation)
+		self.Bind(EVT_CLOCK, self.setClockEvent)
+		self.Bind(EVT_BREAKER, self.setBreakersEvent)
 		self.Bind(EVT_SOCKET_CONNECT, self.socketConnectEvent)
 		self.Bind(EVT_SOCKET_DISCONNECT, self.socketDisconnectEvent)
 		self.Bind(EVT_SOCKET_FAILURE, self.socketFailureEvent)
@@ -490,7 +494,7 @@ class TrainManagerPanel(wx.Panel):
 		self.parent.setTitle(connection="Connecting...")
 		self.log.append("Connecting to dispatch at %s:%s" % (self.settings.dispatchip, self.settings.dispatchport))
 		self.listener = Listener(self.settings.dispatchip, self.settings.dispatchport)
-		self.listener.bind(self.trainReport, self.socketConnect, self.socketDisconnect, self.connectFailure)
+		self.listener.bind(self.socketConnect, self.socketDisconnect, self.connectFailure, self.trainReport, self.setClock, self.setBreakers)
 		self.listener.start()
 		
 	def socketConnect(self):  # thread context
@@ -595,6 +599,20 @@ class TrainManagerPanel(wx.Panel):
 		self.activeTrainList.updateTrain(tid, loco, desc, block)
 		if tid == self.selectedTrain:
 			self.showInfo(self.selectedTrain)
+			
+	def setClock(self, tm):
+		evt = ClockEvent(tm=tm)
+		wx.PostEvent(self, evt)
+		
+	def setClockEvent(self, evt):
+		print("time: %s" % evt.tm)
+		
+	def setBreakers(self, txt):
+		evt = BreakerEvent(txt=txt)
+		wx.PostEvent(self, evt)
+		
+	def setBreakersEvent(self, evt):
+		print("breakers: %s" % evt.txt)
 
 	def onOpenTrain(self, _):
 		if self.activeTrainList.count() > 0:

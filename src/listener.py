@@ -13,6 +13,8 @@ class Listener():
 		self.cbConnect = None
 		self.cbDisconnect = None
 		self.cbFailure = None
+		self.cbClock = None
+		self.cbBreaker = None
 
 		self.thread = threading.Thread(target=self.run)
 		
@@ -24,11 +26,13 @@ class Listener():
 			self.isRunning = False
 			self.thread.join()
 		
-	def bind(self, cbMessage, cbConnect, cbDisconnect, cbFailure):
-		self.cbTrainID = cbMessage
+	def bind(self, cbConnect, cbDisconnect, cbFailure, cbTrainID, cbClock, cbBreakers):
 		self.cbConnect = cbConnect
 		self.cbDisconnect = cbDisconnect
 		self.cbFailure = cbFailure
+		self.cbTrainID = cbTrainID
+		self.cbClock = cbClock
+		self.cbBreakers = cbBreakers
 		
 	def run(self):
 		try:
@@ -66,8 +70,15 @@ class Listener():
 							loco = b[29:39].strip()
 							if callable(self.cbTrainID):
 								self.cbTrainID(train, loco, block)
+						elif b.startswith("PSClock"):
+							tm = b[9, 19].strip()
+							if callable(self.cbClock):
+								self.cbClock(tm)
+						elif b.startswith("CktBkr"):
+							text = b[9:25].strip()
+							if callable(self.cbBreakers):
+								self.cbBreakers(text)
 					
-		self.isRunning = False
 		try:
 			self.skt.close()
 		except:
