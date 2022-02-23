@@ -1,5 +1,6 @@
 import os
 import wx
+import wx.lib.gizmos as gizmos
 
 from wx.lib import newevent
 
@@ -387,6 +388,22 @@ class TrainTrackerPanel(wx.Panel):
 
 		vsizerr = wx.BoxSizer(wx.VERTICAL)
 		vsizerr.AddSpacer(20)
+		
+		self.teBreaker = wx.TextCtrl(self, wx.ID_ANY, "", size=(240, -1))
+		self.setBreakerValue("All OK")
+		breakerFont = wx.Font(wx.Font(16, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
+		self.teBreaker.SetFont(breakerFont)
+		self.teBreaker.SetForegroundColour(wx.Colour(255, 255, 255))
+
+		self.clock = gizmos.LEDNumberCtrl(self, wx.ID_ANY, size=(160, 50), style=gizmos.LED_ALIGN_CENTER)  # @UndefinedVariable
+		
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		hsz.Add(self.teBreaker, 1, wx.TOP, 10)
+		hsz.AddSpacer(100)
+		hsz.Add(self.clock)
+		
+		vsizerr.Add(hsz, 0, wx.ALIGN_CENTER_HORIZONTAL)
+		vsizerr.AddSpacer(20)
 
 		boxDetails = wx.StaticBox(self, wx.ID_ANY, "Train Details")
 		boxDetails.SetFont(labelFontBold)
@@ -483,7 +500,9 @@ class TrainTrackerPanel(wx.Panel):
 		self.report = Report(self)
 		if not self.report.Initialized():
 			self.parent.disableReports()
-			
+
+		self.setBreakerValue("All OK")
+		self.clock.SetValue("00:00")
 		self.setExtraTrains()
 		self.parent.setTitle(connection="Not Connected")
 		
@@ -605,7 +624,7 @@ class TrainTrackerPanel(wx.Panel):
 		wx.PostEvent(self, evt)
 		
 	def setClockEvent(self, evt):
-		print("time: %s" % evt.tm)
+		self.clock.SetValue(evt.tm)
 		
 	def setBreakers(self, txt):
 		evt = BreakerEvent(txt=txt)
@@ -613,6 +632,14 @@ class TrainTrackerPanel(wx.Panel):
 		
 	def setBreakersEvent(self, evt):
 		print("breakers: %s" % evt.txt)
+		self.setBreakerValue(evt.txt)
+		
+	def setBreakerValue(self, txt):
+		self.teBreaker.SetValue(txt)
+		if txt == "All OK":
+			self.teBreaker.SetBackgroundColour(wx.Colour(10, 158, 32))
+		else:
+			self.teBreaker.SetBackgroundColour(wx.Colour(241, 41, 47))
 
 	def onOpenTrain(self, _):
 		if self.activeTrainList.count() > 0:
