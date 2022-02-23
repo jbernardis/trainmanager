@@ -503,7 +503,7 @@ class TrainTrackerPanel(wx.Panel):
 			self.parent.disableReports()
 
 		self.setBreakerValue("All OK")
-		self.clock.SetValue("00:00")
+		self.setClockValue("")
 		self.setExtraTrains()
 		self.parent.setTitle(connection="Not Connected")
 		
@@ -536,6 +536,8 @@ class TrainTrackerPanel(wx.Panel):
 		self.log.append("Socket disconnection complete")
 		self.parent.enableListenerDisconnect(False)
 		self.connected = False
+		self.setBreakerValue("")
+		self.setClockValue("")
 		self.listener = None
 		
 	def connectFailure(self):  # thread context
@@ -627,7 +629,15 @@ class TrainTrackerPanel(wx.Panel):
 		wx.PostEvent(self, evt)
 		
 	def setClockEvent(self, evt):
-		self.clock.SetValue(evt.tm)
+		self.setClkockValue(evt.tm)
+		
+	def setClockValue(self, tm):
+		if not self.connected:
+			self.clock.SetValue("")
+			self.clock.SetBackgroundColour(wx.Colour(255, 115, 47))
+			return
+		self.clock.SetBackgroundColour(wx.Colour(0, 0, 0))
+		self.clock.SetValue(tm)
 		
 	def setBreakers(self, txt):
 		evt = BreakerEvent(txt=txt)
