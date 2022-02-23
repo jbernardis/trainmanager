@@ -254,6 +254,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.parent = parent
 		
 		self.parent.setTitle()
+		self.connected = False
 			
 		self.log = Log()
 		
@@ -389,7 +390,7 @@ class TrainTrackerPanel(wx.Panel):
 		vsizerr = wx.BoxSizer(wx.VERTICAL)
 		vsizerr.AddSpacer(20)
 		
-		self.teBreaker = wx.TextCtrl(self, wx.ID_ANY, "", size=(240, -1))
+		self.teBreaker = wx.TextCtrl(self, wx.ID_ANY, "", size=(240, -1), style=wx.TE_CENTER)
 		self.setBreakerValue("All OK")
 		breakerFont = wx.Font(wx.Font(16, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 		self.teBreaker.SetFont(breakerFont)
@@ -522,6 +523,7 @@ class TrainTrackerPanel(wx.Panel):
 
 	def socketConnectEvent(self, _):
 		self.parent.setTitle(connection="Connected")
+		self.connected = True
 		self.log.append("Socket Connection successful")
 		self.parent.enableListenerDisconnect(True)
 		
@@ -533,6 +535,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.parent.setTitle(connection="Disconnected")
 		self.log.append("Socket disconnection complete")
 		self.parent.enableListenerDisconnect(False)
+		self.connected = False
 		self.listener = None
 		
 	def connectFailure(self):  # thread context
@@ -635,6 +638,11 @@ class TrainTrackerPanel(wx.Panel):
 		self.setBreakerValue(evt.txt)
 		
 	def setBreakerValue(self, txt):
+		if not self.connected:
+			self.teBreaker.SetValue("not connected")
+			self.teBreaker.SetBackgroundColour(wx.Colour(255, 115, 47))
+			return
+			
 		self.teBreaker.SetValue(txt)
 		if txt == "All OK":
 			self.teBreaker.SetBackgroundColour(wx.Colour(10, 158, 32))
