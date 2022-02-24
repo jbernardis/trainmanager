@@ -71,11 +71,11 @@ class Listener():
 							if callable(self.cbTrainID):
 								self.cbTrainID(train, loco, block)
 						elif b.startswith("PSClock"):
-							tm = b[9, 19].strip()
+							tm = b[9:19].strip()
 							if callable(self.cbClock):
 								self.cbClock(tm)
 						elif b.startswith("CktBkr"):
-							text = b[9:25].strip()
+							text = b[9:39].strip()
 							if callable(self.cbBreakers):
 								self.cbBreakers(text)
 					

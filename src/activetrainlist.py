@@ -137,11 +137,16 @@ class ActiveTrainList(wx.ListCtrl):
 	def updateTrain(self, tid, loco, desc, block):
 		for tx in range(len(self.activeTrains)):
 			if self.activeTrains[tx]["tid"] == tid:
+				print("updating train (%s)" % tid)
 				if loco is not None:
+					print("changing loco to (%s)" % loco)
 					self.activeTrains[tx]["loco"] = loco
 				if block is not None:
+					print("changing block to (%s)" % block)
 					self.activeTrains[tx]["block"] = block
-				self.activeTrains[tx]["desc"] = desc
+				if desc is not None:
+					print("changing desc to (%s)" % desc)
+					self.activeTrains[tx]["desc"] = desc
 				self.RefreshItem(tx)
 				return
 		
@@ -207,9 +212,15 @@ class ActiveTrainList(wx.ListCtrl):
 		elif col == 4:
 			return tr["engineer"]
 		elif col == 5:
-			return tr["loco"]
+			if tr["loco"] is None:
+				return ""
+			else:
+				return tr["loco"]
 		elif col == 6:
-			return tr["desc"]
+			if tr["desc"] is None:
+				return ""
+			else:
+				return tr["desc"]
 		elif col == 7:
 			if tr["block"] is None:
 				return ""

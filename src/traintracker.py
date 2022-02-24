@@ -629,7 +629,7 @@ class TrainTrackerPanel(wx.Panel):
 		wx.PostEvent(self, evt)
 		
 	def setClockEvent(self, evt):
-		self.setClkockValue(evt.tm)
+		self.setClockValue(evt.tm)
 		
 	def setClockValue(self, tm):
 		if not self.connected:
@@ -1021,7 +1021,7 @@ class TrainTrackerPanel(wx.Panel):
 		if "block" in tInfo:
 			block = tInfo["block"]
 		else:
-			block = None	
+			block = ""	
 		acttr = {
 			"tid": tid,
 			"dir": tInfo["dir"],
