@@ -255,8 +255,6 @@ class TrainTrackerPanel(wx.Panel):
 		
 		self.parent.setTitle()
 		self.connected = False
-		
-		self.x = 0
 			
 		self.log = Log()
 		
@@ -1041,7 +1039,7 @@ class TrainTrackerPanel(wx.Panel):
 			"desc": descr,
 			"engineer": eng}
 		self.activeTrainList.addTrain(acttr)
-		self.log.append("Assigned %s train %s to %s" % (tid, "extra" if runningExtra else "", eng))
+		self.log.append("Assigned %strain %s to %s" % ("extra " if runningExtra else "", tid, eng))
 
 		if not runningExtra:		
 			self.pendingTrains.remove(tid)
