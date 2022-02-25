@@ -38,15 +38,21 @@ class ActiveTrainList(wx.ListCtrl):
 
 		self.SetItemCount(0)
 		self.activeTrains = []
+		self.highlight = []
 
-		self.attr1 = wx.ItemAttr()
-		self.attr2 = wx.ItemAttr()
-		self.attr1.SetBackgroundColour(wx.Colour(225, 255, 240))
-		self.attr2.SetBackgroundColour(wx.Colour(138, 255, 197))
-		self.attr3 = wx.ItemAttr()
-		self.attr4 = wx.ItemAttr()
-		self.attr3.SetBackgroundColour(wx.Colour(252, 169, 186)) # light red
-		self.attr4.SetBackgroundColour(wx.Colour(251, 145, 166)) # red
+		self.normalA = wx.ItemAttr()
+		self.normalB = wx.ItemAttr()
+		self.normalA.SetBackgroundColour(wx.Colour(225, 255, 240))
+		self.normalB.SetBackgroundColour(wx.Colour(138, 255, 197))
+		
+		self.atcA = wx.ItemAttr()
+		self.atcB = wx.ItemAttr()
+		self.atcA.SetBackgroundColour(wx.Colour(252, 169, 186)) # light red
+		self.atcB.SetBackgroundColour(wx.Colour(251, 145, 166)) # red
+		
+		self.hilite = wx.ItemAttr()
+		self.hilite.SetBackgroundColour(wx.Colour(0, 116, 232))
+		self.hilite.SetTextColour(wx.Colour(255, 255, 255))
 		
 		self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnItemSelected)
 		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnItemActivated)
@@ -92,6 +98,7 @@ class ActiveTrainList(wx.ListCtrl):
 	def clear(self):
 		self.SetItemCount(0)
 		self.activeTrains = []
+		self.highlight = []
 		
 	def count(self):
 		return len(self.activeTrains)
@@ -143,6 +150,8 @@ class ActiveTrainList(wx.ListCtrl):
 					self.activeTrains[tx]["loco"] = loco
 				if block is not None:
 					print("changing block to (%s)" % block)
+					if self.activeTrains[tx]["block"] != block:
+						self.highlight[tx] = 5 # 5 second highlight time
 					self.activeTrains[tx]["block"] = block
 				if desc is not None:
 					print("changing desc to (%s)" % desc)
@@ -152,6 +161,7 @@ class ActiveTrainList(wx.ListCtrl):
 		
 	def addTrain(self, tr):
 		self.activeTrains.append(tr)
+		self.highlight.append(0)
 		self.SetItemCount(len(self.activeTrains))
 		
 	def getEngineers(self):
@@ -167,6 +177,13 @@ class ActiveTrainList(wx.ListCtrl):
 		self.RefreshItem(self.selected)
 		
 		return True
+	
+	def ticker(self):
+		for tx in range(len(self.highlight)):
+			if self.highlight[tx] > 0:
+				self.highlight[tx] -= 1
+				if self.highlight[tx] == 0:
+					self.RefreshItem(tx)
 		
 	def delSelected(self):
 		if self.selected is None:
@@ -175,6 +192,7 @@ class ActiveTrainList(wx.ListCtrl):
 			return False
 		
 		del self.activeTrains[self.selected]
+		del self.highlight[self.selected]
 		self.SetItemCount(len(self.activeTrains))
 		self.setSelection(None)
 		ct = self.GetItemCount()
@@ -229,13 +247,17 @@ class ActiveTrainList(wx.ListCtrl):
 
 	def OnGetItemAttr(self, item):
 		tr = self.activeTrains[item]
+		hilite = self.highlight[item] > 0
+		if hilite:
+			return self.hilite
+
 		if tr["engineer"] == "ATC":
 			if item % 2 == 1:
-				return self.attr4
+				return self.atcB
 			else:
-				return self.attr3
+				return self.atcA
 		else:
 			if item % 2 == 1:
-				return self.attr2
+				return self.normalB
 			else:
-				return self.attr1
+				return self.normalA

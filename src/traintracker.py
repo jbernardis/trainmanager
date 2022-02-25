@@ -255,6 +255,8 @@ class TrainTrackerPanel(wx.Panel):
 		
 		self.parent.setTitle()
 		self.connected = False
+		
+		self.x = 0
 			
 		self.log = Log()
 		
@@ -506,6 +508,13 @@ class TrainTrackerPanel(wx.Panel):
 		self.setClockValue("")
 		self.setExtraTrains()
 		self.parent.setTitle(connection="Not Connected")
+		
+		self.Bind(wx.EVT_TIMER, self.OnTicker)
+		self.ticker = wx.Timer(self)
+		self.ticker.Start(1000)
+		
+	def OnTicker(self, _):
+		self.activeTrainList.ticker()
 		
 	def dispatchReport(self, _):
 		self.report.dispatchReport(self.roster, self.trainOrder)
@@ -1126,7 +1135,7 @@ class TrainTrackerPanel(wx.Panel):
 		dlg = DetailsDlg(self, tid, tinfo, desc, t["engineer"])
 		dlg.Show()
 		
-	def bSkipPressed(self, _):		
+	def bSkipPressed(self, _):	
 		tInfo = self.roster.getTrain(self.selectedTrain)
 		if tInfo is None:
 			return
