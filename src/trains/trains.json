@@ -666,7 +666,7 @@
         "desc": "Express Passenger",
         "dir": "West",
         "extra": false,
-        "loco": null,
+        "loco": "069",
         "steps": [
             [
                 "",

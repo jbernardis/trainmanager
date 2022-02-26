@@ -115,14 +115,14 @@ class ManageEngineersDlg(wx.Dialog):
 		self.bDelEng.Enable(False)
 		
 		sz.AddSpacer(20)
-		self.bSaveAll = wx.Button(self, wx.ID_ANY, "Save\nAll List", size=BTNSZ)
+		self.bSaveAll = wx.Button(self, wx.ID_ANY, "Save\nAll As", size=BTNSZ)
 		self.bSaveAll.SetFont(btnFont)
 		self.bSaveAll.SetToolTip("Save the full list of ALL engineers, including active engineers, to a named file")
 		sz.Add(self.bSaveAll)
 		self.Bind(wx.EVT_BUTTON, self.bSaveAllPressed, self.bSaveAll)
 		
 		sz.AddSpacer(20)
-		self.bSaveAct = wx.Button(self, wx.ID_ANY, "Save\nActive List", size=BTNSZ)
+		self.bSaveAct = wx.Button(self, wx.ID_ANY, "Save\nActive As", size=BTNSZ)
 		self.bSaveAct.SetFont(btnFont)
 		self.bSaveAct.SetToolTip("Save the list of active engineers to a named file")
 		sz.Add(self.bSaveAct)

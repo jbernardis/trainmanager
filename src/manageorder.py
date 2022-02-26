@@ -86,7 +86,7 @@ class ManageOrderDlg(wx.Dialog):
 		
 		btnSizer.AddSpacer(80)
 
-		self.bSave = wx.Button(self, wx.ID_ANY, "Save", size=BTNSZ)
+		self.bSave = wx.Button(self, wx.ID_ANY, "Save As", size=BTNSZ)
 		self.bSave.SetFont(btnFont)
 		self.bSave.SetToolTip("Save the train order list to a named file")
 		self.Bind(wx.EVT_BUTTON, self.bSavePressed, self.bSave)
