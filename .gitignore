@@ -1,11 +1,5 @@
 __pycache__/
 *.py[cod]
 *$py.class
-/traintracker.ini
 /.pydevproject
-src/trains/*
-src/engineers/*
-src/locos/*
-src/orders/*
-src/logs/*
 
