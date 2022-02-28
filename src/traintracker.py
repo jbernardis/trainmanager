@@ -15,6 +15,8 @@ from manageorder import ManageOrderDlg
 from managelocos import ManageLocosDlg
 from assignlocos import AssignLocosDlg
 from viewlogdlg import ViewLogDlg
+from detailsdlg import DetailsDlg
+from aboutdlg import AboutDlg
 from settings import Settings
 from reports import Report
 from log import Log
@@ -29,6 +31,7 @@ MENU_FILE_LOAD_LOCOS = 103
 MENU_FILE_VIEW_LOG = 110
 MENU_FILE_CLEAR_LOG = 111
 MENU_FILE_SAVE_LOG = 112
+MENU_FILE_ABOUT = 120
 MENU_FILE_EXIT = 199
 MENU_MANAGE_TRAINS = 200
 MENU_MANAGE_ENGINEERS = 201
@@ -103,6 +106,10 @@ class MainFrame(wx.Frame):
 		i.SetFont(font)
 		self.menuFile.Append(i)
 		self.menuFile.AppendSeparator()
+		i = wx.MenuItem(self.menuFile, MENU_FILE_ABOUT, "About", helpString="About")
+		i.SetFont(font)
+		self.menuFile.Append(i)
+		self.menuFile.AppendSeparator()
 		i = wx.MenuItem(self.menuFile, MENU_FILE_EXIT, "Exit", helpString="Exit Program")
 		i.SetFont(font)
 		self.menuFile.Append(i)
@@ -173,6 +180,7 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.panel.onViewLog, id=MENU_FILE_VIEW_LOG)
 		self.Bind(wx.EVT_MENU, self.panel.onClearLog, id=MENU_FILE_CLEAR_LOG)
 		self.Bind(wx.EVT_MENU, self.panel.onSaveLog, id=MENU_FILE_SAVE_LOG)
+		self.Bind(wx.EVT_MENU, self.panel.onAbout, id=MENU_FILE_ABOUT)
 		self.Bind(wx.EVT_MENU, self.onClose, id=MENU_FILE_EXIT)
 		
 		self.Bind(wx.EVT_MENU, self.panel.onManageTrains, id=MENU_MANAGE_TRAINS)
@@ -398,10 +406,17 @@ class TrainTrackerPanel(wx.Panel):
 
 		self.clock = gizmos.LEDNumberCtrl(self, wx.ID_ANY, size=(160, 50), style=gizmos.LED_ALIGN_CENTER)  # @UndefinedVariable
 		
+		self.pngPSRY = wx.Image("PSLogo.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+		mask = wx.Mask(self.pngPSRY, wx.BLUE)
+		self.pngPSRY.SetMask(mask)
+		b = wx.StaticBitmap(self, wx.ID_ANY, self.pngPSRY)
+		
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
-		hsz.Add(self.teBreaker, 1, wx.TOP, 10)
+		hsz.Add(self.teBreaker, 1, wx.TOP, 50)
 		hsz.AddSpacer(100)
-		hsz.Add(self.clock)
+		hsz.Add(self.clock, 1, wx.TOP, 40)
+		hsz.AddSpacer(100)
+		hsz.Add(b)
 		
 		vsizerr.Add(hsz, 0, wx.ALIGN_CENTER_HORIZONTAL)
 		vsizerr.AddSpacer(20)
@@ -1117,6 +1132,11 @@ class TrainTrackerPanel(wx.Panel):
 		self.activeTrainList.setNewEngineer(neng)
 		self.log.append("Reassigned train %s from %s to %s" % (t["tid"], oeng, neng))
 		
+	def onAbout(self, _):
+		dlg = AboutDlg(self, self.pngPSRY)
+		dlg.ShowModal()
+		dlg.Destroy()
+		
 	def showDetails(self, t):
 		if t is None:
 			return
@@ -1457,101 +1477,6 @@ class TrainTrackerPanel(wx.Panel):
 			self.listener.kill()
 			
 		self.settings.save()
-		self.Destroy()
-		
-class DetailsDlg(wx.Dialog):
-	def __init__(self, parent, tid, tinfo, desc, engineer):
-		wx.Dialog.__init__(self, parent, wx.ID_ANY, "Train Details")
-		self.Bind(wx.EVT_CLOSE, self.onClose)
-
-		labelFontBold = wx.Font(wx.Font(12, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD, faceName="Monospace"))
-		labelFontLargeBold = wx.Font(wx.Font(16, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD, faceName="Monospace"))
-		
-		vsizer=wx.BoxSizer(wx.VERTICAL)
-		vsizer.AddSpacer(20)
-		
-		st1 = wx.StaticText(self, wx.ID_ANY, tid, size=(80, -1))
-		st1.SetFont(labelFontLargeBold)
-		
-		st2 = wx.StaticText(self, wx.ID_ANY, "%sbound %s" % (tinfo["dir"], tinfo["desc"]))
-		st2.SetFont(labelFontBold)
-		
-		hsz = wx.BoxSizer(wx.HORIZONTAL)
-		hsz.AddSpacer(20)
-		hsz.Add(st1)
-		hsz.Add(st2)
-		
-		vsizer.Add(hsz)
-		vsizer.AddSpacer(10)
-		
-		if desc is None:
-			ldesc = ""
-		else:
-			ldesc = desc.replace('&', '&&')
-		st = wx.StaticText(self, wx.ID_ANY, "Loco: %s - %s" % (tinfo["loco"], ldesc))
-		st.SetFont(labelFontBold)
-		
-		hsz = wx.BoxSizer(wx.HORIZONTAL)
-		hsz.AddSpacer(100)
-		hsz.Add(st)
-		
-		vsizer.Add(hsz)
-		vsizer.AddSpacer(10)
-		
-		st = wx.StaticText(self, wx.ID_ANY, "Engineer: %s" % engineer)
-		st.SetFont(labelFontBold)
-		
-		hsz = wx.BoxSizer(wx.HORIZONTAL)
-		hsz.AddSpacer(100)
-		hsz.Add(st)
-		
-		vsizer.Add(hsz)
-		vsizer.AddSpacer(20)
-		
-		for stp in tinfo["steps"]:
-			st1 = wx.StaticText(self, wx.ID_ANY, stp[0], size=(80, -1))
-			st1.SetFont(labelFontBold)
-			st2 = wx.StaticText(self, wx.ID_ANY, "(%2d)" % stp[2] if stp[2] > 0 else "", size=(60, -1))
-			st2.SetFont(labelFontBold)
-			st3 = wx.StaticText(self, wx.ID_ANY, stp[1])
-			st3.SetFont(labelFontBold)
-			
-			hsz = wx.BoxSizer(wx.HORIZONTAL)
-			hsz.AddSpacer(120)
-			hsz.Add(st1)
-			hsz.Add(st2)
-			hsz.Add(st3)
-			
-			vsizer.Add(hsz)
-			vsizer.AddSpacer(2)
-			
-		vsizer.AddSpacer(10)
-		
-		if tinfo["block"] is None or tinfo["block"] == "":
-			block = "<unknown>"
-		else:
-			block = tinfo["block"]
-			
-		st = wx.StaticText(self, wx.ID_ANY, "Block: %s" % block)
-		st.SetFont(labelFontBold)
-		
-		hsz = wx.BoxSizer(wx.HORIZONTAL)
-		hsz.AddSpacer(100)
-		hsz.Add(st)
-		
-		vsizer.Add(hsz)
-		vsizer.AddSpacer(20)
-				
-		hsizer=wx.BoxSizer(wx.HORIZONTAL)
-		hsizer.AddSpacer(20)
-		hsizer.Add(vsizer)
-		hsizer.AddSpacer(20)
-		self.SetSizer(hsizer)
-
-		self.Layout()
-		self.Fit()
-		
-	def onClose(self, _):
 		self.Destroy()
 
 class App(wx.App):

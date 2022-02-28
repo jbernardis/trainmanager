@@ -1,5 +1,6 @@
 import socket
 import threading
+from rrmap import rrmap
 
 class Listener():
 	def __init__(self, ip, port):
@@ -70,6 +71,22 @@ class Listener():
 							loco = b[29:39].strip()
 							if callable(self.cbTrainID):
 								self.cbTrainID(train, loco, block)
+										
+						elif b.startswith("TrainID"):
+							screen = b[9:19].strip()
+							x = int(b[19:24].strip())
+							y = int(b[24:29].strip())
+							train = b[29:39].strip()
+							if train.startswith("#"):
+								loco = train[2:]
+								train = ""
+							else:
+								loco = ""
+							for row, col, block in rrmap[screen]:
+								if row == x and col == y:
+									if callable(self.cbTrainID):
+										self.cbTrainID(train, loco, block)
+
 						elif b.startswith("PSClock"):
 							tm = b[9:19].strip()
 							if callable(self.cbClock):
