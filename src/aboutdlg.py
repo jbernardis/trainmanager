@@ -23,7 +23,7 @@ class AboutDlg(wx.Dialog):
 		vsizer.AddSpacer(20)
 		
 		sta = wx.StaticText(self, wx.ID_ANY, "version:", size=(100, -1), style=wx.ALIGN_RIGHT)
-		stb = wx.StaticText(self, wx.ID_ANY, "2/28/2022", size=(400, -1))
+		stb = wx.StaticText(self, wx.ID_ANY, "3/3/2022", size=(400, -1))
 		sta.SetFont(textFont)
 		stb.SetFont(textFontBold)
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
