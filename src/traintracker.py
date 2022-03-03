@@ -613,6 +613,14 @@ class TrainTrackerPanel(wx.Panel):
 		self.listener.kill()
 		
 	def resetConnection(self, _):
+		dlg = wx.MessageDialog(self, 'This will sever the connection to the dispatcher program\nand should only be used to recover from error situations.\n\nPress "Yes" to proceed, or "No" to cancel.',
+                               'Reset Dispatcher Connection',
+                               wx.YES_NO | wx.ICON_WARNING)
+		rc = dlg.ShowModal()
+		dlg.Destroy()
+		if rc != wx.ID_YES:
+			return
+
 		if self.listener is not None:
 			self.listener.kill(skipDisconnect=True)
 			self.listener = None
