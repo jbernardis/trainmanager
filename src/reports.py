@@ -3,6 +3,8 @@ import wx
 import os
 import wx.html2 as webview
 
+import pprint
+
 backends = [
 	webview.WebViewBackendEdge,
 	webview.WebViewBackendIE,
@@ -210,8 +212,8 @@ class Report:
 		)
 		
 		return HTML.div({"class": "column"}, table)
-	
-	def dispatchReport(self, trains, order):
+			
+	def StatusReport(self, active, completed):
 		if not self.Initialized:
 			dlg = wx.MessageDialog(self.parent, "Unable to generate reports - initialization failed", 
 		                               "Report Initialization failed",
@@ -229,33 +231,52 @@ class Report:
 		html += HTML.head(HTML.style({'type': "text/css", 'media': "screen, print"}, css))
 		
 		html += HTML.startbody()
-	
-	
-		html += HTML.h1({'align': 'center'}, "Train Locomotive and Block Report")	
-		html += "<br><br>"
-
+		
+		html += HTML.h1({}, "Active Trains")
+		
 		header = HTML.tr({},
 			HTML.th({}, "Train"),
+			HTML.th({}, "Engineer"),
 			HTML.th({}, "Loco"),
 			HTML.th({}, "Block"))
-
-		rows = []		
-		for tid in trains:
-			tinfo = trains.getTrain(tid)
-			row = HTML.tr({},
-						HTML.td({}, tid),
-						HTML.td({}, tinfo["loco"]),
-						HTML.td({}, tinfo["block"])
+		
+		rows = []
+		for tr in active.getTrains():
+			ti = active.getTrainByTid(tr)
+			rows.append(HTML.tr({},
+					HTML.td({}, ti["tid"]),
+					HTML.td({}, ti["engineer"]),
+					HTML.td({}, ti["loco"]),
+					HTML.td({}, ti["block"]))
 			)
-			rows.append(row)
-
 		html += HTML.table({}, header, "".join(rows))
+
+		
+		html += HTML.h1({}, "Completed Trains")
+		
+		header = HTML.tr({},
+			HTML.th({}, "Train"),
+			HTML.th({}, "Engineer"),
+			HTML.th({}, "Loco"))
+		
+		rows = []
+		for tr, ti in completed:
+			rows.append(HTML.tr({},
+					HTML.td({}, tr),
+					HTML.td({}, ti[0]),
+					HTML.td({}, ti[1]))
+			)
+			
+		html += HTML.table({}, header, "".join(rows))
+			
 		html += HTML.endbody()
 		html += HTML.endhtml()
 		
-		dlg = RptDlg(self.parent, self.backend, "Dispatch Report", html)
+		dlg = RptDlg(self.parent, self.backend, "Train Status Report", html)
 		dlg.ShowModal()
 		dlg.Destroy()
+			
+			
 	
 class ChooseCardsDlg(wx.Dialog):
 	def __init__(self, parent, order):

@@ -22,7 +22,10 @@ class Listener():
 	def start(self):
 		self.thread.start()
 		
-	def kill(self):
+	def kill(self, skipDisconnect=False):
+		if skipDisconnect:
+			self.cbDisconnect = None
+			
 		if self.isRunning:
 			self.isRunning = False
 			self.thread.join()

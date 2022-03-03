@@ -19,6 +19,7 @@ from detailsdlg import DetailsDlg
 from aboutdlg import AboutDlg
 from settings import Settings
 from reports import Report
+from completedtrains import CompletedTrains
 from log import Log
 from listener import Listener
 
@@ -38,13 +39,15 @@ MENU_MANAGE_ENGINEERS = 201
 MENU_MANAGE_ASSIGN_LOCOS = 203
 MENU_MANAGE_LOCOS = 204
 MENU_MANAGE_ORDER = 205
+MENU_MANAGE_RESET = 299
 MENU_REPORT_OP_WORKSHEET = 301
 MENU_REPORT_TRAIN_CARDS = 302
-MENU_REPORT_DISPATCH = 303
+MENU_REPORT_STATUS = 304
 MENU_DISPATCH_CONNECT = 401
 MENU_DISPATCH_DISCONNECT = 402
 MENU_DISPATCH_SETUPIP = 403
 MENU_DISPATCH_SETUPPORT = 404
+MENU_DISPATCH_RESET = 405
 
 
 wildcard = "JSON file (*.json)|*.json|"	 \
@@ -133,6 +136,10 @@ class MainFrame(wx.Frame):
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ORDER, "Manage Train Order", helpString="Add/remove trains and modify sequence")
 		i.SetFont(font)
 		self.menuManage.Append(i)
+		self.menuManage.AppendSeparator()
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_RESET, "Reset Session", helpString="Reset Operating Session")
+		i.SetFont(font)
+		self.menuManage.Append(i)
 		
 		self.menuReports = wx.Menu()
 		i = wx.MenuItem(self.menuReports, MENU_REPORT_OP_WORKSHEET, "Operating Worksheet", helpString="Print an Operating Worksheet")
@@ -141,7 +148,7 @@ class MainFrame(wx.Frame):
 		i = wx.MenuItem(self.menuReports, MENU_REPORT_TRAIN_CARDS, "Train Cards", helpString="Print Train Cards")
 		i.SetFont(font)
 		self.menuReports.Append(i)
-		i = wx.MenuItem(self.menuReports, MENU_REPORT_DISPATCH, "Train/Loco/Block Report", helpString="Information to enter into dispatcher")
+		i = wx.MenuItem(self.menuReports, MENU_REPORT_STATUS, "Train Status", helpString="List of all active and completed trains")
 		i.SetFont(font)
 		self.menuReports.Append(i)
 		
@@ -158,6 +165,10 @@ class MainFrame(wx.Frame):
 		i.SetFont(font)
 		self.menuDispatch.Append(i)
 		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_SETUPPORT, "Configure Port", helpString="Configure Port")
+		i.SetFont(font)
+		self.menuDispatch.Append(i)
+		self.menuDispatch.AppendSeparator()
+		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_RESET, "Reset Connection", helpString="Reset connection to dispatcher")
 		i.SetFont(font)
 		self.menuDispatch.Append(i)
 
@@ -188,15 +199,17 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.panel.onManageOrder, id=MENU_MANAGE_ORDER)
 		self.Bind(wx.EVT_MENU, self.panel.onAssignLocos, id=MENU_MANAGE_ASSIGN_LOCOS)
 		self.Bind(wx.EVT_MENU, self.panel.onManageLocos, id=MENU_MANAGE_LOCOS)
+		self.Bind(wx.EVT_MENU, self.panel.onResetSession, id=MENU_MANAGE_RESET)
 		
 		self.Bind(wx.EVT_MENU, self.panel.onReportOpWorksheet, id=MENU_REPORT_OP_WORKSHEET)
 		self.Bind(wx.EVT_MENU, self.panel.onReportTrainCards, id=MENU_REPORT_TRAIN_CARDS)
+		self.Bind(wx.EVT_MENU, self.panel.onReportStatus, id=MENU_REPORT_STATUS)
 		
 		self.Bind(wx.EVT_MENU, self.panel.connectToDispatch, id=MENU_DISPATCH_CONNECT)
 		self.Bind(wx.EVT_MENU, self.panel.disconnectFromDispatch, id=MENU_DISPATCH_DISCONNECT)
 		self.Bind(wx.EVT_MENU, self.panel.setupIP, id=MENU_DISPATCH_SETUPIP)
 		self.Bind(wx.EVT_MENU, self.panel.setupPort, id=MENU_DISPATCH_SETUPPORT)
-		self.Bind(wx.EVT_MENU, self.panel.dispatchReport, id=MENU_REPORT_DISPATCH)
+		self.Bind(wx.EVT_MENU, self.panel.resetConnection, id=MENU_DISPATCH_RESET)
 		
 		self.SetSizer(sizer)
 		self.Layout()
@@ -263,6 +276,7 @@ class TrainTrackerPanel(wx.Panel):
 		
 		self.parent.setTitle()
 		self.connected = False
+		self.completedTrains = CompletedTrains()
 			
 		self.log = Log()
 		
@@ -418,10 +432,10 @@ class TrainTrackerPanel(wx.Panel):
 		
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
 		hsz.Add(self.teBreaker, 1, wx.TOP, 50)
-		hsz.AddSpacer(100)
-		hsz.Add(self.clock, 1, wx.TOP, 40)
-		hsz.AddSpacer(100)
+		hsz.AddSpacer(40)
 		hsz.Add(b)
+		hsz.AddSpacer(40)
+		hsz.Add(self.clock, 1, wx.TOP, 40)
 		
 		vsizerr.Add(hsz, 0, wx.ALIGN_CENTER_HORIZONTAL)
 		vsizerr.AddSpacer(20)
@@ -500,27 +514,6 @@ class TrainTrackerPanel(wx.Panel):
 		
 		wx.CallAfter(self.initialize)
 		
-	def onRmEngineer(self, _):
-		dlg = wx.MessageDialog(self, "This will remove engineer '%s' from the active list.\nPress \"Yes\" to proceed, or \"No\" to cancel." % self.selectedEngineer,
-							'Remove Engineer',
-							wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
-		rc = dlg.ShowModal()
-		dlg.Destroy()
-			
-		if rc != wx.ID_YES:
-			return
-		
-		self.activeEngineers.remove(self.selectedEngineer)
-		self.chEngineer.SetItems(self.activeEngineers)
-		if len(self.activeEngineers) == 0:
-			self.chEngineer.Enable(False)
-			self.bRmEng.Enable(False)
-			self.bAssign.Enable(False)
-		else:
-			self.chEngineer.SetSelection(0)
-			self.selectedEngineer = self.chEngineer.GetString(0)
-			self.bRmEng.Enable(True)
-		
 	def initialize(self):
 		self.settings = Settings(self, os.getcwd())
 		
@@ -529,15 +522,12 @@ class TrainTrackerPanel(wx.Panel):
 		self.engineerFile = self.settings.engineerfile
 		self.locoFile = self.settings.locofile
 		
-		self.loadLocoFile(os.path.join(self.settings.locodir, self.settings.locofile))
-		
-		self.parent.setTitle(train=self.trainFile, order=self.orderFile, engineer=self.engineerFile, loco=self.locoFile)
-		
+		self.completedTrains.clear()
+		self.loadLocoFile(os.path.join(self.settings.locodir, self.settings.locofile))		
 		self.loadEngineerFile(os.path.join(self.settings.engineerdir, self.settings.engineerfile))
-
-		self.loadTrainFile(os.path.join(self.settings.traindir, self.settings.trainfile))
-		
+		self.loadTrainFile(os.path.join(self.settings.traindir, self.settings.trainfile))		
 		self.loadOrderFile(os.path.join(self.settings.orderdir, self.settings.orderfile))
+		self.parent.setTitle(train=self.trainFile, order=self.orderFile, engineer=self.engineerFile, loco=self.locoFile)
 		
 		self.report = Report(self)
 		if not self.report.Initialized():
@@ -548,15 +538,30 @@ class TrainTrackerPanel(wx.Panel):
 		self.setExtraTrains()
 		self.parent.setTitle(connection="Not Connected")
 		
-		self.Bind(wx.EVT_TIMER, self.OnTicker)
+		self.Bind(wx.EVT_TIMER, self.onTicker)
 		self.ticker = wx.Timer(self)
 		self.ticker.Start(1000)
 		
-	def OnTicker(self, _):
+	def onTicker(self, _):
 		self.activeTrainList.ticker()
 		
-	def dispatchReport(self, _):
-		self.report.dispatchReport(self.roster, self.trainOrder)
+	def onResetSession(self, _):
+		dlg = wx.MessageDialog(self, 'This will reload all data files and will delete all active trains\nAre you sure you want to proceed?\n\nPress "Yes" to proceed, or "No" to cancel.',
+                               'Reset Session',
+                               wx.YES_NO | wx.ICON_WARNING)
+		rc = dlg.ShowModal()
+		dlg.Destroy()
+		if rc != wx.ID_YES:
+			return
+
+		self.activeEngineers = [t for t in self.allPresentEngineers]
+		self.completedTrains.clear()
+		self.loadLocoFile(os.path.join(self.settings.locodir, self.settings.locofile))		
+		self.loadEngineerFile(os.path.join(self.settings.engineerdir, self.settings.engineerfile), preserveActive = True)
+		self.loadTrainFile(os.path.join(self.settings.traindir, self.settings.trainfile))		
+		self.loadOrderFile(os.path.join(self.settings.orderdir, self.settings.orderfile))
+		self.setExtraTrains()
+		self.log.append("Session Reset")
 		
 	def connectToDispatch(self, _):
 		self.parent.setTitle(connection="Connecting...")
@@ -606,6 +611,12 @@ class TrainTrackerPanel(wx.Panel):
 	def disconnectFromDispatch(self, _):
 		self.log.append("Starting socket disconnection request")
 		self.listener.kill()
+		
+	def resetConnection(self, _):
+		if self.listener is not None:
+			self.listener.kill(skipDisconnect=True)
+			self.listener = None
+		self.socketDisconnect()
 		
 	def setupIP(self, _):
 		dlg = wx.TextEntryDialog(self, 'Enter/Modify IP Address', 'IP Address', self.settings.dispatchip)
@@ -896,7 +907,7 @@ class TrainTrackerPanel(wx.Panel):
 		
 		self.loadEngineerFile(path)
 
-	def loadEngineerFile(self, fn):
+	def loadEngineerFile(self, fn, preserveActive=False):
 		self.log.append("loading engineer file (%s)" % fn)
 		self.parent.setTitle(engineer=os.path.basename(fn))
 		try:
@@ -910,7 +921,8 @@ class TrainTrackerPanel(wx.Panel):
 
 			self.engineers = None
 			
-		self.activeEngineers = []
+		if not preserveActive:
+			self.activeEngineers = []
 		self.allPresentEngineers = [x for x in self.activeEngineers]
 		self.chEngineer.SetItems(self.activeEngineers)
 		self.chEngineer.Enable(len(self.activeEngineers) > 0)
@@ -1036,6 +1048,27 @@ class TrainTrackerPanel(wx.Panel):
 			self.bAssign.Enable(len(self.pendingTrains) > 0 or self.cbExtra.IsChecked())
 		else:
 			self.bAssign.Enable(len(self.activeEngineers) > 0 and (len(self.pendingTrains) > 0 or self.cbExtra.IsChecked()))
+		
+	def onRmEngineer(self, _):
+		dlg = wx.MessageDialog(self, "This will remove engineer '%s' from the active list.\nPress \"Yes\" to proceed, or \"No\" to cancel." % self.selectedEngineer,
+							'Remove Engineer',
+							wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
+		rc = dlg.ShowModal()
+		dlg.Destroy()
+			
+		if rc != wx.ID_YES:
+			return
+		
+		self.activeEngineers.remove(self.selectedEngineer)
+		self.chEngineer.SetItems(self.activeEngineers)
+		if len(self.activeEngineers) == 0:
+			self.chEngineer.Enable(False)
+			self.bRmEng.Enable(False)
+			self.bAssign.Enable(False)
+		else:
+			self.chEngineer.SetSelection(0)
+			self.selectedEngineer = self.chEngineer.GetString(0)
+			self.bRmEng.Enable(True)
 		
 	def bAssignPressed(self, _):
 		if self.cbExtra.IsChecked():
@@ -1256,6 +1289,7 @@ class TrainTrackerPanel(wx.Panel):
 			return
 
 		self.log.append("Removed train %s from active list" % t["tid"])
+		self.completedTrains.append(t["tid"], t["engineer"], t["loco"])
 		self.activeTrainList.delSelected()
 		if t["engineer"] in self.allPresentEngineers:
 			self.log.append("Returned engineer %s to pool" % t["engineer"])
@@ -1400,14 +1434,8 @@ class TrainTrackerPanel(wx.Panel):
 		if rc != wx.ID_OK:
 			return
 		
-		neworder = [t for t in norder if not self.activeTrainList.hasTrain(t)]
-		
-		if self.trainOrder is None:
-			self.pendingTrains = [x for x in neworder]
-		else:
-			self.trainOrder.setNewOrder(neworder)
-			self.pendingTrains = [x for x in self.trainOrder]
-			
+		self.pendingTrains = [t for t in norder if not self.activeTrainList.hasTrain(t) and t not in self.completedTrains]
+		self.trainOrder.setNewOrder(norder)
 		self.setTrainOrder(preserveActive=True)
 
 	def onManageTrains(self, _):
@@ -1499,6 +1527,9 @@ class TrainTrackerPanel(wx.Panel):
 		
 	def onReportOpWorksheet(self, _):
 		self.report.OpWorksheetReport(self.roster, self.trainOrder, self.locos)
+		
+	def onReportStatus(self, _):
+		self.report.StatusReport(self.activeTrainList, self.completedTrains)
 			
 	def onReportTrainCards(self, _):
 		self.report.TrainCards(self.roster, self.trainOrder)
