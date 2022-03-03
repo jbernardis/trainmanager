@@ -84,11 +84,13 @@ class Listener():
 								x = int(b[19:24].strip())
 							except:
 								print("Unable to parse X coordinate from (%s)" % b[19:24].strip())
+								print("Message = (%s)" % b)
 								x = None
 							try:
 								y = int(b[24:29].strip())
 							except:
 								print("Unable to parse Y coordinate from (%s)" % b[24:29].strip())
+								print("Message = (%s)" % b)
 								y = None
 								
 							if x is None or y is None:
