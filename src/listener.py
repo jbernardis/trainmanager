@@ -59,6 +59,10 @@ class Listener():
 
 			except socket.timeout:
 				pass
+			except Exception as e:
+				print("Exception %s - terminating thread" % str(e))
+				self.isRunning = False
+				
 			else:
 				if self.isRunning:
 					for b in bl:
@@ -73,9 +77,21 @@ class Listener():
 								self.cbTrainID(train, loco, block)
 										
 						elif b.startswith("TrainID"):
+							try:
+								x = int(b[19:24].strip())
+							except:
+								print("Unable to parse X coordinate from (%s)" % b[19:24].strip())
+								x = None
+							try:
+								y = int(b[24:29].strip())
+							except:
+								print("Unable to parse Y coordinate from (%s)" % b[24:29].strip())
+								y = None
+								
+							if x is None or y is None:
+								continue
+							
 							screen = b[9:19].strip()
-							x = int(b[19:24].strip())
-							y = int(b[24:29].strip())
 							train = b[29:39].strip()
 							if train.startswith("#"):
 								loco = train[2:]

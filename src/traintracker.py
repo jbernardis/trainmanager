@@ -63,7 +63,7 @@ wildcardLog = "Log file (*.log)|*.log|"	 \
 
 class MainFrame(wx.Frame):
 	def __init__(self):
-		wx.Frame.__init__(self, None, size=(900, 800), style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER)
+		wx.Frame.__init__(self, None, size=(900, 800), style=wx.DEFAULT_FRAME_STYLE)
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 		
 		font = wx.Font(wx.Font(14, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
@@ -289,7 +289,7 @@ class TrainTrackerPanel(wx.Panel):
 		bsizer.AddSpacer(topBorder)
 		bsizer.Add(wx.StaticText(boxTrain, wx.ID_ANY, "", size=(240, -1)))
 		
-		self.chTrain = wx.Choice(boxTrain, wx.ID_ANY, choices=self.pendingTrains, size=(90, -1))
+		self.chTrain = wx.Choice(boxTrain, wx.ID_ANY, choices=self.pendingTrains, size=(120, -1))
 		self.chTrain.SetSelection(0)
 		self.chTrain.SetFont(textFont)
 		self.Bind(wx.EVT_CHOICE, self.onChoiceTID, self.chTrain)
@@ -299,6 +299,12 @@ class TrainTrackerPanel(wx.Panel):
 		st.SetFont(textFontBold)
 		sz.Add(st, 1, wx.TOP, 4)
 		sz.Add(self.chTrain)
+		
+		self.bSkip = wx.Button(boxTrain, wx.ID_ANY, "-", size=(30, -1))
+		self.Bind(wx.EVT_BUTTON, self.bSkipPressed, self.bSkip)
+		self.bSkip.SetToolTip("Remove train from schedule")
+		sz.AddSpacer(5)
+		sz.Add(self.bSkip)
 		bsizer.Add(sz)
 		
 		bsizer.AddSpacer(10)
@@ -314,7 +320,7 @@ class TrainTrackerPanel(wx.Panel):
 		
 		bsizer.AddSpacer(10)
 
-		self.chExtra = wx.Choice(boxTrain, wx.ID_ANY, choices=[], size=(90, -1))
+		self.chExtra = wx.Choice(boxTrain, wx.ID_ANY, choices=[], size=(120, -1))
 		self.chExtra.SetFont(textFont)
 		self.chExtra.Enable(False)
 
@@ -344,7 +350,7 @@ class TrainTrackerPanel(wx.Panel):
 		bsizer.AddSpacer(topBorder)
 		bsizer.Add(wx.StaticText(boxEng, wx.ID_ANY, "", size=(240, -1)))
 
-		self.chEngineer = wx.Choice(boxEng, wx.ID_ANY, choices=self.activeEngineers)
+		self.chEngineer = wx.Choice(boxEng, wx.ID_ANY, choices=self.activeEngineers, size=(120, -1))
 		self.chEngineer.SetSelection(0)
 		self.chEngineer.SetFont(textFont)
 		self.selectedEngineer = self.chEngineer.GetString(0)
@@ -355,6 +361,12 @@ class TrainTrackerPanel(wx.Panel):
 		st.SetFont(textFontBold)
 		sz.Add(st, 1, wx.TOP, 4)
 		sz.Add(self.chEngineer)
+		
+		self.bRmEng = wx.Button(boxEng, wx.ID_ANY, "-", size=(30, -1))
+		self.Bind(wx.EVT_BUTTON, self.onRmEngineer, self.bRmEng)
+		self.bRmEng.SetToolTip("Remove engineer from active list")
+		sz.AddSpacer(5)
+		sz.Add(self.bRmEng)
 		bsizer.Add(sz)
 		
 		bsizer.AddSpacer(10)
@@ -384,13 +396,6 @@ class TrainTrackerPanel(wx.Panel):
 		self.Bind(wx.EVT_BUTTON, self.bAssignPressed, self.bAssign)
 		btnsizer.Add(self.bAssign)
 		self.bAssign.Enable(len(self.activeEngineers) != 0 and len(self.pendingTrains) != 0)
-		
-		btnsizer.AddSpacer(30)
-		
-		self.bSkip = wx.Button(self, wx.ID_ANY, "Skip\nTrain", size=BTNSZ)
-		self.bSkip.SetFont(btnFont)
-		self.Bind(wx.EVT_BUTTON, self.bSkipPressed, self.bSkip)
-		btnsizer.Add(self.bSkip)
 
 		vsizerl.AddSpacer(20)
 		vsizerl.Add(btnsizer, 1, wx.ALIGN_CENTER_HORIZONTAL)
@@ -464,7 +469,7 @@ class TrainTrackerPanel(wx.Panel):
 		hsizer = wx.BoxSizer(wx.HORIZONTAL)
 		hsizer.AddSpacer(20)
 		hsizer.Add(vsizerl)
-		hsizer.AddSpacer(90)
+		hsizer.AddSpacer(40)
 		hsizer.Add(vsizerr)
 		hsizer.AddSpacer(20)
 		
@@ -494,6 +499,27 @@ class TrainTrackerPanel(wx.Panel):
 		self.Bind(EVT_SOCKET_FAILURE, self.socketFailureEvent)
 		
 		wx.CallAfter(self.initialize)
+		
+	def onRmEngineer(self, _):
+		dlg = wx.MessageDialog(self, "This will remove engineer '%s' from the active list.\nPress \"Yes\" to proceed, or \"No\" to cancel." % self.selectedEngineer,
+							'Remove Engineer',
+							wx.YES_NO | wx.YES_DEFAULT | wx.ICON_QUESTION)
+		rc = dlg.ShowModal()
+		dlg.Destroy()
+			
+		if rc != wx.ID_YES:
+			return
+		
+		self.activeEngineers.remove(self.selectedEngineer)
+		self.chEngineer.SetItems(self.activeEngineers)
+		if len(self.activeEngineers) == 0:
+			self.chEngineer.Enable(False)
+			self.bRmEng.Enable(False)
+			self.bAssign.Enable(False)
+		else:
+			self.chEngineer.SetSelection(0)
+			self.selectedEngineer = self.chEngineer.GetString(0)
+			self.bRmEng.Enable(True)
 		
 	def initialize(self):
 		self.settings = Settings(self, os.getcwd())
@@ -616,16 +642,20 @@ class TrainTrackerPanel(wx.Panel):
 		
 	def setTrainLocation(self, evt):
 		tid = evt.train
+		if tid == "":
+			tid = None
 		loco = evt.loco
+		if loco == "":
+			loco = None
 		block = evt.block
 		self.log.append("Train report: Train(%s) Loco(%s) Blk(%s)" % (tid, loco, block))
 
-		if tid is None or tid == "":
+		if tid is None:
 			if loco is not None:
 				self.log.append("Trying to identify train by loco id")
 				tid = self.roster.getTrainByLoco(loco)
 						
-		if tid is None or tid == "":
+		if tid is None:
 			self.log.append("Unable to determine train ID")
 			return 
 		
@@ -637,7 +667,7 @@ class TrainTrackerPanel(wx.Panel):
 		tInfo["block"] = block
 		self.log.append("Setting block for train %s to %s" % (tid, block))
 		desc = None
-		if tInfo["loco"] != loco and loco != "":
+		if tInfo["loco"] != loco and loco is not None:
 			tInfo["loco"] = loco
 			desc = self.locos.getLoco(loco)
 			self.log.append("Setting locomotive for train %s to %s" % (tid, loco))
@@ -732,6 +762,7 @@ class TrainTrackerPanel(wx.Panel):
 		if len(self.activeEngineers) > 0:
 			self.chEngineer.SetSelection(0)
 		self.chEngineer.Enable(len(self.activeEngineers) > 0)
+		self.bRmEng.Enable(len(self.activeEngineers) > 0)
 		
 		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.activeEngineers) > 0)
 		self.bSkip.Enable(len(self.pendingTrains) > 0)
@@ -883,6 +914,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.allPresentEngineers = [x for x in self.activeEngineers]
 		self.chEngineer.SetItems(self.activeEngineers)
 		self.chEngineer.Enable(len(self.activeEngineers) > 0)
+		self.bRmEng.Enable(len(self.activeEngineers) > 0)
 
 		self.activeTrainList.clear()
 		self.cbATC.SetValue(False)
@@ -954,6 +986,7 @@ class TrainTrackerPanel(wx.Panel):
 		if len(self.activeEngineers) > 0:
 			self.chEngineer.SetSelection(0)
 		self.chEngineer.Enable(len(self.activeEngineers) > 0)
+		self.bRmEng.Enable(len(self.activeEngineers) > 0)
 			
 		self.chTrain.Enable(len(self.pendingTrains) > 0)
 		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.activeEngineers) > 0)
@@ -1076,10 +1109,12 @@ class TrainTrackerPanel(wx.Panel):
 			self.chEngineer.SetItems(self.activeEngineers)
 			if len(self.activeEngineers) == 0:
 				self.chEngineer.Enable(False)
+				self.bRmEng.Enable(False)
 				self.bAssign.Enable(False)
 			else:
 				self.chEngineer.SetSelection(0)
 				self.selectedEngineer = self.chEngineer.GetString(0)
+				self.bRmEng.Enable(True)
 				
 		else:
 			self.cbATC.SetValue(False)
@@ -1113,6 +1148,7 @@ class TrainTrackerPanel(wx.Panel):
 			if t["engineer"] not in self.activeEngineers:
 				self.activeEngineers.append(t["engineer"])
 			self.chEngineer.Enable(True)
+			self.bRmEng.Enable(True)
 			self.chEngineer.SetItems(self.activeEngineers)
 			self.chEngineer.SetSelection(0)
 			self.selectedEngineer = self.chEngineer.GetString(0)
@@ -1122,6 +1158,7 @@ class TrainTrackerPanel(wx.Panel):
 			self.chEngineer.SetItems(self.activeEngineers)
 			if len(self.activeEngineers) == 0:
 				self.chEngineer.Enable(False)
+				self.bRmEng.Enable(False)
 				self.bAssign.Enable(self.cbATC.IsChecked())
 			else:
 				self.chEngineer.SetSelection(0)
@@ -1200,6 +1237,7 @@ class TrainTrackerPanel(wx.Panel):
 			if t["engineer"] not in self.activeEngineers:
 				self.activeEngineers = [t["engineer"]] + self.activeEngineers
 			self.chEngineer.Enable(True)
+			self.bRmEng.Enable(True)
 			self.chEngineer.SetItems(self.activeEngineers)
 			self.chEngineer.SetSelection(0)
 			self.selectedEngineer = self.chEngineer.GetString(0)
@@ -1224,6 +1262,7 @@ class TrainTrackerPanel(wx.Panel):
 			if t["engineer"] not in self.activeEngineers:
 				self.activeEngineers.append(t["engineer"])
 			self.chEngineer.Enable(True)
+			self.bRmEng.Enable(True)
 			self.chEngineer.SetItems(self.activeEngineers)
 			self.chEngineer.SetSelection(0)
 			self.selectedEngineer = self.chEngineer.GetString(0)
@@ -1407,6 +1446,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.activeEngineers = newEngs		
 		self.chEngineer.SetItems(self.activeEngineers)
 		self.chEngineer.Enable(len(self.activeEngineers) > 0)
+		self.bRmEng.Enable(len(self.activeEngineers) > 0)
 		if len(self.pendingTrains) > 0 and (len(self.activeEngineers) > 0 or self.cbATC.IsChecked()):
 			self.bAssign.Enable(True)
 		self.chEngineer.SetSelection(0)

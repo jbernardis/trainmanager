@@ -11,7 +11,7 @@ class ActiveTrainList(wx.ListCtrl):
 		self.parent = parent
 		
 		wx.ListCtrl.__init__(
-			self, parent, wx.ID_ANY, size=(1050, 360),
+			self, parent, wx.ID_ANY, size=(1050, 280),
 			style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_VRULES|wx.LC_SINGLE_SEL
 			)
 		
@@ -67,7 +67,7 @@ class ActiveTrainList(wx.ListCtrl):
 			return
 
 		menu = wx.Menu()
-		menu.Append( MENU_REMOVE_TRAIN, "Remove Train" )
+		menu.Append( MENU_REMOVE_TRAIN, "Train at Destination" )
 		menu.Append( MENU_CHANGE_ENGINEER, "Change Engineer" )
 		menu.Append( MENU_CHANGE_LOCO, "Change Locomotive" )
 		menu.Append( MENU_SHOW_DETAILS, "Show Train Details" )
