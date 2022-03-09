@@ -9,6 +9,7 @@ from locomotives import Locomotives
 from engineers import Engineers
 from order import Order
 from activetrainlist import ActiveTrainList
+from completedtrainlist import CompletedTrainList
 from managetrains import ManageTrainsDlg
 from manageengineers import ManageEngineersDlg
 from manageorder import ManageOrderDlg
@@ -487,9 +488,12 @@ class TrainTrackerPanel(wx.Panel):
 		hsizer.Add(vsizerr)
 		hsizer.AddSpacer(20)
 		
-		wsizer = wx.BoxSizer(wx.VERTICAL)
-		wsizer.Add(hsizer)
-		wsizer.AddSpacer(20)
+		wsizerl = wx.BoxSizer(wx.VERTICAL)
+		wsizerl.Add(hsizer)
+		wsizerl.AddSpacer(5)
+		st = wx.StaticText(self, wx.ID_ANY, "Active Trains:")
+		st.SetFont(labelFontBold)
+		wsizerl.Add(st, 0, wx.ALIGN_CENTER_HORIZONTAL)
 		
 		self.activeTrainList = ActiveTrainList(self)
 		sz = wx.BoxSizer(wx.HORIZONTAL)
@@ -497,9 +501,29 @@ class TrainTrackerPanel(wx.Panel):
 		sz.Add(self.activeTrainList)
 		sz.AddSpacer(20)
 		
-		wsizer.Add(sz, 0, wx.ALIGN_CENTER_HORIZONTAL)
+		wsizerl.Add(sz, 0, wx.ALIGN_CENTER_HORIZONTAL)
 		
+		wsizerl.AddSpacer(20)
+		
+		wsizerr = wx.BoxSizer(wx.VERTICAL)
+		
+		wsizerr.AddSpacer(50)
+
+		st = wx.StaticText(self, wx.ID_ANY, "Completed Trains:")
+		st.SetFont(labelFontBold)
+		wsizerr.Add(st, 0, wx.ALIGN_CENTER_HORIZONTAL)
+		
+		self.completedTrainList = CompletedTrainList(self, self.completedTrains)
+		wsizerr.Add(self.completedTrainList)
+		
+		wsizer = wx.BoxSizer(wx.HORIZONTAL)
+		wsizer.Add(wsizerl)
 		wsizer.AddSpacer(20)
+		wsizer.Add(wsizerr)
+		wsizer.AddSpacer(20)
+		
+		
+		
 
 		self.SetSizer(wsizer)
 		self.Layout()
@@ -523,6 +547,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.locoFile = self.settings.locofile
 		
 		self.completedTrains.clear()
+		self.completedTrainList.update()
 		self.loadLocoFile(os.path.join(self.settings.locodir, self.settings.locofile))		
 		self.loadEngineerFile(os.path.join(self.settings.engineerdir, self.settings.engineerfile))
 		self.loadTrainFile(os.path.join(self.settings.traindir, self.settings.trainfile))		
@@ -556,6 +581,7 @@ class TrainTrackerPanel(wx.Panel):
 
 		self.activeEngineers = [t for t in self.allPresentEngineers]
 		self.completedTrains.clear()
+		self.completedTrainList.update()
 		self.loadLocoFile(os.path.join(self.settings.locodir, self.settings.locofile))		
 		self.loadEngineerFile(os.path.join(self.settings.engineerdir, self.settings.engineerfile), preserveActive = True)
 		self.loadTrainFile(os.path.join(self.settings.traindir, self.settings.trainfile))		
@@ -1298,6 +1324,7 @@ class TrainTrackerPanel(wx.Panel):
 
 		self.log.append("Removed train %s from active list" % t["tid"])
 		self.completedTrains.append(t["tid"], t["engineer"], t["loco"])
+		self.completedTrainList.update()
 		self.activeTrainList.delSelected()
 		if t["engineer"] in self.allPresentEngineers:
 			self.log.append("Returned engineer %s to pool" % t["engineer"])
