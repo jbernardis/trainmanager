@@ -1,3 +1,11 @@
 limit number of steps due to size of train cards (8 lines??)
 
 Add a notes field to the train information for printing on the cards
+
+
+add a list of cancelled/skipped trains
+
+add a watchdog - if we do not receive enough clock messages within a certain timeframe, reset the connection.  Also, should watch for other error types
+
+
+

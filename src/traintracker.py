@@ -64,6 +64,7 @@ wildcardLog = "Log file (*.log)|*.log|"	 \
 (SocketConnectEvent, EVT_SOCKET_CONNECT) = newevent.NewEvent()
 (SocketDisconnectEvent, EVT_SOCKET_DISCONNECT) = newevent.NewEvent()
 (SocketFailureEvent, EVT_SOCKET_FAILURE) = newevent.NewEvent()
+(MessageEvent, EVT_MESSAGE) = newevent.NewEvent()  
 
 class MainFrame(wx.Frame):
 	def __init__(self):
@@ -284,8 +285,8 @@ class TrainTrackerPanel(wx.Panel):
 		self.listener = None
 
 		self.pendingTrains = []
-		self.activeEngineers = [] 
-		self.allPresentEngineers = [x for x in self.activeEngineers]
+		self.selectedEngineers = [] 
+		self.idleEngineers = []
 		self.trainOrder = None
 		
 		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
@@ -365,7 +366,7 @@ class TrainTrackerPanel(wx.Panel):
 		bsizer.AddSpacer(topBorder)
 		bsizer.Add(wx.StaticText(boxEng, wx.ID_ANY, "", size=(240, -1)))
 
-		self.chEngineer = wx.Choice(boxEng, wx.ID_ANY, choices=self.activeEngineers, size=(120, -1))
+		self.chEngineer = wx.Choice(boxEng, wx.ID_ANY, choices=self.idleEngineers, size=(120, -1))
 		self.chEngineer.SetSelection(0)
 		self.chEngineer.SetFont(textFont)
 		self.selectedEngineer = self.chEngineer.GetString(0)
@@ -410,7 +411,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.bAssign.SetFont(btnFont)
 		self.Bind(wx.EVT_BUTTON, self.bAssignPressed, self.bAssign)
 		btnsizer.Add(self.bAssign)
-		self.bAssign.Enable(len(self.activeEngineers) != 0 and len(self.pendingTrains) != 0)
+		self.bAssign.Enable(len(self.idleEngineers) != 0 and len(self.pendingTrains) != 0)
 
 		vsizerl.AddSpacer(20)
 		vsizerl.Add(btnsizer, 1, wx.ALIGN_CENTER_HORIZONTAL)
@@ -535,6 +536,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.Bind(EVT_SOCKET_CONNECT, self.socketConnectEvent)
 		self.Bind(EVT_SOCKET_DISCONNECT, self.socketDisconnectEvent)
 		self.Bind(EVT_SOCKET_FAILURE, self.socketFailureEvent)
+		self.Bind(EVT_MESSAGE, self.setMessageEvent)
 		
 		wx.CallAfter(self.initialize)
 		
@@ -579,7 +581,7 @@ class TrainTrackerPanel(wx.Panel):
 		if rc != wx.ID_YES:
 			return
 
-		self.activeEngineers = [t for t in self.allPresentEngineers]
+		self.idleEngineers = [t for t in self.selectedEngineers]
 		self.completedTrains.clear()
 		self.completedTrainList.update()
 		self.loadLocoFile(os.path.join(self.settings.locodir, self.settings.locofile))		
@@ -593,7 +595,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.parent.setTitle(connection="Connecting...")
 		self.log.append("Connecting to dispatch at %s:%s" % (self.settings.dispatchip, self.settings.dispatchport))
 		self.listener = Listener(self.settings.dispatchip, self.settings.dispatchport)
-		self.listener.bind(self.socketConnect, self.socketDisconnect, self.connectFailure, self.trainReport, self.setClock, self.setBreakers)
+		self.listener.bind(self.socketConnect, self.socketDisconnect, self.connectFailure, self.trainReport, self.setClock, self.setBreakers, self.setMessage)
 		self.listener.start()
 		
 	def socketConnect(self):  # thread context
@@ -650,6 +652,7 @@ class TrainTrackerPanel(wx.Panel):
 		if self.listener is not None:
 			self.listener.kill(skipDisconnect=True)
 			self.listener = None
+		self.log.append("connection reset started")
 		self.socketDisconnect()
 		
 	def setupIP(self, _):
@@ -664,6 +667,7 @@ class TrainTrackerPanel(wx.Panel):
 			return
 		
 		self.settings.dispatchip = newIP
+		self.log.append("modified IP address to %s" % newIP)
 		self.settings.setModified()
 		
 	def setupPort(self, _):
@@ -679,6 +683,7 @@ class TrainTrackerPanel(wx.Panel):
 		
 		self.settings.dispatchport = newPort
 		self.settings.setModified()
+		self.log.append("modified IP port to %s" % newPort)
 		
 	def trainReport(self, train, loco, block):
 		# This method executes in thread context - don't touch the wxpython elements here
@@ -721,7 +726,7 @@ class TrainTrackerPanel(wx.Panel):
 		if tid == self.selectedTrain:
 			self.showInfo(self.selectedTrain)
 			
-	def setClock(self, tm):
+	def setClock(self, tm): # thread context
 		evt = ClockEvent(tm=tm)
 		wx.PostEvent(self, evt)
 		
@@ -736,12 +741,19 @@ class TrainTrackerPanel(wx.Panel):
 		self.clock.SetBackgroundColour(wx.Colour(0, 0, 0))
 		self.clock.SetValue(tm)
 		
-	def setBreakers(self, txt):
+	def setMessage(self, txt): # thread context
+		evt = MessageEvent(txt=txt)
+		wx.PostEvent(self, evt)
+		
+	def setMessageEvent(self, evt):
+		self.log.append("Message: %s" % evt.txt)
+		
+	def setBreakers(self, txt): # thread context
 		evt = BreakerEvent(txt=txt)
 		wx.PostEvent(self, evt)
 		
 	def setBreakersEvent(self, evt):
-		print("breakers: %s" % evt.txt)
+		self.log.append("Set breakers to :%s" % evt.txt)
 		self.setBreakerValue(evt.txt)
 		
 	def setBreakerValue(self, txt):
@@ -801,15 +813,14 @@ class TrainTrackerPanel(wx.Panel):
 			self.roster = None
 
 		engRunning = self.activeTrainList.getEngineers()
-		self.activeEngineers += engRunning
-		self.allPresentEngineers = [x for x in self.activeEngineers]
-		self.chEngineer.SetItems(self.activeEngineers)
-		if len(self.activeEngineers) > 0:
+		self.idleEngineers += engRunning
+		self.chEngineer.SetItems(self.idleEngineers)
+		if len(self.idleEngineers) > 0:
 			self.chEngineer.SetSelection(0)
-		self.chEngineer.Enable(len(self.activeEngineers) > 0)
-		self.bRmEng.Enable(len(self.activeEngineers) > 0)
+		self.chEngineer.Enable(len(self.idleEngineers) > 0)
+		self.bRmEng.Enable(len(self.idleEngineers) > 0)
 		
-		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.activeEngineers) > 0)
+		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.idleEngineers) > 0)
 		self.bSkip.Enable(len(self.pendingTrains) > 0)
 
 		self.activeTrainList.clear()
@@ -817,7 +828,7 @@ class TrainTrackerPanel(wx.Panel):
 
 		self.chTrain.SetItems(self.pendingTrains)
 		self.chTrain.Enable(len(self.pendingTrains) > 0)
-		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.activeEngineers) > 0)
+		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.idleEngineers) > 0)
 		
 		if len(self.pendingTrains) > 0:
 			self.chTrain.SetSelection(0)
@@ -849,7 +860,7 @@ class TrainTrackerPanel(wx.Panel):
 			self.setSelectedTrain(tid)
 			self.chTrain.Enable(False)
 			self.bSkip.Enable(False)
-			self.bAssign.Enable(len(self.activeEngineers) > 0 or self.cbATC.IsChecked())
+			self.bAssign.Enable(len(self.idleEngineers) > 0 or self.cbATC.IsChecked())
 		else:
 			self.chExtra.Enable(False)
 			self.chTrain.Enable(True)
@@ -858,7 +869,7 @@ class TrainTrackerPanel(wx.Panel):
 			self.setSelectedTrain(tid)
 			self.bSkip.Enable(len(self.pendingTrains) > 0)
 			self.cbExtra.SetValue(False)
-			if len(self.pendingTrains) > 0 and (len(self.activeEngineers) > 0 or self.cbATC.IsChecked()):
+			if len(self.pendingTrains) > 0 and (len(self.idleEngineers) > 0 or self.cbATC.IsChecked()):
 				self.bAssign.Enable(True)
 			else:
 				self.bAssign.Enable(False)
@@ -956,17 +967,17 @@ class TrainTrackerPanel(wx.Panel):
 			self.engineers = None
 			
 		if not preserveActive:
-			self.activeEngineers = []
-		self.allPresentEngineers = [x for x in self.activeEngineers]
-		self.chEngineer.SetItems(self.activeEngineers)
-		self.chEngineer.Enable(len(self.activeEngineers) > 0)
-		self.bRmEng.Enable(len(self.activeEngineers) > 0)
+			self.idleEngineers = []
+		self.selectedEngineers = [x for x in self.idleEngineers]
+		self.chEngineer.SetItems(self.idleEngineers)
+		self.chEngineer.Enable(len(self.idleEngineers) > 0)
+		self.bRmEng.Enable(len(self.idleEngineers) > 0)
 
 		self.activeTrainList.clear()
 		self.cbATC.SetValue(False)
-		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.activeEngineers) > 0)
+		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.idleEngineers) > 0)
 		
-		if len(self.activeEngineers) > 0:
+		if len(self.idleEngineers) > 0:
 			self.chEngineer.SetSelection(0)
 			self.selectedEngineer = self.chEngineer.GetString(0)
 		else:
@@ -1026,16 +1037,15 @@ class TrainTrackerPanel(wx.Panel):
 			self.setSelectedTrain(self.chTrain.GetString(0))
 			
 		engRunning = self.activeTrainList.getEngineers()
-		self.activeEngineers += engRunning
-		self.allPresentEngineers = [x for x in self.activeEngineers]
-		self.chEngineer.SetItems(self.activeEngineers)
-		if len(self.activeEngineers) > 0:
+		self.idleEngineers += engRunning
+		self.chEngineer.SetItems(self.idleEngineers)
+		if len(self.idleEngineers) > 0:
 			self.chEngineer.SetSelection(0)
-		self.chEngineer.Enable(len(self.activeEngineers) > 0)
-		self.bRmEng.Enable(len(self.activeEngineers) > 0)
+		self.chEngineer.Enable(len(self.idleEngineers) > 0)
+		self.bRmEng.Enable(len(self.idleEngineers) > 0)
 			
 		self.chTrain.Enable(len(self.pendingTrains) > 0)
-		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.activeEngineers) > 0)
+		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.idleEngineers) > 0)
 		self.bSkip.Enable(len(self.pendingTrains) > 0)
 
 		if not preserveActive:
@@ -1081,7 +1091,7 @@ class TrainTrackerPanel(wx.Panel):
 		if self.cbATC.IsChecked():
 			self.bAssign.Enable(len(self.pendingTrains) > 0 or self.cbExtra.IsChecked())
 		else:
-			self.bAssign.Enable(len(self.activeEngineers) > 0 and (len(self.pendingTrains) > 0 or self.cbExtra.IsChecked()))
+			self.bAssign.Enable(len(self.idleEngineers) > 0 and (len(self.pendingTrains) > 0 or self.cbExtra.IsChecked()))
 		
 	def onRmEngineer(self, _):
 		dlg = wx.MessageDialog(self, "This will remove engineer '%s' from the active list.\nPress \"Yes\" to proceed, or \"No\" to cancel." % self.selectedEngineer,
@@ -1093,9 +1103,11 @@ class TrainTrackerPanel(wx.Panel):
 		if rc != wx.ID_YES:
 			return
 		
-		self.activeEngineers.remove(self.selectedEngineer)
-		self.chEngineer.SetItems(self.activeEngineers)
-		if len(self.activeEngineers) == 0:
+		self.log.append("Removed engineer %s from active list" % self.selectedEngineer)
+		self.idleEngineers.remove(self.selectedEngineer)
+		self.selectedEngineers.remove(self.selectedEngineer)
+		self.chEngineer.SetItems(self.idleEngineers)
+		if len(self.idleEngineers) == 0:
 			self.chEngineer.Enable(False)
 			self.bRmEng.Enable(False)
 			self.bAssign.Enable(False)
@@ -1172,9 +1184,9 @@ class TrainTrackerPanel(wx.Panel):
 			self.enableExtraMode(False)
 		
 		if not self.cbATC.IsChecked():
-			self.activeEngineers.remove(self.selectedEngineer)
-			self.chEngineer.SetItems(self.activeEngineers)
-			if len(self.activeEngineers) == 0:
+			self.idleEngineers.remove(self.selectedEngineer)
+			self.chEngineer.SetItems(self.idleEngineers)
+			if len(self.idleEngineers) == 0:
 				self.chEngineer.Enable(False)
 				self.bRmEng.Enable(False)
 				self.bAssign.Enable(False)
@@ -1185,7 +1197,7 @@ class TrainTrackerPanel(wx.Panel):
 				
 		else:
 			self.cbATC.SetValue(False)
-			self.bAssign.Enable(len(self.pendingTrains) != 0 and len(self.activeEngineers) != 0)
+			self.bAssign.Enable(len(self.pendingTrains) != 0 and len(self.idleEngineers) != 0)
 		
 	def reassignTrain(self, t):
 		engActive = self.activeTrainList.getEngineers()	
@@ -1211,26 +1223,29 @@ class TrainTrackerPanel(wx.Panel):
 			dlg.Destroy()
 			return
 		
-		if t["engineer"] in self.allPresentEngineers:
-			if t["engineer"] not in self.activeEngineers:
-				self.activeEngineers.append(t["engineer"])
+		if t["engineer"] in self.selectedEngineers:
+			if t["engineer"] not in self.idleEngineers:
+				self.idleEngineers.append(t["engineer"])
 			self.chEngineer.Enable(True)
 			self.bRmEng.Enable(True)
-			self.chEngineer.SetItems(self.activeEngineers)
+			self.chEngineer.SetItems(self.idleEngineers)
 			self.chEngineer.SetSelection(0)
 			self.selectedEngineer = self.chEngineer.GetString(0)
 
-		if neng in self.activeEngineers:
-			self.activeEngineers.remove(neng)
-			self.chEngineer.SetItems(self.activeEngineers)
-			if len(self.activeEngineers) == 0:
+		if neng in self.idleEngineers:
+			self.idleEngineers.remove(neng)
+			self.chEngineer.SetItems(self.idleEngineers)
+			if len(self.idleEngineers) == 0:
 				self.chEngineer.Enable(False)
 				self.bRmEng.Enable(False)
-				self.bAssign.Enable(self.cbATC.IsChecked())
 			else:
 				self.chEngineer.SetSelection(0)
 				self.selectedEngineer = self.chEngineer.GetString(0)
-				self.bAssign.Enable(True)
+				self.chEngineer.Enable(True)
+				self.bRmEng.Enable(True)
+
+		if len(self.pendingTrains) > 0 and (len(self.idleEngineers) > 0 or self.cbATC.IsChecked()):
+			self.bAssign.Enable(True)
 
 		oeng = t["engineer"]		
 		self.activeTrainList.setNewEngineer(neng)
@@ -1290,7 +1305,7 @@ class TrainTrackerPanel(wx.Panel):
 		if rc == wx.ID_CANCEL:
 			return
 
-		self.log.append("Retruned train %s from active list" % t["tid"])
+		self.log.append("Returned train %s from active list" % t["tid"])
 		self.activeTrainList.delSelected()
 		self.pendingTrains = [t["tid"]] + self.pendingTrains
 		self.chTrain.SetItems(self.pendingTrains)
@@ -1298,20 +1313,20 @@ class TrainTrackerPanel(wx.Panel):
 		self.chTrain.SetSelection(0)
 		tid = self.chTrain.GetString(0)
 		self.setSelectedTrain(tid)
-		
-		if t["engineer"] in self.allPresentEngineers:
+
+		if t["engineer"] in self.selectedEngineers:
 			self.log.append("Returned engineer %s to head of pool" % t["engineer"])
-			if t["engineer"] not in self.activeEngineers:
-				self.activeEngineers = [t["engineer"]] + self.activeEngineers
+			if t["engineer"] not in self.idleEngineers:
+				self.idleEngineers = [t["engineer"]] + self.idleEngineers
 			self.chEngineer.Enable(True)
 			self.bRmEng.Enable(True)
-			self.chEngineer.SetItems(self.activeEngineers)
+			self.chEngineer.SetItems(self.idleEngineers)
 			self.chEngineer.SetSelection(0)
 			self.selectedEngineer = self.chEngineer.GetString(0)
 			
 		self.chTrain.Enable(len(self.pendingTrains) > 0)
 			
-		if len(self.pendingTrains) > 0 and (len(self.activeEngineers) > 0 or self.cbATC.IsChecked()):
+		if len(self.pendingTrains) > 0 and (len(self.idleEngineers) > 0 or self.cbATC.IsChecked()):
 			self.bAssign.Enable(True)
 		
 	def removeActiveTrain(self, t):
@@ -1326,17 +1341,17 @@ class TrainTrackerPanel(wx.Panel):
 		self.completedTrains.append(t["tid"], t["engineer"], t["loco"])
 		self.completedTrainList.update()
 		self.activeTrainList.delSelected()
-		if t["engineer"] in self.allPresentEngineers:
+		if t["engineer"] in self.selectedEngineers:
 			self.log.append("Returned engineer %s to pool" % t["engineer"])
-			if t["engineer"] not in self.activeEngineers:
-				self.activeEngineers.append(t["engineer"])
+			if t["engineer"] not in self.idleEngineers:
+				self.idleEngineers.append(t["engineer"])
 			self.chEngineer.Enable(True)
 			self.bRmEng.Enable(True)
-			self.chEngineer.SetItems(self.activeEngineers)
+			self.chEngineer.SetItems(self.idleEngineers)
 			self.chEngineer.SetSelection(0)
 			self.selectedEngineer = self.chEngineer.GetString(0)
 			
-		if len(self.pendingTrains) > 0 and (len(self.activeEngineers) > 0 or self.cbATC.IsChecked()):
+		if len(self.pendingTrains) > 0 and (len(self.idleEngineers) > 0 or self.cbATC.IsChecked()):
 			self.bAssign.Enable(True)
 		
 	def changeLoco(self, t):
@@ -1363,6 +1378,7 @@ class TrainTrackerPanel(wx.Panel):
 		tinfo = self.roster.getTrain(tid)
 		if tinfo is not None:
 			tinfo["loco"] = loco
+		self.log.append("Train %s: changed loco to %s" % (tid, loco))
 		
 	def onChoiceTID(self, _):
 		tx = self.chTrain.GetSelection()
@@ -1469,7 +1485,9 @@ class TrainTrackerPanel(wx.Panel):
 		if rc != wx.ID_OK:
 			return
 		
+		self.log.append("Modified full train order to %s" % str(norder))
 		self.pendingTrains = [t for t in norder if not self.activeTrainList.hasTrain(t) and t not in self.completedTrains]
+		self.log.append("Pending trains = %s" % str(self.pendingTrains))
 		self.trainOrder.setNewOrder(norder)
 		self.setTrainOrder(preserveActive=True)
 
@@ -1486,12 +1504,12 @@ class TrainTrackerPanel(wx.Panel):
 		self.setExtraTrains()
 		
 	def onManageEngineers(self, _):
-		currentEngineers = self.activeTrainList.getEngineers()
-		availableEngineers = [x for x in list(self.engineers) if x not in currentEngineers]
-		dlg = ManageEngineersDlg(self, availableEngineers, self.activeEngineers, currentEngineers, self.settings)
+		busyEngineers = [x for x in self.activeTrainList.getEngineers() if x in self.selectedEngineers]
+		availableEngineers = [x for x in list(self.engineers) if x not in busyEngineers]
+		dlg = ManageEngineersDlg(self, availableEngineers, self.idleEngineers, busyEngineers, self.settings)
 		rc = dlg.ShowModal()
 		if rc == wx.ID_OK:
-			newEngs, allEngs = dlg.getValues()
+			newSelEngs, allEngs = dlg.getValues()
 			
 		dlg.Destroy()
 		if rc != wx.ID_OK:
@@ -1505,17 +1523,18 @@ class TrainTrackerPanel(wx.Panel):
 			if not self.engineers.contains(eng):
 				self.engineers.add(eng)
 
-		self.log.append("New Engineer list: %s" % str(newEngs))
-		self.activeEngineers = newEngs		
-		self.chEngineer.SetItems(self.activeEngineers)
-		self.chEngineer.Enable(len(self.activeEngineers) > 0)
-		self.bRmEng.Enable(len(self.activeEngineers) > 0)
-		if len(self.pendingTrains) > 0 and (len(self.activeEngineers) > 0 or self.cbATC.IsChecked()):
+		self.log.append("New Engineer list: %s" % str(newSelEngs))
+		self.log.append("Currently assigned engineers = %s" % str(busyEngineers))
+		self.idleEngineers = newSelEngs		
+		self.chEngineer.SetItems(self.idleEngineers)
+		self.chEngineer.Enable(len(self.idleEngineers) > 0)
+		self.bRmEng.Enable(len(self.idleEngineers) > 0)
+		if len(self.pendingTrains) > 0 and (len(self.idleEngineers) > 0 or self.cbATC.IsChecked()):
 			self.bAssign.Enable(True)
 		self.chEngineer.SetSelection(0)
 		self.selectedEngineer = self.chEngineer.GetString(0)
 		
-		self.allPresentEngineers = [x for x in self.activeEngineers] + currentEngineers
+		self.selectedEngineers = [x for x in self.idleEngineers] + busyEngineers
 		
 	def onManageLocos(self, _):
 		dlg = ManageLocosDlg(self, self.locos, self.settings)

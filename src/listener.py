@@ -16,6 +16,7 @@ class Listener():
 		self.cbFailure = None
 		self.cbClock = None
 		self.cbBreaker = None
+		self.cbMessage = None
 
 		self.thread = threading.Thread(target=self.run)
 		
@@ -30,13 +31,14 @@ class Listener():
 			self.isRunning = False
 			self.thread.join()
 		
-	def bind(self, cbConnect, cbDisconnect, cbFailure, cbTrainID, cbClock, cbBreakers):
+	def bind(self, cbConnect, cbDisconnect, cbFailure, cbTrainID, cbClock, cbBreakers, cbMessage):
 		self.cbConnect = cbConnect
 		self.cbDisconnect = cbDisconnect
 		self.cbFailure = cbFailure
 		self.cbTrainID = cbTrainID
 		self.cbClock = cbClock
 		self.cbBreakers = cbBreakers
+		self.cbMessage = cbMessage
 		
 	def run(self):
 		try:
@@ -63,7 +65,8 @@ class Listener():
 			except socket.timeout:
 				pass
 			except Exception as e:
-				print("Exception %s - terminating thread" % str(e))
+				if callable(self.cbMessage):
+					self.cbMessage("Exception %s - terminating thread" % str(e))
 				self.isRunning = False
 				
 			else:
@@ -83,14 +86,16 @@ class Listener():
 							try:
 								x = int(b[19:24].strip())
 							except:
-								print("Unable to parse X coordinate from (%s)" % b[19:24].strip())
-								print("Message = (%s)" % b)
+								if callable(self.cbMessage):
+									self.cbMessage("Unable to parse X coordinate from (%s)" % b[19:24].strip())
+									self.cbMessage("Message = (%s)" % b)
 								x = None
 							try:
 								y = int(b[24:29].strip())
 							except:
-								print("Unable to parse Y coordinate from (%s)" % b[24:29].strip())
-								print("Message = (%s)" % b)
+								if callable(self.cbMessage):
+									self.cbMessage("Unable to parse Y coordinate from (%s)" % b[24:29].strip())
+									self.cbMessage("Message = (%s)" % b)
 								y = None
 								
 							if x is None or y is None:
@@ -118,11 +123,14 @@ class Listener():
 								self.cbBreakers(text)
 					
 		try:
+			print("Attempting socket close")
 			self.skt.close()
+			print("socket close completed")
 		except:
 			pass
 		
 		if callable(self.cbDisconnect):
+			print("sending disconnect")
 			self.cbDisconnect()
 					
 

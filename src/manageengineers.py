@@ -356,7 +356,7 @@ class ManageEngineersDlg(wx.Dialog):
 		self.EndModal(wx.ID_OK)
 		
 	def getValues(self):
-		return self.activeEngs, self.allEngs
+		return self.activeEngs, self.allEngs+self.busyEngs
 		
 	def bCancelPressed(self, _):
 		self.doCancel()
