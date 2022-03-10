@@ -50,6 +50,8 @@ MENU_DISPATCH_SETUPIP = 403
 MENU_DISPATCH_SETUPPORT = 404
 MENU_DISPATCH_RESET = 405
 
+DEADMANSET = 10
+
 
 wildcard = "JSON file (*.json)|*.json|"	 \
 		   "All files (*.*)|*.*"
@@ -277,7 +279,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.parent = parent
 		
 		self.parent.setTitle()
-		self.connected = False
+		self.setConnected(False)
 		self.completedTrains = CompletedTrains()
 			
 		self.log = Log()
@@ -570,6 +572,15 @@ class TrainTrackerPanel(wx.Panel):
 		self.ticker.Start(1000)
 		
 	def onTicker(self, _):
+		if self.connected and self.deadmanTimer != 0:
+			self.deadmanTimer -= 1
+			if self.deadmanTimer == 0:
+				dlg = wx.MessageDialog(self, 'The connection to the dispatcher appears to be closed.',
+                               'Dispatcher Session Error',
+                               wx.OK | wx.ICON_WARNING)
+				dlg.ShowModal()
+				dlg.Destroy()
+				
 		self.activeTrainList.ticker()
 		
 	def onResetSession(self, _):
@@ -598,13 +609,19 @@ class TrainTrackerPanel(wx.Panel):
 		self.listener.bind(self.socketConnect, self.socketDisconnect, self.connectFailure, self.trainReport, self.setClock, self.setBreakers, self.setMessage)
 		self.listener.start()
 		
+	def setConnected(self, flag=True):
+		self.connected = flag
+		self.deadmanTimer = DEADMANSET if flag else 0
+		
 	def socketConnect(self):  # thread context
 		evt = SocketConnectEvent()
 		wx.PostEvent(self, evt)
 
 	def socketConnectEvent(self, _):
 		self.parent.setTitle(connection="Connected")
-		self.connected = True
+		self.setConnected()
+		self.setBreakerValue("")
+		self.setClockValue("")
 		self.log.append("Socket Connection successful")
 		self.parent.enableListenerDisconnect(True)
 		
@@ -616,7 +633,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.parent.setTitle(connection="Disconnected")
 		self.log.append("Socket disconnection complete")
 		self.parent.enableListenerDisconnect(False)
-		self.connected = False
+		self.setConnected(False)
 		self.setBreakerValue("")
 		self.setClockValue("")
 		self.listener = None
@@ -635,6 +652,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.parent.setTitle(connection="Connection Failed")
 		self.log.append("Error from socket connection request")
 		self.listener = None
+		self.setConnected()
 		
 	def disconnectFromDispatch(self, _):
 		self.log.append("Starting socket disconnection request")
@@ -732,6 +750,7 @@ class TrainTrackerPanel(wx.Panel):
 		
 	def setClockEvent(self, evt):
 		self.setClockValue(evt.tm)
+		self.deadmanTimer = DEADMANSET
 		
 	def setClockValue(self, tm):
 		if not self.connected:
@@ -763,7 +782,7 @@ class TrainTrackerPanel(wx.Panel):
 			return
 			
 		self.teBreaker.SetValue(txt)
-		if txt == "All OK":
+		if txt == "All OK" or txt == "":
 			self.teBreaker.SetBackgroundColour(wx.Colour(10, 158, 32))
 		else:
 			self.teBreaker.SetBackgroundColour(wx.Colour(241, 41, 47))
