@@ -3,8 +3,6 @@ import wx
 import os
 import wx.html2 as webview
 
-import pprint
-
 backends = [
 	webview.WebViewBackendEdge,
 	webview.WebViewBackendIE,

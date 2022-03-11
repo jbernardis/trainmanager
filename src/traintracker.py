@@ -652,7 +652,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.parent.setTitle(connection="Connection Failed")
 		self.log.append("Error from socket connection request")
 		self.listener = None
-		self.setConnected()
+		self.setConnected(False)
 		
 	def disconnectFromDispatch(self, _):
 		self.log.append("Starting socket disconnection request")

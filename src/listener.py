@@ -122,16 +122,28 @@ class Listener():
 							if callable(self.cbBreakers):
 								self.cbBreakers(text)
 					
+		if callable(self.cbMessage):
+			self.cbMessage("Attempting socket close")
+			
 		try:
-			print("Attempting socket close")
 			self.skt.close()
-			print("socket close completed")
-		except:
-			pass
+		except Exception as e:
+			if callable(self.cbMessage):
+				self.cbMessage("Socket Close Failed: %s" % str(e))
+			print("Socket Close Failed: %s" % str(e))
+			
+		if callable(self.cbMessage):
+			self.cbMessage("socket close completed")
 		
 		if callable(self.cbDisconnect):
+			if callable(self.cbMessage):
+				self.cbMessage("sending disconnect")
 			print("sending disconnect")
 			self.cbDisconnect()
+			
+		if callable(self.cbMessage):
+			self.cbMessage("Thread execution ended")
+		print("Thread execution ended")
 					
 
 

@@ -144,17 +144,13 @@ class ActiveTrainList(wx.ListCtrl):
 	def updateTrain(self, tid, loco, desc, block):
 		for tx in range(len(self.activeTrains)):
 			if self.activeTrains[tx]["tid"] == tid:
-				print("updating train (%s)" % tid)
 				if loco is not None:
-					print("changing loco to (%s)" % loco)
 					self.activeTrains[tx]["loco"] = loco
 				if block is not None:
-					print("changing block to (%s)" % block)
 					if self.activeTrains[tx]["block"] != block:
 						self.highlight[tx] = 5 # 5 second highlight time
 					self.activeTrains[tx]["block"] = block
 				if desc is not None:
-					print("changing desc to (%s)" % desc)
 					self.activeTrains[tx]["desc"] = desc
 				self.RefreshItem(tx)
 				return
