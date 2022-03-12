@@ -1509,6 +1509,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.log.append("Pending trains = %s" % str(self.pendingTrains))
 		self.trainOrder.setNewOrder(norder)
 		self.setTrainOrder(preserveActive=True)
+		self.setExtraTrains()
 
 	def onManageTrains(self, _):
 		dlg = ManageTrainsDlg(self, self.roster, self.locos, self.settings)
@@ -1605,7 +1606,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.report.StatusReport(self.activeTrainList, self.completedTrains)
 			
 	def onReportTrainCards(self, _):
-		self.report.TrainCards(self.roster, self.trainOrder)
+		self.report.TrainCards(self.roster, self.extraTrains, self.trainOrder)
 			
 	def onClose(self, _):
 		if self.activeTrainList.count() > 0:

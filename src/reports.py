@@ -98,7 +98,7 @@ class Report:
 		dlg.ShowModal()
 		dlg.Destroy()
 
-	def TrainCards(self, roster, order):	
+	def TrainCards(self, roster, extra, order):	
 		if not self.Initialized:
 			dlg = wx.MessageDialog(self.parent, "Unable to generate reports - initialization failed", 
 		                               "Report Initialization failed",
@@ -107,11 +107,11 @@ class Report:
 			dlg.Destroy()
 			return
 		
-		dlg = ChooseCardsDlg(self.parent, list(order))
+		dlg = ChooseCardsDlg(self.parent, list(order), extra)
 		rc = dlg.ShowModal()
 		
 		if rc == wx.ID_OK:
-			cardsToPrint = dlg.getValues()
+			scheduledToPrint, extraToPrint = dlg.getValues()
 			
 		dlg.Destroy()
 		
@@ -119,11 +119,16 @@ class Report:
 			return
 		
 		ct = 0
-		for flag in cardsToPrint:
+		for flag in scheduledToPrint:
 			if flag:
 				ct += 1
 				
-		if ct == 0:
+		ctx = 0
+		for flag in extraToPrint:
+			if flag:
+				ctx += 1
+				
+		if ct+ctx == 0:
 			dlg = wx.MessageDialog(self.parent, "No Train Cards chosen - skipping report", 
 		                               "Nothing to print",
 		                               wx.OK | wx.ICON_INFORMATION)
@@ -153,9 +158,14 @@ class Report:
 
 		for tx in range(len(order)):
 			tid = order.getTid(tx)
-			if cardsToPrint[tx]:
-				cards.append(self.formatTrainCard(tid, roster.getTrain(tid), tx+1))
-			
+			if scheduledToPrint[tx]:
+				cards.append(self.formatTrainCard(tid, roster.getTrain(tid), "%d" % (tx+1)))
+		for tx in range(len(extra)):
+			tid = extra[tx]
+			if extraToPrint[tx]:
+				cn = chr(ord('A') + tx)
+				cards.append(self.formatTrainCard(tid, roster.getTrain(tid), cn))
+				
 		nCards = len(cards)
 		
 		divs = []
@@ -186,7 +196,7 @@ class Report:
 		trainIdRow = HTML.tr({}, HTML.td({"class": "trainid"}, tid), HTML.td())
 		emptyRow = HTML.tr({}, HTML.td({}, HTML.nbsp()))
 		descRow = HTML.tr({}, HTML.td({"class": "firstcol", "colspan": "3"}, "%sbound %s" % (tinfo["dir"], tinfo["desc"])))
-		cardNumberRow = HTML.tr({}, HTML.td({}, ""), HTML.td({}, ""), HTML.td({"class": "cardnumber"}, "%d" % tx))
+		cardNumberRow = HTML.tr({}, HTML.td({}, ""), HTML.td({}, ""), HTML.td({"class": "cardnumber"}, tx))
 
 		stepRows = []
 		for stp in tinfo["steps"]:
@@ -277,11 +287,12 @@ class Report:
 			
 	
 class ChooseCardsDlg(wx.Dialog):
-	def __init__(self, parent, order):
+	def __init__(self, parent, order, extra):
 		wx.Dialog.__init__(self, parent, wx.ID_ANY, "Choose Train Cards")
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 		
 		self.order = order
+		self.extra = extra
 
 		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
@@ -289,11 +300,6 @@ class ChooseCardsDlg(wx.Dialog):
 
 		vsizer = wx.BoxSizer(wx.VERTICAL)
 		vsizer.AddSpacer(20)
-		
-		st = wx.StaticText(self, wx.ID_ANY, "Select Train Cards to Print:")
-		st.SetFont(textFontBold)
-		vsizer.Add(st)
-		vsizer.AddSpacer(5)
 		
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
 		
@@ -320,7 +326,50 @@ class ChooseCardsDlg(wx.Dialog):
 		vsz.Add(self.bUncheckAll)
 		
 		hsz.Add(vsz, 0, wx.ALIGN_CENTER_VERTICAL)
+		hsz.AddSpacer(50)
 		
+		
+		
+		clb = wx.CheckListBox(self, wx.ID_ANY, choices=self.extra)
+		clb.SetFont(textFont)
+		self.Bind(wx.EVT_CHECKLISTBOX, self.onClbExtra, clb)
+		self.clbExtra = clb
+		hsz.Add(clb)
+		
+		hsz.AddSpacer(10)
+		
+		vsz = wx.BoxSizer(wx.VERTICAL)
+		
+		self.bCheckAllExtra = wx.Button(self, wx.ID_ANY, "Select\nAll", size=BTNSZ)
+		self.Bind(wx.EVT_BUTTON, self.bCheckAllExtraPressed, self.bCheckAllExtra)
+		self.bCheckAllExtra.SetFont(btnFont)
+		
+		self.bUncheckAllExtra = wx.Button(self, wx.ID_ANY, "Unselect\nAll", size=BTNSZ)
+		self.Bind(wx.EVT_BUTTON, self.bUncheckAllExtraPressed, self.bUncheckAllExtra)
+		self.bUncheckAllExtra.SetFont(btnFont)
+		
+		vsz.Add(self.bCheckAllExtra)
+		vsz.AddSpacer(20)
+		vsz.Add(self.bUncheckAllExtra)
+		
+		hsz.Add(vsz, 0, wx.ALIGN_CENTER_VERTICAL)
+		
+		
+		
+		labelsz = wx.BoxSizer(wx.HORIZONTAL)
+		st = wx.StaticText(self, wx.ID_ANY, "Select Scheduled Train Cards:")
+		st.SetFont(textFontBold)
+		labelsz.Add(st)
+		
+		labelsz.AddSpacer(50)
+		
+		st = wx.StaticText(self, wx.ID_ANY, "Select Extra Train Cards:")
+		st.SetFont(textFontBold)
+		labelsz.Add(st)
+		
+		vsizer.Add(labelsz)
+		vsizer.AddSpacer(5)
+				
 		vsizer.Add(hsz)
 		
 		vsizer.AddSpacer(10)
@@ -369,13 +418,31 @@ class ChooseCardsDlg(wx.Dialog):
 			
 		self.reportCheckCount()
 		
+	def bCheckAllExtraPressed(self, _):
+		for i in range(len(self.extra)):
+			self.clbExtra.Check(i, True)
+			
+		self.reportCheckCount()
+		
+	def bUncheckAllExtraPressed(self, _):
+		for i in range(len(self.extra)):
+			self.clbExtra.Check(i, False)
+			
+		self.reportCheckCount()
+		
 	def onClbOrder(self, _):
+		self.reportCheckCount()
+		
+	def onClbExtra(self, _):
 		self.reportCheckCount()
 		
 	def reportCheckCount(self):
 		ct = 0
 		for i in range(len(self.order)):
 			if self.clbOrder.IsChecked(i):
+				ct += 1
+		for i in range(len(self.extra)):
+			if self.clbExtra.IsChecked(i):
 				ct += 1
 				
 		if ct == 1:
@@ -398,7 +465,7 @@ class ChooseCardsDlg(wx.Dialog):
 		self.EndModal(wx.ID_CANCEL)
 		
 	def getValues(self):
-		return [self.clbOrder.IsChecked(i) for i in range(len(self.order))]
+		return [self.clbOrder.IsChecked(i) for i in range(len(self.order))], [self.clbExtra.IsChecked(i) for i in range(len(self.extra))]
 
 class RptDlg(wx.Dialog):
 	def __init__(self, parent, backend, title, html):
