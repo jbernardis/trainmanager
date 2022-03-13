@@ -23,6 +23,7 @@ from reports import Report
 from completedtrains import CompletedTrains
 from log import Log
 from listener import Listener
+from backup import saveData, restoreData
 
 BTNSZ = (120, 46)
 
@@ -34,6 +35,8 @@ MENU_FILE_VIEW_LOG = 110
 MENU_FILE_CLEAR_LOG = 111
 MENU_FILE_SAVE_LOG = 112
 MENU_FILE_ABOUT = 120
+MENU_FILE_BACKUP = 113
+MENU_FILE_RESTORE = 114
 MENU_FILE_EXIT = 199
 MENU_MANAGE_TRAINS = 200
 MENU_MANAGE_ENGINEERS = 201
@@ -110,6 +113,13 @@ class MainFrame(wx.Frame):
 		i.SetFont(font)
 		self.menuFile.Append(i)
 		i = wx.MenuItem(self.menuFile, MENU_FILE_CLEAR_LOG, "Clear Log", helpString="Clear Log")
+		i.SetFont(font)
+		self.menuFile.Append(i)
+		self.menuFile.AppendSeparator()
+		i = wx.MenuItem(self.menuFile, MENU_FILE_BACKUP, "Backup", helpString="Backup data files to a ZIP file")
+		i.SetFont(font)
+		self.menuFile.Append(i)
+		i = wx.MenuItem(self.menuFile, MENU_FILE_RESTORE, "Restore", helpString="Restore data files from a ZIP file")
 		i.SetFont(font)
 		self.menuFile.Append(i)
 		self.menuFile.AppendSeparator()
@@ -196,6 +206,8 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.panel.onClearLog, id=MENU_FILE_CLEAR_LOG)
 		self.Bind(wx.EVT_MENU, self.panel.onSaveLog, id=MENU_FILE_SAVE_LOG)
 		self.Bind(wx.EVT_MENU, self.panel.onAbout, id=MENU_FILE_ABOUT)
+		self.Bind(wx.EVT_MENU, self.panel.onSaveData, id=MENU_FILE_BACKUP)
+		self.Bind(wx.EVT_MENU, self.panel.onRestoreData, id=MENU_FILE_RESTORE)
 		self.Bind(wx.EVT_MENU, self.onClose, id=MENU_FILE_EXIT)
 		
 		self.Bind(wx.EVT_MENU, self.panel.onManageTrains, id=MENU_MANAGE_TRAINS)
@@ -1607,6 +1619,12 @@ class TrainTrackerPanel(wx.Panel):
 			
 	def onReportTrainCards(self, _):
 		self.report.TrainCards(self.roster, self.extraTrains, self.trainOrder)
+		
+	def onSaveData(self, _):
+		saveData(self, self.dettings)
+		
+	def onRestoreData(self, _):
+		restoreData(self, self.settings)
 			
 	def onClose(self, _):
 		if self.activeTrainList.count() > 0:
