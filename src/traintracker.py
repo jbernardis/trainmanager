@@ -941,6 +941,9 @@ class TrainTrackerPanel(wx.Panel):
 		self.updateActiveListLocos()
 		
 	def updateActiveListLocos(self):
+		if self.locos is None:
+			return
+		
 		actTrains = self.activeTrainList.getTrains()
 		locos = self.locos.getLocoList()
 		for tid in actTrains:
@@ -1621,7 +1624,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.report.TrainCards(self.roster, self.extraTrains, self.trainOrder)
 		
 	def onSaveData(self, _):
-		saveData(self, self.dettings)
+		saveData(self, self.settings)
 		
 	def onRestoreData(self, _):
 		restoreData(self, self.settings)
