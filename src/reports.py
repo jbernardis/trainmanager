@@ -140,13 +140,14 @@ class Report:
 		css.addElement("div.page", {"page-break-inside": "avoid"})
 		css.addElement("*", {"box-sizing": "border-box"})
 		css.addElement(".row", {"margin-left": "-5px", "margin-right": "-5px", "height": "107mm"})
-		css.addElement(".column", {"float": "left", "width": "138mm", "padding": "1px"})
+		css.addElement(".column", {"float": "left", "width": "136mm", "padding": "1px"})
 		css.addElement(".row::after", {"content": '""', "clear": "both", "display": "table"})
-		css.addElement("table", {"border-collapse": "collapse", "border-spacing": "0", "width": "100%", "height": "99mm", "font-family": '"Times New Roman", Times, serif', "font-size": "16px"})
+		css.addElement("table", {"border-collapse": "collapse", "border-spacing": "0", "width": "100%", "height": "106mm", "font-family": '"Times New Roman", Times, serif', "font-size": "16px"})
 		css.addElement("td.trainid", {"width": "36.4%", "padding-left": "50px", "padding-top": "10px", "font-size": "28px", "font-weight": "bold"})
 		css.addElement("td.firstcol", {"width": "36.4%", "padding-left": "50px"})
 		css.addElement("td.secondcol", {"width": "10%"})
-		css.addElement("td", {"text-align": "left", "padding": "6px"})
+		css.addElement("tr.datarow", {"height": "5mm"})
+		css.addElement("td", {"text-align": "left", "padding-left": "6px"})
 		css.addElement("td.cardnumber", {"text-align": "right", "padding-right": "50px"})
 		
 		html  = HTML.starthtml()
@@ -181,7 +182,6 @@ class Report:
 				html += HTML.div({"class": "page"}, divs[dx])
 			else:
 				html += HTML.div({"class": "page"}, divs[dx], divs[dx+1])
-				#HTML.p({}, HTML.nbsp()), 
 				
 			dx += 2
 
@@ -194,13 +194,13 @@ class Report:
 
 	def formatTrainCard(self, tid, tinfo, tx):
 		trainIdRow = HTML.tr({}, HTML.td({"class": "trainid"}, tid), HTML.td())
-		emptyRow = HTML.tr({}, HTML.td({}, HTML.nbsp()))
+		emptyRow = HTML.tr({"class": "datarow"}, HTML.td({}, HTML.nbsp()))
 		descRow = HTML.tr({}, HTML.td({"class": "firstcol", "colspan": "3"}, "%sbound %s" % (tinfo["dir"], tinfo["desc"])))
 		cardNumberRow = HTML.tr({}, HTML.td({}, ""), HTML.td({}, ""), HTML.td({"class": "cardnumber"}, tx))
 
 		stepRows = []
 		for stp in tinfo["steps"]:
-			row = HTML.tr({},
+			row = HTML.tr({"class": "datarow"},
 						HTML.td({"class": "firstcol"}, stp[0]),
 						HTML.td({"class": "secondcol"}, "" if stp[2] == 0 else ("(%2d)" % stp[2])),
 						HTML.td({}, stp[1])
@@ -208,7 +208,7 @@ class Report:
 			stepRows.append(row)
 			
 		nRows = len(stepRows)
-		nEmpty = 8 - nRows
+		nEmpty = 10 - nRows
 		
 		table = HTML.table({},
 			trainIdRow,
