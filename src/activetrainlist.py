@@ -11,7 +11,7 @@ class ActiveTrainList(wx.ListCtrl):
 		self.parent = parent
 		
 		wx.ListCtrl.__init__(
-			self, parent, wx.ID_ANY, size=(1050, 280),
+			self, parent, wx.ID_ANY, size=(1110, 280),
 			style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_VRULES|wx.LC_SINGLE_SEL
 			)
 		
@@ -27,6 +27,7 @@ class ActiveTrainList(wx.ListCtrl):
 		self.InsertColumn(5, "Loco #")
 		self.InsertColumn(6, "Train Description")
 		self.InsertColumn(7, "Block")
+		self.InsertColumn(8, "Time")
 		self.SetColumnWidth(0, 80)
 		self.SetColumnWidth(1, 80)
 		self.SetColumnWidth(2, 120)
@@ -35,6 +36,7 @@ class ActiveTrainList(wx.ListCtrl):
 		self.SetColumnWidth(5, 80)
 		self.SetColumnWidth(6, 360)
 		self.SetColumnWidth(7, 80)
+		self.SetColumnWidth(8, 60)
 
 		self.SetItemCount(0)
 		self.activeTrains = []
@@ -156,6 +158,7 @@ class ActiveTrainList(wx.ListCtrl):
 				return
 		
 	def addTrain(self, tr):
+		tr["time"] = 0
 		self.activeTrains.append(tr)
 		self.highlight.append(0)
 		self.SetItemCount(len(self.activeTrains))
@@ -175,6 +178,11 @@ class ActiveTrainList(wx.ListCtrl):
 		return True
 	
 	def ticker(self):
+		for tx in range(len(self.activeTrains)):
+			self.activeTrains[tx]["time"] += 1
+			
+		self.RefreshItems(0, self.GetItemCount()-1)
+		
 		for tx in range(len(self.highlight)):
 			if self.highlight[tx] > 0:
 				self.highlight[tx] -= 1
@@ -194,7 +202,7 @@ class ActiveTrainList(wx.ListCtrl):
 		ct = self.GetItemCount()
 		for x in range(0, ct):
 			self.Select(x, on=0)
-			self.RefreshItems(0, ct-1)
+		self.RefreshItems(0, ct-1)
 		return True
 				
 	def OnItemSelected(self, event):
@@ -240,6 +248,10 @@ class ActiveTrainList(wx.ListCtrl):
 				return ""
 			else:
 				return tr["block"]
+		elif col == 8:
+			mins = int(tr["time"] / 60)
+			secs = tr["time"] % 60
+			return "%2d:%02d" % (mins, secs)
 
 	def OnGetItemAttr(self, item):
 		tr = self.activeTrains[item]
