@@ -283,8 +283,51 @@ class Report:
 		dlg = RptDlg(self.parent, self.backend, "Train Status Report", html)
 		dlg.ShowModal()
 		dlg.Destroy()
+					
+	def LocosReport(self, locos):
+		if not self.Initialized:
+			dlg = wx.MessageDialog(self.parent, "Unable to generate reports - initialization failed", 
+		                               "Report Initialization failed",
+		                               wx.OK | wx.ICON_ERROR)
+			dlg.ShowModal()
+			dlg.Destroy()
+			return
 			
+		css = HTML.StyleSheet()
+		css.addElement("table", {'width': '650px', 'border-spacing': '15px',  'margin-left': 'auto', 'margin-right': 'auto'})
+		css.addElement("table, th, td", { 'border': "1px solid black", 'border-collapse': 'collapse'})
+		css.addElement("th", {'text-align': 'center',  'overflow': 'hidden'})
+		#css.addElement("th", {'text-align': 'center', 'width': '80px', 'overflow': 'hidden'})
+		css.addElement("td.loco", {"text-align": "right", "width": "90px", "padding-right": "40px"})
+		css.addElement("td.desc", {"text-align": "left", "width": "500px", "padding-left": "20px"})
+		
+		html  = HTML.starthtml()
+		html += HTML.head(HTML.style({'type': "text/css", 'media': "screen, print"}, css))
+		
+		html += HTML.startbody()
+		
+		html += HTML.h1({'align': 'center'}, "Locomotives")
+		
+		header = HTML.tr({},
+			HTML.th({}, "Loco Number"),
+			HTML.th({}, "Description"))
+		
+		rows = []
+		for loco in locos.getLocoList():
+			desc = locos.getLoco(loco)
+			rows.append(HTML.tr({},
+					HTML.td({"class": "loco"}, loco),
+					HTML.td({"class": "desc"}, desc))
+			)
+		html += HTML.table({}, header, "".join(rows))
+
 			
+		html += HTML.endbody()
+		html += HTML.endhtml()
+		
+		dlg = RptDlg(self.parent, self.backend, "Locomotives Report", html)
+		dlg.ShowModal()
+		dlg.Destroy()
 	
 class ChooseCardsDlg(wx.Dialog):
 	def __init__(self, parent, order, extra):

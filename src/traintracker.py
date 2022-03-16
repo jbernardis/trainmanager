@@ -46,6 +46,7 @@ MENU_MANAGE_ORDER = 205
 MENU_MANAGE_RESET = 299
 MENU_REPORT_OP_WORKSHEET = 301
 MENU_REPORT_TRAIN_CARDS = 302
+MENU_REPORT_LOCOS = 303
 MENU_REPORT_STATUS = 304
 MENU_DISPATCH_CONNECT = 401
 MENU_DISPATCH_DISCONNECT = 402
@@ -162,6 +163,9 @@ class MainFrame(wx.Frame):
 		i = wx.MenuItem(self.menuReports, MENU_REPORT_TRAIN_CARDS, "Train Cards", helpString="Print Train Cards")
 		i.SetFont(font)
 		self.menuReports.Append(i)
+		i = wx.MenuItem(self.menuReports, MENU_REPORT_LOCOS, "Locomotives", helpString="Print Locomotive Roster")
+		i.SetFont(font)
+		self.menuReports.Append(i)
 		i = wx.MenuItem(self.menuReports, MENU_REPORT_STATUS, "Train Status", helpString="List of all active and completed trains")
 		i.SetFont(font)
 		self.menuReports.Append(i)
@@ -219,6 +223,7 @@ class MainFrame(wx.Frame):
 		
 		self.Bind(wx.EVT_MENU, self.panel.onReportOpWorksheet, id=MENU_REPORT_OP_WORKSHEET)
 		self.Bind(wx.EVT_MENU, self.panel.onReportTrainCards, id=MENU_REPORT_TRAIN_CARDS)
+		self.Bind(wx.EVT_MENU, self.panel.onReportLocos, id=MENU_REPORT_LOCOS)
 		self.Bind(wx.EVT_MENU, self.panel.onReportStatus, id=MENU_REPORT_STATUS)
 		
 		self.Bind(wx.EVT_MENU, self.panel.connectToDispatch, id=MENU_DISPATCH_CONNECT)
@@ -1616,6 +1621,9 @@ class TrainTrackerPanel(wx.Panel):
 		
 	def onReportOpWorksheet(self, _):
 		self.report.OpWorksheetReport(self.roster, self.trainOrder, self.locos)
+		
+	def onReportLocos(self, _):
+		self.report.LocosReport(self.locos)
 		
 	def onReportStatus(self, _):
 		self.report.StatusReport(self.activeTrainList, self.completedTrains)
