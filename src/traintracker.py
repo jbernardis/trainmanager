@@ -1376,7 +1376,10 @@ class TrainTrackerPanel(wx.Panel):
 		if rc == wx.ID_CANCEL:
 			return
 
-		self.log.append("Removed train %s from active list" % t["tid"])
+		mins = int(t["time"] / 60)
+		secs = t["time"] % 60
+		runtime = "%2d:%02d" % (mins, secs)
+		self.log.append("Removed train %s from active list.  Run time %s" % (t["tid"], runtime))
 		self.completedTrains.append(t["tid"], t["engineer"], t["loco"])
 		self.completedTrainList.update()
 		self.activeTrainList.delSelected()
@@ -1620,7 +1623,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.roster.save()
 		
 	def onReportOpWorksheet(self, _):
-		self.report.OpWorksheetReport(self.roster, self.trainOrder, self.locos)
+		self.report.OpWorksheetReport(self.roster, self.trainOrder, self.locos, self.extraTrains)
 		
 	def onReportLocos(self, _):
 		self.report.LocosReport(self.locos)

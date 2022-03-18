@@ -36,7 +36,7 @@ class Report:
 	def Initialized(self):
 		return self.initialized
 
-	def OpWorksheetReport(self, roster, order, locos):	
+	def OpWorksheetReport(self, roster, order, locos, extras):	
 		if not self.Initialized:
 			dlg = wx.MessageDialog(self.parent, "Unable to generate reports - initialization failed", 
 		                               "Report Initialization failed",
@@ -49,6 +49,7 @@ class Report:
 		css.addElement("table", {'width': '650px', 'border-spacing': '15px',  'margin-left': 'auto', 'margin-right': 'auto'})
 		css.addElement("table, th, td", { 'border': "1px solid black", 'border-collapse': 'collapse'})
 		css.addElement("td, th", {'text-align': 'center', 'width': '80px', 'overflow': 'hidden'})
+		css.addElement("td.seq", {'text-align': 'center', 'width': '40px', 'overflow': 'hidden'})
 		css.addElement("td.description", {'text-align': 'left', 'width': '300px', 'overflow': 'hidden'})
 		css.addElement("td.engineer", {'width': '180px'})
 		
@@ -64,7 +65,15 @@ class Report:
 		colorEast = "#c1e2b4"
 		colorWest = "#fdc4a8"
 		
+		header = HTML.tr({},
+			HTML.th({}, "Card"),
+			HTML.th({}, "Train"),
+			HTML.th({}, "Loco"),
+			HTML.th({}, "Description"),
+			HTML.th({}, "Engineer"))
+		
 		rows = []
+		seq = 1
 		
 		for tid in order:
 			tInfo = roster.getTrain(tid)
@@ -78,19 +87,54 @@ class Report:
 				if desc is None:
 					desc = ""
 			rows.append(HTML.tr({},
+				HTML.td({"class": "seq"}, "%2d" % seq),
 				HTML.td({"bgcolor": c}, tid),
 				HTML.td({}, lid),
 				HTML.td({'class': 'description'}, HTML.nbsp(2), desc),
 				HTML.td({'class': 'engineer'}, ""))
-			)
+				)
+			seq += 1
+
+		html += HTML.h2({}, "Scheduled Trains")
 		
+		html += HTML.table({}, header, "".join(rows))
+
 		header = HTML.tr({},
+			HTML.th({}, "Card"),
 			HTML.th({}, "Train"),
 			HTML.th({}, "Loco"),
 			HTML.th({}, "Description"),
 			HTML.th({}, "Engineer"))
 		
+		rows = []
+		seq = 0
+		
+		for tid in extras:
+			tInfo = roster.getTrain(tid)
+			c = colorEast if tInfo["dir"].lower() == "east" else colorWest
+			lid = tInfo["loco"]
+			if lid is None:
+				lid = ""
+				desc = ""
+			else:
+				desc = locos.getLoco(lid)
+				if desc is None:
+					desc = ""
+			cn = chr(ord('A') + seq)
+			rows.append(HTML.tr({},
+				HTML.td({"class": "seq"}, cn),
+				HTML.td({"bgcolor": c}, tid),
+				HTML.td({}, lid),
+				HTML.td({'class': 'description'}, HTML.nbsp(2), desc),
+				HTML.td({'class': 'engineer'}, ""))
+				)
+			seq += 1
+
+		
+		html += HTML.h2({}, "Extra Trains")
+
 		html += HTML.table({}, header, "".join(rows))
+
 		html += HTML.endbody()
 		html += HTML.endhtml()
 		
