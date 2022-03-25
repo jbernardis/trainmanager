@@ -24,6 +24,8 @@ from completedtrains import CompletedTrains
 from log import Log
 from listener import Listener
 from backup import saveData, restoreData
+from dccsniffer import DCCSniffer
+from serial import SerialException
 
 BTNSZ = (120, 46)
 
@@ -53,6 +55,10 @@ MENU_DISPATCH_DISCONNECT = 402
 MENU_DISPATCH_SETUPIP = 403
 MENU_DISPATCH_SETUPPORT = 404
 MENU_DISPATCH_RESET = 405
+MENU_DCC_CONNECT = 501
+MENU_DCC_DISCONNECT = 502
+MENU_DCC_SETUPPORT = 503
+MENU_DCC_SETUPBAUD = 504
 
 DEADMANSET = 10
 
@@ -71,6 +77,9 @@ wildcardLog = "Log file (*.log)|*.log|"	 \
 (SocketDisconnectEvent, EVT_SOCKET_DISCONNECT) = newevent.NewEvent()
 (SocketFailureEvent, EVT_SOCKET_FAILURE) = newevent.NewEvent()
 (MessageEvent, EVT_MESSAGE) = newevent.NewEvent()  
+
+(DCCMessageEvent, EVT_DCCMESSAGE) = newevent.NewEvent()  
+(DCCClosedEvent,  EVT_DCCCLOSED)  = newevent.NewEvent()  
 
 class MainFrame(wx.Frame):
 	def __init__(self):
@@ -91,6 +100,7 @@ class MainFrame(wx.Frame):
 		self.engineerfile = None
 		self.locofile = None
 		self.connection = None
+		self.dcc = None
 		
 
 		self.menuFile = wx.Menu()	
@@ -174,7 +184,7 @@ class MainFrame(wx.Frame):
 		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_CONNECT, "Connect", helpString="Connect to dispatcher")
 		i.SetFont(font)
 		self.menuDispatch.Append(i)
-		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_DISCONNECT, "Disconnect", helpString="Disconnect from Dispatcher")
+		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_DISCONNECT, "Disconnect", helpString="Disconnect from dispatcher")
 		i.SetFont(font)
 		self.menuDispatch.Append(i)
 		self.menuDispatch.Enable(MENU_DISPATCH_DISCONNECT, False)
@@ -189,11 +199,28 @@ class MainFrame(wx.Frame):
 		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_RESET, "Reset Connection", helpString="Reset connection to dispatcher")
 		i.SetFont(font)
 		self.menuDispatch.Append(i)
+		
+		self.menuDCC = wx.Menu()
+		i = wx.MenuItem(self.menuDCC, MENU_DCC_CONNECT, "Connect", helpString="Connect to DCC Sniffer")
+		i.SetFont(font)
+		self.menuDCC.Append(i)
+		i = wx.MenuItem(self.menuDCC, MENU_DCC_DISCONNECT, "Disconnect", helpString="Disconnect from DCC Sniffer")
+		i.SetFont(font)
+		self.menuDCC.Append(i)
+		self.menuDCC.Enable(MENU_DCC_DISCONNECT, False)
+		self.menuDCC.AppendSeparator()
+		i = wx.MenuItem(self.menuDCC, MENU_DCC_SETUPPORT, "Configure DCC Port Name", helpString="Configure DCC Port Name")
+		i.SetFont(font)
+		self.menuDCC.Append(i)
+		i = wx.MenuItem(self.menuDCC, MENU_DCC_SETUPBAUD, "Configure DCC Baud Rate", helpString="Configure DCC Baud Rate")
+		i.SetFont(font)
+		self.menuDCC.Append(i)
 
 		menuBar.Append(self.menuFile, "File")
 		menuBar.Append(self.menuManage, "Manage")
 		menuBar.Append(self.menuReports, "Reports")
 		menuBar.Append(self.menuDispatch, "Dispatch")
+		menuBar.Append(self.menuDCC, "DCC")
 				
 		self.SetMenuBar(menuBar)
 		self.menuBar = menuBar
@@ -232,11 +259,16 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.panel.setupPort, id=MENU_DISPATCH_SETUPPORT)
 		self.Bind(wx.EVT_MENU, self.panel.resetConnection, id=MENU_DISPATCH_RESET)
 		
+		self.Bind(wx.EVT_MENU, self.panel.onConnectSnifferPressed, id=MENU_DCC_CONNECT)
+		self.Bind(wx.EVT_MENU, self.panel.onDisconnectSnifferPressed, id=MENU_DCC_DISCONNECT)
+		self.Bind(wx.EVT_MENU, self.panel.setupDCCtty, id=MENU_DCC_SETUPPORT)
+		self.Bind(wx.EVT_MENU, self.panel.setupDCCBaud, id=MENU_DCC_SETUPBAUD)
+		
 		self.SetSizer(sizer)
 		self.Layout()
 		self.Fit();
 		
-	def setTitle(self, train=None, order=None, engineer=None, loco=None, connection=None):
+	def setTitle(self, train=None, order=None, engineer=None, loco=None, connection=None, dcc=None):
 		if train is not None:
 			self.trainfile = train
 			
@@ -251,6 +283,9 @@ class MainFrame(wx.Frame):
 			
 		if connection is not None:
 			self.connection = connection
+			
+		if dcc is not None:
+			self.dcc = dcc
 			
 		title = "Train Tracker"
 		if self.trainfile is not None:
@@ -274,7 +309,12 @@ class MainFrame(wx.Frame):
 			title += " / "
 		
 		if self.connection is not None:
-			title += "     %s" % self.connection
+			title += "     %s / " % self.connection
+		else:
+			title += " / "
+		
+		if self.dcc is not None:
+			title += "%s" % self.dcc
 		self.SetTitle(title)
 		
 	def disableReports(self):
@@ -302,11 +342,13 @@ class TrainTrackerPanel(wx.Panel):
 		self.log = Log()
 		
 		self.listener = None
+		self.sniffer = None
 
 		self.pendingTrains = []
 		self.selectedEngineers = [] 
 		self.idleEngineers = []
 		self.trainOrder = None
+		self.speeds = {}
 		
 		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 		labelFont = wx.Font(wx.Font(12, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.NORMAL, faceName="Monospace"))
@@ -548,7 +590,8 @@ class TrainTrackerPanel(wx.Panel):
 		self.SetSizer(wsizer)
 		self.Layout()
 		self.Fit()
-		
+
+		# events from dispatcher		
 		self.Bind(EVT_TRAINLOC, self.setTrainLocation)
 		self.Bind(EVT_CLOCK, self.setClockEvent)
 		self.Bind(EVT_BREAKER, self.setBreakersEvent)
@@ -556,6 +599,10 @@ class TrainTrackerPanel(wx.Panel):
 		self.Bind(EVT_SOCKET_DISCONNECT, self.socketDisconnectEvent)
 		self.Bind(EVT_SOCKET_FAILURE, self.socketFailureEvent)
 		self.Bind(EVT_MESSAGE, self.setMessageEvent)
+
+		# events from DCC tracker
+		self.Bind(EVT_DCCMESSAGE, self.onDCCMessage)
+		self.Bind(EVT_DCCCLOSED,  self.onDCCClosed)
 		
 		wx.CallAfter(self.initialize)
 		
@@ -582,7 +629,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.setBreakerValue("All OK")
 		self.setClockValue("")
 		self.setExtraTrains()
-		self.parent.setTitle(connection="Not Connected")
+		self.parent.setTitle(connection="Not Connected", dcc="DCC Not Connected")
 		
 		self.Bind(wx.EVT_TIMER, self.onTicker)
 		self.ticker = wx.Timer(self)
@@ -719,6 +766,37 @@ class TrainTrackerPanel(wx.Panel):
 		self.settings.dispatchport = newPort
 		self.settings.setModified()
 		self.log.append("modified IP port to %s" % newPort)
+		
+		
+	def setupDCCtty(self, _):
+		dlg = wx.TextEntryDialog(self, 'Enter/Modify COM port for DCC', 'COM Port', self.settings.dccsnifferport)
+		rc = dlg.ShowModal()
+		if rc == wx.ID_OK:
+			newPort = dlg.GetValue()
+
+		dlg.Destroy()
+		
+		if rc != wx.ID_OK:
+			return
+		
+		self.settings.dccsnifferport = newPort
+		self.log.append("modified DCC Port to %s" % newPort)
+		self.settings.setModified()
+		
+	def setupDCCBaud(self, _):
+		dlg = wx.TextEntryDialog(self, 'Enter/Modify DCC Sniffer Baud rate', 'Baud Rate', "%d" % self.settings.dccsnifferbaud)
+		rc = dlg.ShowModal()
+		if rc == wx.ID_OK:
+			newBaud = dlg.GetValue()
+
+		dlg.Destroy()
+		
+		if rc != wx.ID_OK:
+			return
+		
+		self.settings.dccsnifferbaud = int(newBaud)
+		self.settings.setModified()
+		self.log.append("modified DCC Baud Rate to %d" % int(newBaud))
 		
 	def trainReport(self, train, loco, block):
 		# This method executes in thread context - don't touch the wxpython elements here
@@ -1186,11 +1264,17 @@ class TrainTrackerPanel(wx.Panel):
 		if tInfo["loco"] is None:
 			loco = ""
 			descr = ""
+			speed = None
 		else:
 			loco = tInfo["loco"]
 			descr = self.locos.getLoco(loco)
 			if descr is None:
 				descr = ""
+			if loco in self.speeds:
+				speed = self.speeds[loco][0]
+			else:
+				speed = None
+				
 		if "block" in tInfo:
 			block = tInfo["block"]
 		else:
@@ -1202,6 +1286,7 @@ class TrainTrackerPanel(wx.Panel):
 			"terminus": tInfo["terminus"],
 			"block": block,
 			"loco": loco,
+			"throttle": speed,
 			"desc": descr,
 			"engineer": eng}
 		self.activeTrainList.addTrain(acttr)
@@ -1416,6 +1501,9 @@ class TrainTrackerPanel(wx.Panel):
 		
 		desc = self.locos.getLoco(loco)
 		self.activeTrainList.updateTrain(tid, loco, desc, None)
+		
+		if loco in self.speeds:
+			self.activeTrainList.setThrottle(loco, self.speeds[loco][0], self.speeds[loco][1])
 		
 		tinfo = self.roster.getTrain(tid)
 		if tinfo is not None:
@@ -1639,6 +1727,82 @@ class TrainTrackerPanel(wx.Panel):
 		
 	def onRestoreData(self, _):
 		restoreData(self, self.settings)
+		
+	def onConnectSnifferPressed(self, _):
+		self.connectSniffer()
+
+	def connectSniffer(self):		
+		self.sniffer = DCCSniffer()
+		self.sniffer.bind(self.DCCMessage, self.DCCClosed)
+
+		try:
+			self.sniffer.connect(self.settings.dccsnifferport, self.settings.dccsnifferbaud, 1)
+		except SerialException:
+			dlg = wx.MessageDialog(self, 'Connection to DCC Sniffer on port ' + self.settings.dccsnifferport + ' failed',
+                               'Connection Failed',
+                               wx.OK | wx.ICON_ERROR)
+			dlg.ShowModal()
+			dlg.Destroy()
+			self.sniffer = None
+			
+		self.enableDCCDisconnect(self.sniffer is not None)
+		if self.sniffer:
+			self.parent.setTitle(dcc="DCC Connected(%s)" % self.settings.dccsnifferport)
+		else:
+			self.parent.setTitle(dcc="DCC Not Connected")
+
+
+	def onDisconnectSnifferPressed(self, _):
+		self.disconnectSniffer()
+		
+	def disconnectSniffer(self):
+		if self.sniffer is None:
+			return
+		
+		try:
+			self.sniffer.kill()
+			self.sniffer.join()	
+		except:
+			pass
+		
+		self.sniffer = None
+		self.enableDCCDisconnect(False)
+		self.parent.setTitle(dcc="DCC Not Connected")
+		
+	def enableDCCDisconnect(self, flag=True):
+		self.parent.menuDCC.Enable(MENU_DCC_DISCONNECT, flag)
+		self.parent.menuDCC.Enable(MENU_DCC_CONNECT, not flag)
+
+			
+	def DCCMessage(self, txt): # thread context
+		dccMsg = {
+			"instr": txt[0],
+			"loco": txt[1],
+			"param": txt[2]
+		}
+		evt = DCCMessageEvent(dcc=dccMsg)
+		wx.PostEvent(self, evt)
+		
+	def onDCCMessage(self, evt):
+		dccMsg = evt.dcc
+		cmd = dccMsg["instr"]
+		if cmd in ["F", "f", "R", "r", "s", "e"]:
+			if cmd in ["F", "f"]:
+				forward = True
+			elif cmd in ["R", "r"]:
+				forward = False
+			else:
+				forward = True
+			speed = int(dccMsg["param"])
+			self.speeds[dccMsg["loco"]] = [speed, forward]
+			self.activeTrainList.setThrottle(dccMsg["loco"], speed, forward)
+		
+	def DCCClosed(self): # thread context
+		evt = DCCClosedEvent()
+		wx.PostEvent(self, evt)
+		
+	def onDCCClosed(self, evt):
+		self.disconnectSniffer()
 			
 	def onClose(self, _):
 		if self.activeTrainList.count() > 0:
@@ -1652,6 +1816,8 @@ class TrainTrackerPanel(wx.Panel):
 			
 		if self.listener is not None:
 			self.listener.kill()
+			
+		self.disconnectSniffer()
 			
 		self.settings.save()
 		self.Destroy()

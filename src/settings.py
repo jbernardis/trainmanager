@@ -33,6 +33,8 @@ class Settings:
 		self.logdir = os.path.join(os.getcwd(), "logs")
 		self.dispatchip = "192.168.1.157"
 		self.dispatchport = "5204"
+		self.dccsnifferport = "COM5"
+		self.dccsnifferbaud = 38400
 		
 		self.cfg = configparser.ConfigParser()
 		self.cfg.optionxform = str
@@ -71,6 +73,10 @@ class Settings:
 					self.dispatchip = value
 				elif opt == "dispatchport":
 					self.dispatchport = value
+				elif opt == "dccsnifferport":
+					self.dccsnifferport = value
+				elif opt == "dccsnifferbaud":
+					self.dccsnifferbaud = int(value)
 				else:
 					msgs.append("INI file: Unknown %s option: %s - ignoring" % (self.section, opt))
 		else:
@@ -108,6 +114,8 @@ class Settings:
 		self.cfg.set(self.section, "logdir", str(self.logdir))
 		self.cfg.set(self.section, "dispatchip", str(self.dispatchip))
 		self.cfg.set(self.section, "dispatchport", str(self.dispatchport))
+		self.cfg.set(self.section, "dccsnifferport", str(self.dccsnifferport))
+		self.cfg.set(self.section, "dccsnifferbaud", str(self.dccsnifferbaud))
 
 		try:		
 			cfp = open(self.inifile, 'w')

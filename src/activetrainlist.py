@@ -11,7 +11,7 @@ class ActiveTrainList(wx.ListCtrl):
 		self.parent = parent
 		
 		wx.ListCtrl.__init__(
-			self, parent, wx.ID_ANY, size=(1110, 280),
+			self, parent, wx.ID_ANY, size=(1160, 280),
 			style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_VRULES|wx.LC_SINGLE_SEL
 			)
 		
@@ -20,23 +20,25 @@ class ActiveTrainList(wx.ListCtrl):
 
 
 		self.InsertColumn(0, "Train")
-		self.InsertColumn(1, "Dir")
-		self.InsertColumn(2, "Origin")
+		self.InsertColumn(1, "Origin")
+		self.InsertColumn(2, "Dir")
 		self.InsertColumn(3, "Terminus")
 		self.InsertColumn(4, "Engineer")
 		self.InsertColumn(5, "Loco #")
 		self.InsertColumn(6, "Train Description")
 		self.InsertColumn(7, "Block")
-		self.InsertColumn(8, "Time")
+		self.InsertColumn(8, "Speed")
+		self.InsertColumn(9, "Time")
 		self.SetColumnWidth(0, 80)
-		self.SetColumnWidth(1, 80)
-		self.SetColumnWidth(2, 120)
+		self.SetColumnWidth(1, 120)
+		self.SetColumnWidth(2, 80)
 		self.SetColumnWidth(3, 120)
 		self.SetColumnWidth(4, 120)
 		self.SetColumnWidth(5, 80)
 		self.SetColumnWidth(6, 360)
-		self.SetColumnWidth(7, 80)
+		self.SetColumnWidth(7, 60)
 		self.SetColumnWidth(8, 60)
+		self.SetColumnWidth(9, 80)
 
 		self.SetItemCount(0)
 		self.activeTrains = []
@@ -159,6 +161,8 @@ class ActiveTrainList(wx.ListCtrl):
 		
 	def addTrain(self, tr):
 		tr["time"] = 0
+		if "throttle" not in tr:
+			tr["throttle"] = None
 		self.activeTrains.append(tr)
 		self.highlight.append(0)
 		self.SetItemCount(len(self.activeTrains))
@@ -176,6 +180,15 @@ class ActiveTrainList(wx.ListCtrl):
 		self.RefreshItem(self.selected)
 		
 		return True
+	
+	def setThrottle(self, loco, throttle, forward):
+		tx = 0
+		for tx in range(len(self.activeTrains)):
+			tr = self.activeTrains[tx]
+			if tr["loco"] == loco:
+				self.activeTrains[tx]["throttle"] = throttle
+				self.RefreshItem(tx)
+				return
 	
 	def ticker(self):
 		for tx in range(len(self.activeTrains)):
@@ -226,9 +239,9 @@ class ActiveTrainList(wx.ListCtrl):
 		if col == 0:
 			return tr["tid"]
 		elif col == 1:
-			return tr["dir"]
-		elif col == 2:
 			return tr["origin"]
+		elif col == 2:
+			return tr["dir"]
 		elif col == 3:
 			return tr["terminus"]
 		elif col == 4:
@@ -249,6 +262,11 @@ class ActiveTrainList(wx.ListCtrl):
 			else:
 				return tr["block"]
 		elif col == 8:
+			if tr["throttle"] is None:
+				return ""
+			else:
+				return("%5d" % tr["throttle"])
+		elif col == 9:
 			mins = int(tr["time"] / 60)
 			secs = tr["time"] % 60
 			return "%2d:%02d" % (mins, secs)
