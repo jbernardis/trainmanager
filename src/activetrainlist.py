@@ -6,12 +6,18 @@ MENU_CHANGE_LOCO     = 1102
 MENU_SHOW_DETAILS    = 1103
 MENU_RETURN_TRAIN    = 1104
 
+FWD_128 = 1
+FWD_28 = 2
+REV_128 = 3
+REV_28 = 4
+STOP = 5
+
 class ActiveTrainList(wx.ListCtrl):
 	def __init__(self, parent):
 		self.parent = parent
 		
 		wx.ListCtrl.__init__(
-			self, parent, wx.ID_ANY, size=(1160, 280),
+			self, parent, wx.ID_ANY, size=(1170, 280),
 			style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_VRULES|wx.LC_SINGLE_SEL
 			)
 		
@@ -37,7 +43,7 @@ class ActiveTrainList(wx.ListCtrl):
 		self.SetColumnWidth(5, 80)
 		self.SetColumnWidth(6, 360)
 		self.SetColumnWidth(7, 60)
-		self.SetColumnWidth(8, 60)
+		self.SetColumnWidth(8, 70)
 		self.SetColumnWidth(9, 80)
 
 		self.SetItemCount(0)
@@ -181,14 +187,28 @@ class ActiveTrainList(wx.ListCtrl):
 		
 		return True
 	
-	def setThrottle(self, loco, throttle, forward):
+	def setThrottle(self, loco, throttle, speedType):
 		tx = 0
 		for tx in range(len(self.activeTrains)):
 			tr = self.activeTrains[tx]
 			if tr["loco"] == loco:
-				self.activeTrains[tx]["throttle"] = throttle
+				self.activeTrains[tx]["throttle"] = self.formatThrottle(throttle, speedType)
 				self.RefreshItem(tx)
 				return
+			
+	def formatThrottle(self, speed, speedType):
+		speedStr = "%3d" % speed
+		
+		if speedType == FWD_128:
+			return speedStr
+		elif speedType == FWD_28:
+			return "%s/28" % speedStr
+		elif speedType == REV_128:
+			return "(%s)" % speedStr
+		elif speedType == REV_28:
+			return "(%s/28)" % speedStr
+		else:
+			return speedStr
 	
 	def ticker(self):
 		for tx in range(len(self.activeTrains)):
@@ -265,7 +285,7 @@ class ActiveTrainList(wx.ListCtrl):
 			if tr["throttle"] is None:
 				return ""
 			else:
-				return("%5d" % tr["throttle"])
+				return tr["throttle"]
 		elif col == 9:
 			mins = int(tr["time"] / 60)
 			secs = tr["time"] % 60

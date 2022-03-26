@@ -8,7 +8,7 @@ from trainroster import TrainRoster
 from locomotives import Locomotives
 from engineers import Engineers
 from order import Order
-from activetrainlist import ActiveTrainList
+from activetrainlist import ActiveTrainList, FWD_128, FWD_28, REV_128, REV_28, STOP
 from completedtrainlist import CompletedTrainList
 from managetrains import ManageTrainsDlg
 from manageengineers import ManageEngineersDlg
@@ -1264,16 +1264,11 @@ class TrainTrackerPanel(wx.Panel):
 		if tInfo["loco"] is None:
 			loco = ""
 			descr = ""
-			speed = None
 		else:
 			loco = tInfo["loco"]
 			descr = self.locos.getLoco(loco)
 			if descr is None:
 				descr = ""
-			if loco in self.speeds:
-				speed = self.speeds[loco][0]
-			else:
-				speed = None
 				
 		if "block" in tInfo:
 			block = tInfo["block"]
@@ -1286,10 +1281,12 @@ class TrainTrackerPanel(wx.Panel):
 			"terminus": tInfo["terminus"],
 			"block": block,
 			"loco": loco,
-			"throttle": speed,
 			"desc": descr,
 			"engineer": eng}
 		self.activeTrainList.addTrain(acttr)
+		if loco in self.speeds:
+			self.activeTrainList.setThrottle(self.speeds[loco][0], self.speeds[loco][1])
+			
 		self.log.append("Assigned %strain %s to %s" % ("extra " if runningExtra else "", tid, eng))
 
 		if not runningExtra:		
@@ -1787,15 +1784,20 @@ class TrainTrackerPanel(wx.Panel):
 		dccMsg = evt.dcc
 		cmd = dccMsg["instr"]
 		if cmd in ["F", "f", "R", "r", "s", "e"]:
-			if cmd in ["F", "f"]:
-				forward = True
-			elif cmd in ["R", "r"]:
-				forward = False
+			if cmd == "F":
+				speedType = FWD_128
+			elif cmd == "f":
+				speedType = FWD_28
+			elif cmd == "R":
+				speedType = REV_128
+			elif cmd == "r":
+				speedType = REV_28
 			else:
-				forward = True
+				speedType = STOP
+
 			speed = int(dccMsg["param"])
-			self.speeds[dccMsg["loco"]] = [speed, forward]
-			self.activeTrainList.setThrottle(dccMsg["loco"], speed, forward)
+			self.speeds[dccMsg["loco"]] = [speed, speedType]
+			self.activeTrainList.setThrottle(dccMsg["loco"], speed, speedType)
 		
 	def DCCClosed(self): # thread context
 		evt = DCCClosedEvent()
