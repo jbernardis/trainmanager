@@ -510,15 +510,15 @@ class TrainTrackerPanel(wx.Panel):
 		bsizer.AddSpacer(topBorder)
 		
 		bsizer.Add(wx.StaticText(boxDetails, wx.ID_ANY, "", size=(300, -1)))
-		bsizer.AddSpacer(20)
+		bsizer.AddSpacer(5)
 
 		self.stDescription = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(400, -1))
 		self.stDescription.SetFont(labelFontBold)
 		bsizer.Add(self.stDescription)
 		bsizer.AddSpacer(10)
-		self.stStepsTower = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(100, 150))
-		self.stStepsLoc = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(60, 150))
-		self.stStepsStop = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(300, 150))
+		self.stStepsTower = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(100, 170))
+		self.stStepsLoc = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(60, 170))
+		self.stStepsStop = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(300, 170))
 		self.stStepsTower.SetFont(labelFont)
 		self.stStepsLoc.SetFont(labelFont)
 		self.stStepsStop.SetFont(labelFont)
@@ -530,9 +530,9 @@ class TrainTrackerPanel(wx.Panel):
 		
 		self.stLocoInfo = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(600, -1))
 		self.stLocoInfo.SetFont(labelFontBold)
-		bsizer.AddSpacer(10)
+		bsizer.AddSpacer(5)
 		bsizer.Add(self.stLocoInfo)
-		bsizer.AddSpacer(20)
+		bsizer.AddSpacer(10)
 		
 		bhsizer = wx.BoxSizer(wx.HORIZONTAL)
 		bhsizer.AddSpacer(20)
