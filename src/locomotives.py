@@ -7,7 +7,7 @@ class Locomotives:
 			self.locos = json.load(fp)
 		
 	def getLocoList(self):
-		return list(self.locos.keys())
+		return sorted(list(self.locos.keys()))
 		
 	def getLoco(self, lId):
 		if lId not in self.locos:
