@@ -1,32 +1,24 @@
 import HTML
 import wx
 import os
-import wx.html2 as webview
+import webbrowser
 
-backends = [
-	webview.WebViewBackendEdge,
-	webview.WebViewBackendIE,
-	webview.WebViewBackendWebKit,
-	webview.WebViewBackendDefault
-]
 BTNSZ = (120, 46)
 
 class Report:
-	def __init__(self, parent):
+	def __init__(self, parent, settings):
 		self.initialized = False
 		self.parent = parent
+		self.settings = settings
 		
-		self.backend = None
-		for bid in backends:
-			available = webview.WebView.IsBackendAvailable(bid)
-			if available and self.backend is None:
-				self.backend = bid
-				break
+		browserCmd = self.settings.browser + " --app=%s"
 
-		if self.backend is None:
-			dlg = wx.MessageDialog(self.parent, "Unable to find an available backend", 
-		                               "Report Initialization failed",
-		                               wx.OK | wx.ICON_ERROR)
+		try:
+			self.browser = webbrowser.get(browserCmd)
+		except webbrowser.Error:
+			dlg = wx.MessageDialog(self.parent, "Unable to find an available browser at\n%s" % self.settings.browser, 
+		                                "Report Initialization failed",
+		                                wx.OK | wx.ICON_ERROR)
 			dlg.ShowModal()
 			dlg.Destroy()
 			return
@@ -35,16 +27,20 @@ class Report:
 		
 	def Initialized(self):
 		return self.initialized
+	
+	def openBrowser(self, title, html):
+		htmlFileName = "report.html"
+		with open(htmlFileName, "w") as fp:
+			fp.write(html)
+		
+		path = os.path.join(os.getcwd(), htmlFileName)
+		
+		fileURL = 'file:///'+path
+
+		self.browser.open_new(fileURL)
+
 
 	def OpWorksheetReport(self, roster, order, locos, extras):	
-		if not self.Initialized:
-			dlg = wx.MessageDialog(self.parent, "Unable to generate reports - initialization failed", 
-		                               "Report Initialization failed",
-		                               wx.OK | wx.ICON_ERROR)
-			dlg.ShowModal()
-			dlg.Destroy()
-			return
-			
 		css = HTML.StyleSheet()
 		css.addElement("table", {'width': '650px', 'border-spacing': '15px',  'margin-left': 'auto', 'margin-right': 'auto'})
 		css.addElement("table, th, td", { 'border': "1px solid black", 'border-collapse': 'collapse'})
@@ -138,19 +134,9 @@ class Report:
 		html += HTML.endbody()
 		html += HTML.endhtml()
 		
-		dlg = RptDlg(self.parent, self.backend, "Operating Worksheet", html)
-		dlg.ShowModal()
-		dlg.Destroy()
+		self.openBrowser("Operating Worksheet", html)
 
 	def TrainCards(self, roster, extra, order):	
-		if not self.Initialized:
-			dlg = wx.MessageDialog(self.parent, "Unable to generate reports - initialization failed", 
-		                               "Report Initialization failed",
-		                               wx.OK | wx.ICON_ERROR)
-			dlg.ShowModal()
-			dlg.Destroy()
-			return
-		
 		dlg = ChooseCardsDlg(self.parent, list(order), extra)
 		rc = dlg.ShowModal()
 		
@@ -232,9 +218,7 @@ class Report:
 		html += HTML.endbody()
 		html += HTML.endhtml()
 
-		dlg = RptDlg(self.parent, self.backend, "Train Cards", html)
-		dlg.ShowModal()
-		dlg.Destroy()
+		self.openBrowser("Train Cards", html)
 
 	def formatTrainCard(self, tid, tinfo, tx):
 		trainIdRow = HTML.tr({}, HTML.td({"class": "trainid"}, tid), HTML.td())
@@ -266,14 +250,6 @@ class Report:
 		return HTML.div({"class": "column"}, table)
 			
 	def StatusReport(self, active, completed):
-		if not self.Initialized:
-			dlg = wx.MessageDialog(self.parent, "Unable to generate reports - initialization failed", 
-		                               "Report Initialization failed",
-		                               wx.OK | wx.ICON_ERROR)
-			dlg.ShowModal()
-			dlg.Destroy()
-			return
-			
 		css = HTML.StyleSheet()
 		css.addElement("table", {'width': '650px', 'border-spacing': '15px',  'margin-left': 'auto', 'margin-right': 'auto'})
 		css.addElement("table, th, td", { 'border': "1px solid black", 'border-collapse': 'collapse'})
@@ -324,19 +300,9 @@ class Report:
 		html += HTML.endbody()
 		html += HTML.endhtml()
 		
-		dlg = RptDlg(self.parent, self.backend, "Train Status Report", html)
-		dlg.ShowModal()
-		dlg.Destroy()
+		self.openBrowser("Train Status Report", html)
 					
 	def LocosReport(self, locos):
-		if not self.Initialized:
-			dlg = wx.MessageDialog(self.parent, "Unable to generate reports - initialization failed", 
-		                               "Report Initialization failed",
-		                               wx.OK | wx.ICON_ERROR)
-			dlg.ShowModal()
-			dlg.Destroy()
-			return
-			
 		css = HTML.StyleSheet()
 		css.addElement("table", {'width': '650px', 'border-spacing': '15px',  'margin-left': 'auto', 'margin-right': 'auto'})
 		css.addElement("table, th, td", { 'border': "1px solid black", 'border-collapse': 'collapse'})
@@ -369,9 +335,7 @@ class Report:
 		html += HTML.endbody()
 		html += HTML.endhtml()
 		
-		dlg = RptDlg(self.parent, self.backend, "Locomotives Report", html)
-		dlg.ShowModal()
-		dlg.Destroy()
+		self.openBrowser("Locomotives Report", html)
 	
 class ChooseCardsDlg(wx.Dialog):
 	def __init__(self, parent, order, extra):
@@ -553,56 +517,4 @@ class ChooseCardsDlg(wx.Dialog):
 		
 	def getValues(self):
 		return [self.clbOrder.IsChecked(i) for i in range(len(self.order))], [self.clbExtra.IsChecked(i) for i in range(len(self.extra))]
-
-class RptDlg(wx.Dialog):
-	def __init__(self, parent, backend, title, html):
-		wx.Dialog.__init__(self, parent, wx.ID_ANY, title, size=(760, 800), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
-		self.Bind(wx.EVT_CLOSE, self.onClose)
-		
-		
-		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
-
-		self.wv = webview.WebView.New(self, backend=backend)
-		
-		vsizer=wx.BoxSizer(wx.VERTICAL)
-		vsizer.AddSpacer(20)
-		vsizer.Add(self.wv, 1, wx.EXPAND)
-		vsizer.AddSpacer(20)
-		
-		btnsizer = wx.BoxSizer(wx.HORIZONTAL)
-		btnsizer.AddSpacer(20)
-		
-		btn = wx.Button(self, wx.ID_ANY, "Print", size=BTNSZ)
-		btn.SetFont(btnFont)
-		self.Bind(wx.EVT_BUTTON, self.onBtn, btn)
-		btnsizer.Add(btn)
-		
-		btnsizer.AddSpacer(20)
-		
-		vsizer.Add(btnsizer)
-		vsizer.AddSpacer(20)
-				
-		hsizer=wx.BoxSizer(wx.HORIZONTAL)
-		hsizer.AddSpacer(20)
-		hsizer.Add(vsizer, 1, wx.EXPAND)
-		hsizer.AddSpacer(20)
-		self.SetSizer(hsizer)
-
-		htmlFileName = "report.html"
-		with open(htmlFileName, "w") as fp:
-			fp.write(html)
-		
-		path = os.path.join(os.getcwd(), htmlFileName)
-		
-		fileURL = 'file:///'+path
-
-		self.wv.LoadURL(fileURL)
-		
-		self.Layout()
-		
-	def onBtn(self, _):
-		self.wv.Print()
-		
-	def onClose(self, _):
-		self.EndModal(wx.ID_OK)
 	

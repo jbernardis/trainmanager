@@ -35,6 +35,8 @@ class Settings:
 		self.dispatchport = "5204"
 		self.dccsnifferport = "COM5"
 		self.dccsnifferbaud = 38400
+		self.browser = "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"
+
 		
 		self.cfg = configparser.ConfigParser()
 		self.cfg.optionxform = str
@@ -77,6 +79,8 @@ class Settings:
 					self.dccsnifferport = value
 				elif opt == "dccsnifferbaud":
 					self.dccsnifferbaud = int(value)
+				elif opt == "browser":
+					self.browser = value
 				else:
 					msgs.append("INI file: Unknown %s option: %s - ignoring" % (self.section, opt))
 		else:
@@ -116,6 +120,7 @@ class Settings:
 		self.cfg.set(self.section, "dispatchport", str(self.dispatchport))
 		self.cfg.set(self.section, "dccsnifferport", str(self.dccsnifferport))
 		self.cfg.set(self.section, "dccsnifferbaud", str(self.dccsnifferbaud))
+		self.cfg.set(self.section, "browser", str(self.browser))
 
 		try:		
 			cfp = open(self.inifile, 'w')

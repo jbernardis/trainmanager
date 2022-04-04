@@ -318,7 +318,8 @@ class MainFrame(wx.Frame):
 		self.SetTitle(title)
 		
 	def disableReports(self):
-		self.menuReports.Enable(MENU_REPORT_OP_WORKSHEET, False)
+		for r in [ MENU_REPORT_OP_WORKSHEET, MENU_REPORT_TRAIN_CARDS, MENU_REPORT_LOCOS, MENU_REPORT_STATUS ]:
+			self.menuReports.Enable(r, False)
 		
 	def enableListenerDisconnect(self, flag=True):
 		self.menuDispatch.Enable(MENU_DISPATCH_DISCONNECT, flag)
@@ -622,7 +623,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.loadOrderFile(os.path.join(self.settings.orderdir, self.settings.orderfile))
 		self.parent.setTitle(train=self.trainFile, order=self.orderFile, engineer=self.engineerFile, loco=self.locoFile)
 		
-		self.report = Report(self)
+		self.report = Report(self, self.settings)
 		if not self.report.Initialized():
 			self.parent.disableReports()
 
