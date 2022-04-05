@@ -17,7 +17,7 @@ class ActiveTrainList(wx.ListCtrl):
 		self.parent = parent
 		
 		wx.ListCtrl.__init__(
-			self, parent, wx.ID_ANY, size=(1170, 280),
+			self, parent, wx.ID_ANY, size=(1200, 280),
 			style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_VRULES|wx.LC_SINGLE_SEL
 			)
 		
@@ -34,17 +34,19 @@ class ActiveTrainList(wx.ListCtrl):
 		self.InsertColumn(6, "Train Description")
 		self.InsertColumn(7, "Block")
 		self.InsertColumn(8, "Speed")
-		self.InsertColumn(9, "Time")
+		self.InsertColumn(9, "Limit")
+		self.InsertColumn(10, "Time")
 		self.SetColumnWidth(0, 80)
 		self.SetColumnWidth(1, 120)
 		self.SetColumnWidth(2, 80)
 		self.SetColumnWidth(3, 120)
 		self.SetColumnWidth(4, 120)
 		self.SetColumnWidth(5, 80)
-		self.SetColumnWidth(6, 360)
+		self.SetColumnWidth(6, 340)
 		self.SetColumnWidth(7, 60)
 		self.SetColumnWidth(8, 70)
-		self.SetColumnWidth(9, 80)
+		self.SetColumnWidth(9, 60)
+		self.SetColumnWidth(10, 80)
 
 		self.SetItemCount(0)
 		self.activeTrains = []
@@ -63,6 +65,14 @@ class ActiveTrainList(wx.ListCtrl):
 		self.hilite = wx.ItemAttr()
 		self.hilite.SetBackgroundColour(wx.Colour(0, 116, 232))
 		self.hilite.SetTextColour(wx.Colour(255, 255, 255))
+
+		self.loadImages()		
+		self.il = wx.ImageList(16, 16)
+		empty = self.makeBlank()
+		self.idxEmpty = self.il.Add(empty)
+		self.idxRed = self.il.Add(self.imageRed)
+		self.idxGreen = self.il.Add(self.imageGreen)
+		self.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
 		self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnItemSelected)
 		self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnItemActivated)
@@ -70,6 +80,29 @@ class ActiveTrainList(wx.ListCtrl):
 		self.Bind(wx.EVT_LIST_CACHE_HINT, self.OnItemHint)
 
 		self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.onRightClick, self)	
+
+	def makeBlank(self):
+		empty = wx.Bitmap(16,16,32)
+		dc = wx.MemoryDC(empty)
+		dc.SetBackground(wx.Brush((0,0,0,0)))
+		dc.Clear()
+		del dc
+		empty.SetMaskColour((0,0,0))
+		return empty
+	
+	def loadImages(self):
+		png = wx.Image("trainRed.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+		mask = wx.Mask(png, wx.BLUE)
+		png.SetMask(mask)
+		self.imageRed = png
+		png = wx.Image("trainGreen.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+		mask = wx.Mask(png, wx.BLUE)
+		png.SetMask(mask)
+		self.imageGreen = png
+		png = wx.Image("trainYellow.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+		mask = wx.Mask(png, wx.BLUE)
+		png.SetMask(mask)
+		self.imageYellow = png
 		
 	def onRightClick(self, evt):
 		self.itemSelected = self.GetFirstSelected()
@@ -169,6 +202,10 @@ class ActiveTrainList(wx.ListCtrl):
 		tr["time"] = 0
 		if "throttle" not in tr:
 			tr["throttle"] = None
+		if "speed" not in tr:
+			tr["speed"] = None
+		if "limit" not in tr:
+			tr["limit"] = None
 		self.activeTrains.append(tr)
 		self.highlight.append(0)
 		self.SetItemCount(len(self.activeTrains))
@@ -187,12 +224,14 @@ class ActiveTrainList(wx.ListCtrl):
 		
 		return True
 	
-	def setThrottle(self, loco, throttle, speedType):
+	def setThrottle(self, loco, throttle, speedType, limit=None):
 		tx = 0
 		for tx in range(len(self.activeTrains)):
 			tr = self.activeTrains[tx]
 			if tr["loco"] == loco:
 				self.activeTrains[tx]["throttle"] = self.formatThrottle(throttle, speedType)
+				self.activeTrains[tx]["speed"] = throttle
+				self.activeTrains[tx]["limit"] = limit
 				self.RefreshItem(tx)
 				return
 			
@@ -250,10 +289,27 @@ class ActiveTrainList(wx.ListCtrl):
 	def OnItemHint(self, evt):
 		if self.GetFirstSelected() == -1:
 			self.setSelection(None)
+			
+	def OnGetItemImage(self, item):
+		if item < 0 or item >= len(self.activeTrains):
+			return self.idxEmpty
+		
+		tr = self.activeTrains[item]
+		
+		if tr["throttle"] is None:
+			return self.idxEmpty
+		
+		if tr["limit"] is None:
+			return self.idxYellow
+		
+		if tr["speed"] > tr["limit"]:
+			return self.idxRed
+		
+		return self.idxGreen
 
 	def OnGetItemText(self, item, col):
 		if item < 0 or item >= len(self.activeTrains):
-			return None
+			return ""
 		
 		tr = self.activeTrains[item]
 		if col == 0:
@@ -287,6 +343,11 @@ class ActiveTrainList(wx.ListCtrl):
 			else:
 				return tr["throttle"]
 		elif col == 9:
+			if tr["limit"] is None:
+				return ""
+			else:
+				return "%d" % tr["limit"]
+		elif col == 10:
 			mins = int(tr["time"] / 60)
 			secs = tr["time"] % 60
 			return "%2d:%02d" % (mins, secs)

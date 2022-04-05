@@ -9,9 +9,6 @@ class TrainRoster:
 			
 		for tid in self.trains:
 			trn = self.trains[tid]
-			if 'extra' not in trn:
-				trn['extra'] = False
-
 			trn["block"] = None
 			trn["loco"] = None
 			if len(trn["steps"]) > 0:
@@ -27,9 +24,6 @@ class TrainRoster:
 			else:
 				trn["origin"] = ""
 				trn["terminus"] = ""
-				
-	def getExtraTrains(self, order=[]):
-		return [tid for tid in sorted(self.trains.keys()) if self.trains[tid]['extra'] and tid not in order]
 
 	def __iter__(self):
 		self.order = sorted(self.trains.keys())

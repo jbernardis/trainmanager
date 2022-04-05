@@ -29,7 +29,7 @@ class Settings:
 		self.engineerdir = os.path.join(os.getcwd(), "engineers")
 		self.engineerfile = "engineers.txt"
 		self.orderdir = os.path.join(os.getcwd(), "orders")
-		self.orderfile = "order.txt"
+		self.orderfile = "order.json"
 		self.logdir = os.path.join(os.getcwd(), "logs")
 		self.dispatchip = "192.168.1.157"
 		self.dispatchport = "5204"

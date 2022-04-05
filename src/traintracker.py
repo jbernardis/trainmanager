@@ -955,7 +955,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.setSelectedTrain(tid)
 	
 	def setExtraTrains(self):		
-		self.extraTrains = self.roster.getExtraTrains(self.pendingTrains)
+		self.extraTrains = self.trainOrder.getExtras()
 		self.chExtra.SetItems(self.extraTrains)
 		if len(self.extraTrains) > 0:
 			self.chExtra.SetSelection(0)
@@ -1116,7 +1116,7 @@ class TrainTrackerPanel(wx.Panel):
 			self, message="Choose an order file",
 			defaultDir=self.settings.orderdir,
 			defaultFile="",
-			wildcard=wildcardTxt,
+			wildcard=wildcard,
 			style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_PREVIEW)
 		if dlg.ShowModal() != wx.ID_OK:
 			dlg.Destroy()
@@ -1602,11 +1602,11 @@ class TrainTrackerPanel(wx.Panel):
 		self.stLocoInfo.SetLabel("%-40.40s %s" % (locoString, blockString))
 				
 	def onManageOrder(self, _):
-		dlg = ManageOrderDlg(self, self.trainOrder, self.roster, self.settings)
+		dlg = ManageOrderDlg(self, self.trainOrder, self.roster.getTrainList(), self.pendingTrains, self.extraTrains, self.settings)
 		rc = dlg.ShowModal()
 		
 		if rc == wx.ID_OK:
-			norder = dlg.getValues()
+			norder, nextra = dlg.getValues()
 			
 		dlg.Destroy()
 		
@@ -1614,9 +1614,11 @@ class TrainTrackerPanel(wx.Panel):
 			return
 		
 		self.log.append("Modified full train order to %s" % str(norder))
+		self.log.append("Modified extra trains to %s" % str(nextra))
+		
 		self.pendingTrains = [t for t in norder if not self.activeTrainList.hasTrain(t) and t not in self.completedTrains]
 		self.log.append("Pending trains = %s" % str(self.pendingTrains))
-		self.trainOrder.setNewOrder(norder)
+		self.extraTrains = sorted([t for t in nextra])
 		self.setTrainOrder(preserveActive=True)
 		self.setExtraTrains()
 

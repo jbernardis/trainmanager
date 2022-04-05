@@ -1,146 +1,173 @@
 import wx
 
-wildcardTxt = "TXT file (*.txt)|*.txt|"	 \
+BTNSZ = (120, 46)
+wildcardJson = "JSON file (*.json)|*.json|"	 \
 		   "All files (*.*)|*.*"
 
-BTNSZ = (120, 46)
-
 class ManageOrderDlg(wx.Dialog):
-	def __init__(self, parent, order, roster, settings):
+	def __init__(self, parent, order, alltrains, scheduled, extra, settings):
 		wx.Dialog.__init__(self, parent, wx.ID_ANY, "")
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 		
 		self.titleString = "Manage Train Order"
 		self.settings = settings
+		self.order = order
+		
+		self.scheduledTrains = [t for t in scheduled]
+		self.extraTrains = sorted([t for t in extra])
+		self.allTrains = sorted([t for t in alltrains])
+		self.availableTrains = [t for t in self.allTrains if t not in self.scheduledTrains and t not in self.extraTrains]
 		
 		self.modified = None
-
 		self.setModified(False)
-	
-		self.trainOrder = [x for x in order]
-		self.trainRoster = roster
-		self.allTrains = sorted(self.trainRoster.getTrainList())
-		
+
 		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
+		
+		self.lbAll = wx.ListBox(self, wx.ID_ANY, choices=self.availableTrains, size=(120, 330))
+		self.lbAll.SetFont(textFont)
+		self.Bind(wx.EVT_LISTBOX, self.onLbAllSelect, self.lbAll)
+		
+		self.lbSchedule = wx.ListBox(self, wx.ID_ANY, choices=self.scheduledTrains, size=(120, 150))
+		self.lbSchedule.SetFont(textFont)
+		self.Bind(wx.EVT_LISTBOX, self.onLbScheduleSelect, self.lbSchedule)
+			
+		self.lbExtra = wx.ListBox(self, wx.ID_ANY, choices=self.extraTrains, size=(120, 150))
+		self.lbExtra.SetFont(textFont)
+		self.Bind(wx.EVT_LISTBOX, self.onLbExtraSelect, self.lbExtra)
+		
+		self.bRightSch = wx.Button(self, wx.ID_ANY, ">>>")
+		self.bRightSch.SetFont(btnFont)
+		self.bRightSch.SetToolTip("Move the selected train to the right, from the all/available list to the scheduled list")
+		self.Bind(wx.EVT_BUTTON, self.bRightSchPressed, self.bRightSch)
+		
+		self.bLeftSch = wx.Button(self, wx.ID_ANY, "<<<")
+		self.bLeftSch.SetFont(btnFont)
+		self.bLeftSch.SetToolTip("Move the selected train to the left, from the scheduled list to the all/available list")
+		self.Bind(wx.EVT_BUTTON, self.bLeftSchPressed, self.bLeftSch)
+		
+		self.bRightExt = wx.Button(self, wx.ID_ANY, ">>>")
+		self.bRightExt.SetFont(btnFont)
+		self.bRightExt.SetToolTip("Move the selected train to the right, from the all/available list to the extra list")
+		self.Bind(wx.EVT_BUTTON, self.bRightExtPressed, self.bRightExt)
+		
+		self.bLeftExt = wx.Button(self, wx.ID_ANY, "<<<")
+		self.bLeftExt.SetFont(btnFont)
+		self.bLeftExt.SetToolTip("Move the selected train to the left, from the extra list to the all/available list")
+		self.Bind(wx.EVT_BUTTON, self.bLeftExtPressed, self.bLeftExt)
+		
+		self.bUp = wx.Button(self, wx.ID_ANY, "Up")
+		self.bUp.SetFont(btnFont)
+		self.bUp.SetToolTip("Move the selected train up to be earlier in the schedule")
+		self.Bind(wx.EVT_BUTTON, self.bUpPressed, self.bUp)
+		
+		self.bDown = wx.Button(self, wx.ID_ANY, "Down")
+		self.bDown.SetFont(btnFont)
+		self.bDown.SetToolTip("Move the selected train down to be later in the schedule")
+		self.Bind(wx.EVT_BUTTON, self.bDownPressed, self.bDown)
 		
 		hsizer = wx.BoxSizer(wx.HORIZONTAL)
 		hsizer.AddSpacer(20)
 		
-		self.lbOrder = wx.ListBox(self, wx.ID_ANY, choices=self.trainOrder, size=(120, 300))
-		self.lbOrder.SetFont(textFont)
-		self.Bind(wx.EVT_LISTBOX, self.onLbOrderSelect, self.lbOrder)
+		vsz = wx.BoxSizer(wx.VERTICAL)
+		st = wx.StaticText(self, wx.ID_ANY, "Available:")
+		st.SetFont(textFont)
+		vsz.Add(st)
+		vsz.AddSpacer(5)
+		vsz.Add(self.lbAll)
+		vsz.AddSpacer(10)
+		hsizer.Add(vsz)
 		
-		hsizer.Add(self.lbOrder)
-
+		hsizer.AddSpacer(10)
+		
+		vsz = wx.BoxSizer(wx.VERTICAL)
+		vsz.AddSpacer(60)
+		vsz.Add(self.bRightSch)
+		vsz.AddSpacer(20)
+		vsz.Add(self.bLeftSch)
+		vsz.AddSpacer(110)
+		vsz.Add(self.bRightExt)
+		vsz.AddSpacer(20)
+		vsz.Add(self.bLeftExt)
+		hsizer.Add(vsz)
+		
+		hsizer.AddSpacer(10)
+		
+		vsz = wx.BoxSizer(wx.VERTICAL)
+		st = wx.StaticText(self, wx.ID_ANY, "Scheduled:")
+		st.SetFont(textFont)
+		vsz.Add(st)
+		vsz.AddSpacer(5)
+		vsz.Add(self.lbSchedule)
+		
+		vsz.AddSpacer(5)
+		st = wx.StaticText(self, wx.ID_ANY, "Extra:")
+		st.SetFont(textFont)
+		vsz.Add(st)
+		vsz.AddSpacer(5)
+		vsz.Add(self.lbExtra)
+		vsz.AddSpacer(10)
+		
+		hsizer.Add(vsz)
+		hsizer.AddSpacer(10)
+		
+		vsz = wx.BoxSizer(wx.VERTICAL)
+		vsz.AddSpacer(60)
+		vsz.Add(self.bUp)
+		vsz.AddSpacer(20)
+		vsz.Add(self.bDown)
+		hsizer.Add(vsz)
+		
 		hsizer.AddSpacer(20)
 		
-		btnSizer = wx.BoxSizer(wx.VERTICAL)
-		btnSizer.AddSpacer(20)
-		
-		self.bUp = wx.Button(self, wx.ID_ANY, "Up", size=BTNSZ)
-		self.bUp.SetFont(btnFont)
-		self.bUp.SetToolTip("Move the selected train up in the order")
-		self.Bind(wx.EVT_BUTTON, self.bUpPressed, self.bUp)
-		btnSizer.Add(self.bUp)
-		self.bUp.Enable(False)
-			
-		btnSizer.AddSpacer(20)
-		
-		self.bDown = wx.Button(self, wx.ID_ANY, "Down", size=BTNSZ)
-		self.bDown.SetFont(btnFont)
-		self.bDown.SetToolTip("Move the selected train down in the order")
-		self.Bind(wx.EVT_BUTTON, self.bDownPressed, self.bDown)
-		btnSizer.Add(self.bDown)
-		self.bDown.Enable(False)
-		
-		btnSizer.AddSpacer(20)
-		
-		hsizer.Add(btnSizer)
-		hsizer.AddSpacer(40)
-		
-		
-		btnSizer = wx.BoxSizer(wx.VERTICAL)
-		btnSizer.AddSpacer(20)
-		
-		self.bAdd = wx.Button(self, wx.ID_ANY, "Add", size=BTNSZ)
-		self.bAdd.SetFont(btnFont)
-		self.bAdd.SetToolTip("Add the selected train to the end of the order list")
-		self.Bind(wx.EVT_BUTTON, self.bAddPressed, self.bAdd)
-		btnSizer.Add(self.bAdd)
-		
+		btnSizer = wx.BoxSizer(wx.HORIZONTAL)
 		btnSizer.AddSpacer(10)
 		
-		self.chAvail = wx.Choice(self, wx.ID_ANY, choices=[], size=(100, -1))
-		self.chAvail.SetFont(textFont)
-		btnSizer.Add(self.chAvail)
-		
-		btnSizer.AddSpacer(20)
-		
-		self.bDel = wx.Button(self, wx.ID_ANY, "Delete", size=BTNSZ)
-		self.bDel.SetFont(btnFont)
-		self.bDel.SetToolTip("Delete the currently selected train from the train order")
-		self.Bind(wx.EVT_BUTTON, self.bDelPressed, self.bDel)
-		btnSizer.Add(self.bDel)
-		self.bDel.Enable(False)
-		
-		btnSizer.AddSpacer(80)
-
-		self.bSave = wx.Button(self, wx.ID_ANY, "Save As", size=BTNSZ)
+		self.bSave = wx.Button(self, wx.ID_ANY, "Save", size=BTNSZ)
 		self.bSave.SetFont(btnFont)
-		self.bSave.SetToolTip("Save the train order list to a named file")
+		self.bSave.SetToolTip("Save the train order to the currently loaded file")
 		self.Bind(wx.EVT_BUTTON, self.bSavePressed, self.bSave)
 		btnSizer.Add(self.bSave)
 		
 		btnSizer.AddSpacer(10)
 		
-		hsizer.Add(btnSizer)
+		self.bSaveAs = wx.Button(self, wx.ID_ANY, "Save As", size=BTNSZ)
+		self.bSaveAs.SetFont(btnFont)
+		self.bSaveAs.SetToolTip("Save the train order to a named file")
+		self.Bind(wx.EVT_BUTTON, self.bSaveAsPressed, self.bSaveAs)
+		btnSizer.Add(self.bSaveAs)
 		
-		hsizer.AddSpacer(20)
-		
-		hsizer2 = wx.BoxSizer(wx.HORIZONTAL)
-		hsizer2.AddSpacer(10)
+		btnSizer.AddSpacer(20)
 		
 		self.bOK = wx.Button(self, wx.ID_ANY, "OK", size=BTNSZ)
 		self.bOK.SetFont(btnFont)
-		self.bOK.SetToolTip("Exit the dialog box and update the loaded train order.  No file will be saved")
+		self.bOK.SetToolTip("Exit the dialog box saving any pending changes to the currently loaded file")
 		self.Bind(wx.EVT_BUTTON, self.bOKPressed, self.bOK)
-		hsizer2.Add(self.bOK)
+		btnSizer.Add(self.bOK)
 		
-		hsizer2.AddSpacer(10)
+		btnSizer.AddSpacer(10)
 		
 		self.bCancel = wx.Button(self, wx.ID_ANY, "Cancel", size=BTNSZ)
 		self.bCancel.SetFont(btnFont)
-		self.bCancel.SetToolTip("Exit the dialog box discarding any pending changes")
+		self.bCancel.SetToolTip("Exit the dialog box discarding any pending changes (since last save)")
 		self.Bind(wx.EVT_BUTTON, self.bCancelPressed, self.bCancel)
-		hsizer2.Add(self.bCancel)
+		btnSizer.Add(self.bCancel)
 
-		hsizer2.AddSpacer(10)
-
+		btnSizer.AddSpacer(10)
+		
 		vsizer = wx.BoxSizer(wx.VERTICAL)		
 		vsizer.AddSpacer(20)
-		vsizer.Add(hsizer)	   
+		vsizer.Add(hsizer, 0, wx.ALIGN_CENTER_HORIZONTAL)
 		vsizer.AddSpacer(20)
-		vsizer.Add(hsizer2, 0, wx.ALIGN_RIGHT)	   
+		vsizer.Add(btnSizer, 0, wx.ALIGN_CENTER_HORIZONTAL)
 		vsizer.AddSpacer(20)
-		
-		self.setArrays()
-		self.setModified(False)
 		
 		self.SetSizer(vsizer)
 		self.Layout()
 		self.Fit();
 		
-	def setArrays(self):
-		self.availableTrains = [x for x in self.allTrains if x not in self.trainOrder]
-		self.bAdd.Enable(len(self.availableTrains) > 0)
-		self.chAvail.SetItems(self.availableTrains)
-		if len(self.availableTrains) > 0:
-			self.chAvail.Enable(True)
-			if self.chAvail.GetSelection() == wx.NOT_FOUND:
-				self.chAvail.SetSelection(0)
-		else:
-			self.chAvail.Enable(False)
+		self.setButtons()
+
 		
 	def setTitle(self):
 		title = self.titleString
@@ -150,89 +177,6 @@ class ManageOrderDlg(wx.Dialog):
 			
 		self.SetTitle(title)
 		
-	def onLbOrderSelect(self, _):
-		self.setButtons()
-		
-	def setButtons(self):
-		ix = self.lbOrder.GetSelection()
-		if ix == wx.NOT_FOUND:
-			self.bUp.Enable(False)
-			self.bDown.Enable(False)
-			self.bDel.Enable(False)
-			return 
-		
-		self.bDel.Enable(True)
-		self.bUp.Enable(ix != 0)
-		self.bDown.Enable(ix != len(self.trainOrder)-1)
-		
-	def bAddPressed(self, _):
-		tx = self.chAvail.GetSelection()
-		if tx == wx.NOT_FOUND:
-			return
-		
-		tid = self.availableTrains[tx]
-		del(self.availableTrains[tx])
-		
-		self.trainOrder.append(tid)
-		self.lbOrder.SetItems(self.trainOrder)
-		self.lbOrder.SetSelection(len(self.trainOrder)-1)
-		
-		self.setArrays()
-		self.setButtons()
-		
-		self.setModified()
-		
-	def bDelPressed(self, _):
-		ix = self.lbOrder.GetSelection()
-		if ix == wx.NOT_FOUND:
-			return
-		
-		del(self.trainOrder[ix])
-		if ix >= len(self.trainOrder):
-			ix = len(self.trainOrder)-1
-			if ix < 0:
-				ix = wx.NOT_FOUND
-			
-		self.lbOrder.SetItems(self.trainOrder)
-		self.lbOrder.SetSelection(ix)
-
-		self.setArrays()		
-		self.setButtons()
-			
-		self.setModified()
-		
-	def bUpPressed(self, _):
-		ix = self.lbOrder.GetSelection()
-		if ix == wx.NOT_FOUND or ix == 0:
-			return
-		
-		s = self.trainOrder[ix]
-		self.trainOrder[ix] = self.trainOrder[ix-1]
-		self.trainOrder[ix-1] = s
-		
-		self.lbOrder.SetItems(self.trainOrder)
-		self.lbOrder.SetSelection(ix-1)
-		
-		self.setButtons()
-
-		self.setModified()
-		
-	def bDownPressed(self, _):
-		ix = self.lbOrder.GetSelection()
-		if ix == wx.NOT_FOUND or ix >= len(self.trainOrder)-1:
-			return
-		
-		s = self.trainOrder[ix]
-		self.trainOrder[ix] = self.trainOrder[ix+1]
-		self.trainOrder[ix+1] = s
-		
-		self.lbOrder.SetItems(self.trainOrder)
-		self.lbOrder.SetSelection(ix+1)
-		
-		self.setButtons()
-
-		self.setModified()
-		
 	def setModified(self, flag=True):
 		if self.modified == flag:
 			return
@@ -240,26 +184,172 @@ class ManageOrderDlg(wx.Dialog):
 		self.modified = flag
 		self.setTitle()
 		
+		
+	def onLbAllSelect(self, _):
+		self.setButtons()
+		
+	def setButtons(self):
+		ix = self.lbAll.GetSelection()
+		if ix == wx.NOT_FOUND:
+			self.bRightSch.Enable(False)
+			self.bRightExt.Enable(False)
+		else:
+			self.bRightSch.Enable(True)
+			self.bRightExt.Enable(True)
+			
+		ix = self.lbSchedule.GetSelection()
+		if ix == wx.NOT_FOUND:
+			self.bUp.Enable(False)
+			self.bDown.Enable(False)
+			self.bLeftSch.Enable(False)
+		else:
+			self.bUp.Enable(ix != 0)
+			self.bDown.Enable(ix != len(self.scheduledTrains)-1)
+			self.bLeftSch.Enable(True)
+		
+		ix = self.lbExtra.GetSelection()
+		if ix == wx.NOT_FOUND:
+			self.bLeftExt.Enable(False)
+		else:
+			self.bLeftExt.Enable(True)
+		
+	def onLbScheduleSelect(self, _):
+		self.setButtons()
+		
+	def onLbExtraSelect(self, _):
+		self.setButtons()
+		
+	def bUpPressed(self, _):
+		ix = self.lbSchedule.GetSelection()
+		if ix == wx.NOT_FOUND or ix == 0:
+			return
+		
+		s = self.scheduledTrains[ix]
+		self.scheduledTrains[ix] = self.scheduledTrains[ix-1]
+		self.scheduledTrains[ix-1] = s
+		
+		self.lbSchedule.SetItems(self.scheduledTrains)
+		self.lbSchedule.SetSelection(ix-1)
+		
+		self.setButtons()
+		self.setModified()
+		
+	def bDownPressed(self, _):
+		ix = self.lbSchedule.GetSelection()
+		if ix == wx.NOT_FOUND or ix >= len(self.scheduledTrains)-1:
+			return
+		
+		s = self.scheduledTrains[ix]
+		self.scheduledTrains[ix] = self.scheduledTrains[ix+1]
+		self.scheduledTrains[ix+1] = s
+		
+		self.lbSchedule.SetItems(self.scheduledTrains)
+		self.lbSchedule.SetSelection(ix+1)
+		
+		self.setButtons()
+		self.setModified()
+		
+	def bRightSchPressed(self, _):
+		ix = self.lbAll.GetSelection()
+		if ix == wx.NOT_FOUND:
+			return
+		
+		tid = self.availableTrains[ix]
+		self.scheduledTrains.append(tid)
+		self.lbSchedule.SetItems(self.scheduledTrains)
+		self.setAvailableTrains()
+		self.bRightSch.Enable(False)
+		self.setModified()
+		ix = len(self.scheduledTrains)-1
+		self.lbSchedule.EnsureVisible(ix)
+		self.lbSchedule.SetSelection(ix)
+		self.setButtons()
+
+
+	def bLeftSchPressed(self, _):
+		ix = self.lbSchedule.GetSelection()
+		if ix == wx.NOT_FOUND:
+			return
+
+		tid = self.scheduledTrains[ix]		
+		del(self.scheduledTrains[ix])
+		self.lbSchedule.SetItems(self.scheduledTrains)
+		self.setAvailableTrains()
+		ix = self.availableTrains.index(tid)
+		self.bLeftSch.Enable(False)
+		self.setModified()
+		if ix is not None:
+			self.lbAll.EnsureVisible(ix)
+			self.lbAll.SetSelection(ix)
+		self.setButtons()
+	
+	def bRightExtPressed(self, _):
+		ix = self.lbAll.GetSelection()
+		if ix == wx.NOT_FOUND:
+			return
+		
+		tid = self.availableTrains[ix]
+		self.extraTrains = sorted(self.extraTrains + [tid])
+		ix = self.extraTrains.index(tid)
+		self.lbExtra.SetItems(self.extraTrains)
+		self.setAvailableTrains()
+		self.bRightExt.Enable(False)
+		self.setModified()
+		if ix is not None:
+			self.lbExtra.EnsureVisible(ix)
+			self.lbExtra.SetSelection(ix)
+		self.setButtons()
+
+	def bLeftExtPressed(self, _):
+		ix = self.lbExtra.GetSelection()
+		if ix == wx.NOT_FOUND:
+			return
+		
+		tid = self.extraTrains[ix]		
+		del(self.extraTrains[ix])
+		self.lbExtra.SetItems(self.extraTrains)
+		self.setAvailableTrains()
+		ix = self.availableTrains.index(tid)
+		self.bLeftExt.Enable(False)
+		self.setModified()
+		if ix is not None:
+			self.lbAll.EnsureVisible(ix)
+			self.lbAll.SetSelection(ix)
+		self.setButtons()
+		
+	def setAvailableTrains(self):
+		self.availableTrains = [t for t in self.allTrains if t not in self.scheduledTrains and t not in self.extraTrains]
+		self.lbAll.SetItems(self.availableTrains)
+
 	def bSavePressed(self, _):
-		dlg = wx.FileDialog(self, message="Save train order list to file", defaultDir=self.settings.orderdir,
-			defaultFile="", wildcard=wildcardTxt, style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
+		self.doSave()
+		
+	def bSaveAsPressed(self, _):
+		dlg = wx.FileDialog(self, message="Save train order to file", defaultDir=self.settings.orderdir,
+			defaultFile="", wildcard=wildcardJson, style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
 		if dlg.ShowModal() != wx.ID_OK:
 			dlg.Destroy()
-			return False
+			return
 		
 		path = dlg.GetPath()
 		dlg.Destroy()
-	
-		with open(path, "w") as ofp:
-			for ln in self.trainOrder:
-				ofp.write("%s\n" % ln)
-		
+
+		self.order.saveas(path, self.scheduledTrains, self.extraTrains)
+		self.setModified(False)
+
 	def bOKPressed(self, _):
-		self.EndModal(wx.ID_OK)
+		if self.modified:
+			self.doSave()
+			self.EndModal(wx.ID_OK)
+		else:
+			self.EndModal(wx.ID_EXIT)
 		
-	def getValues(self):
-		return self.trainOrder
-	
+	def doSave(self):
+		self.order.setNewOrder(self.scheduledTrains)
+		self.order.setNewExtras(self.extraTrains)
+		self.order.save()
+		self.setModified(False)
+
 	def bCancelPressed(self, _):
 		self.doCancel()
 		
@@ -276,4 +366,7 @@ class ManageOrderDlg(wx.Dialog):
 				return
 
 		self.EndModal(wx.ID_CANCEL)
+		
+	def getValues(self):
+		return self.scheduledTrains, self.extraTrains
 
