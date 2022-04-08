@@ -1202,9 +1202,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.settings.logdir = os.path.split(path)[0]
 		self.settings.setModified()
 
-		with open(path, "w") as ofp:
-			for ln in self.log:
-				ofp.write("%s\n" % ln)
+		self.log.saveAs(path)
 		
 	def onCbATC(self, _):
 		if self.cbATC.IsChecked():
@@ -1839,6 +1837,9 @@ class TrainTrackerPanel(wx.Panel):
 		self.disconnectSniffer()
 			
 		self.settings.save()
+		if self.settings.savelogonexit:
+			path = os.path.join(self.settings.logdir, "tracker.log")
+			self.log.saveAs(path)
 		self.Destroy()
 
 

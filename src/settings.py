@@ -36,6 +36,7 @@ class Settings:
 		self.dccsnifferport = "COM5"
 		self.dccsnifferbaud = 38400
 		self.browser = "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"
+		self.savelogonexit = True
 
 		
 		self.cfg = configparser.ConfigParser()
@@ -81,6 +82,8 @@ class Settings:
 					self.dccsnifferbaud = int(value)
 				elif opt == "browser":
 					self.browser = value
+				elif opt == "savelogonexit":
+					self.savelogonexit = parseBoolean(value, True)
 				else:
 					msgs.append("INI file: Unknown %s option: %s - ignoring" % (self.section, opt))
 		else:
@@ -121,6 +124,7 @@ class Settings:
 		self.cfg.set(self.section, "dccsnifferport", str(self.dccsnifferport))
 		self.cfg.set(self.section, "dccsnifferbaud", str(self.dccsnifferbaud))
 		self.cfg.set(self.section, "browser", str(self.browser))
+		self.cfg.set(self.section, "savelogonexit", "True" if self.savelogonexit else "False")
 
 		try:		
 			cfp = open(self.inifile, 'w')

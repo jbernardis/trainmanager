@@ -25,3 +25,8 @@ class Log:
 		rv = self.log[self.lx]
 		self.lx += 1
 		return rv
+	
+	def saveAs(self, path):
+		with open(path, "w") as ofp:
+			for ln in self.log:
+				ofp.write("%s\n" % ln)

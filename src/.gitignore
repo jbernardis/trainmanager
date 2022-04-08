@@ -6,3 +6,4 @@
 /logs/
 traintracker.ini
 /tracker.out
+/tracker.err
