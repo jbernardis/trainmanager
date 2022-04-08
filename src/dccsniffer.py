@@ -9,12 +9,14 @@ class DCCSniffer(threading.Thread):
 		self.port = None
 		self.isRunning = False
 		self.endOfLife = False
-		self.cbMessage = None
+		self.cbDCCMessage = None
 		self.cbClosed = None
+		self.cbLog = None
 		
-	def bind(self, cbMessage, cbClosed):
-		self.cbMessage = cbMessage
+	def bind(self, cbDCCMessage, cbClosed, cbLog):
+		self.cbDCCMessage = cbDCCMessage
 		self.cbClosed = cbClosed
+		self.cbLog = cbLog
 
 	def connect(self, tty, baud, timeout):
 		self.tty = tty
@@ -45,9 +47,14 @@ class DCCSniffer(threading.Thread):
 					self.isRunning = True
 				
 				if len(c) != 0:
-					if callable(self.cbMessage):
-						s = str(c, 'UTF-8')
-						self.cbMessage(s.split())
+					if callable(self.cbDCCMessage):
+						try:
+							s = str(c, 'UTF-8')
+						except:
+							if callable(self.cbLog):
+								self.cbLog("unable to convert DCC message to string: (" + s + ")")
+						else:
+							self.cbDCCMessage(s.split())
 
 		try:
 			self.port.close()
@@ -57,5 +64,7 @@ class DCCSniffer(threading.Thread):
 		self.endOfLife = True
 		if callable(self.cbClosed):
 			self.cbClosed()
+		if callable(self.cbLog):
+			self.cbLog("DCC sniffer thread ended execution")
 
 

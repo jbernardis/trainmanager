@@ -80,6 +80,7 @@ wildcardLog = "Log file (*.log)|*.log|"	 \
 
 (DCCMessageEvent, EVT_DCCMESSAGE) = newevent.NewEvent()  
 (DCCClosedEvent,  EVT_DCCCLOSED)  = newevent.NewEvent()  
+(DCCLogEvent,     EVT_DCCLOG)     = newevent.NewEvent()  
 
 class MainFrame(wx.Frame):
 	def __init__(self):
@@ -101,7 +102,6 @@ class MainFrame(wx.Frame):
 		self.locofile = None
 		self.connection = None
 		self.dcc = None
-		
 
 		self.menuFile = wx.Menu()	
 		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_TRAIN, "Load Train Roster", helpString ="Load a Train Roster file")
@@ -604,6 +604,7 @@ class TrainTrackerPanel(wx.Panel):
 		# events from DCC tracker
 		self.Bind(EVT_DCCMESSAGE, self.onDCCMessage)
 		self.Bind(EVT_DCCCLOSED,  self.onDCCClosed)
+		self.Bind(EVT_DCCLOG,     self.onDCCLog)
 		
 		wx.CallAfter(self.initialize)
 		
@@ -1286,7 +1287,7 @@ class TrainTrackerPanel(wx.Panel):
 			"engineer": eng}
 		self.activeTrainList.addTrain(acttr)
 		if loco in self.speeds:
-			self.activeTrainList.setThrottle(self.speeds[loco][0], self.speeds[loco][1])
+			self.activeTrainList.setThrottle(loco, self.speeds[loco][0], self.speeds[loco][1])
 			
 		self.log.append("Assigned %strain %s to %s" % ("extra " if runningExtra else "", tid, eng))
 
@@ -1733,7 +1734,7 @@ class TrainTrackerPanel(wx.Panel):
 
 	def connectSniffer(self):		
 		self.sniffer = DCCSniffer()
-		self.sniffer.bind(self.DCCMessage, self.DCCClosed)
+		self.sniffer.bind(self.DCCMessage, self.DCCClosed, self.DCCLog)
 
 		try:
 			self.sniffer.connect(self.settings.dccsnifferport, self.settings.dccsnifferbaud, 1)
@@ -1775,13 +1776,18 @@ class TrainTrackerPanel(wx.Panel):
 
 			
 	def DCCMessage(self, txt): # thread context
-		dccMsg = {
-			"instr": txt[0],
-			"loco": txt[1],
-			"param": txt[2]
-		}
-		evt = DCCMessageEvent(dcc=dccMsg)
-		wx.PostEvent(self, evt)
+		try:
+			dccMsg = {
+				"instr": txt[0],
+				"loco": "%d" % int(txt[1]), # strip off any leading zeroes
+				"param": txt[2]
+			}
+		except:
+			evt = DCCLogEvent(msg="Unable to parse DCC message (%s)" % str(txt))
+			wx.PostEvent(self, evt)
+		else:		
+			evt = DCCMessageEvent(dcc=dccMsg)
+			wx.PostEvent(self, evt)
 		
 	def onDCCMessage(self, evt):
 		dccMsg = evt.dcc
@@ -1808,6 +1814,14 @@ class TrainTrackerPanel(wx.Panel):
 		
 	def onDCCClosed(self, evt):
 		self.disconnectSniffer()
+		
+	def DCCLog(self, txt): # thread context
+		evt = DCCLogEvent(msg=txt)
+		wx.PostEvent(self, evt)
+		
+	def onDCCLog(self, evt):
+		logMsg = evt.msg
+		self.log.append(logMsg)
 			
 	def onClose(self, _):
 		if self.activeTrainList.count() > 0:
@@ -1827,6 +1841,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.settings.save()
 		self.Destroy()
 
+
 class App(wx.App):
 	def OnInit(self):
 		self.frame = MainFrame()
@@ -1834,5 +1849,15 @@ class App(wx.App):
 		self.SetTopWindow(self.frame)
 		return True
 
+import sys
+
+ofp = open("tracker.out", "w")
+efp = open("tracker.err", "w")
+sys.stdout = ofp
+sys.stderr = efp
+
 app = App(False)
 app.MainLoop()
+
+ofp.close()
+efp.close()

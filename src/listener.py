@@ -76,6 +76,7 @@ class Listener():
 							continue
 						
 						if b.startswith("TrnMgr"):
+							print("TrnMgr: (%s)" % b)
 							train = b[9:19].strip()
 							block = b[19:29].strip()
 							loco = b[29:39].strip()
@@ -83,6 +84,7 @@ class Listener():
 								self.cbTrainID(train, loco, block)
 										
 						elif b.startswith("TrainID"):
+							print("TrainID: (%s)" % b)
 							try:
 								x = int(b[19:24].strip())
 							except:
@@ -104,7 +106,7 @@ class Listener():
 							screen = b[9:19].strip()
 							train = b[29:39].strip()
 							if train.startswith("#"):
-								loco = train[2:]
+								loco = train[2:].strip()
 								train = ""
 							else:
 								loco = ""
@@ -112,6 +114,7 @@ class Listener():
 								if row == x and col == y:
 									if callable(self.cbTrainID):
 										self.cbTrainID(train, loco, block)
+									break
 
 						elif b.startswith("PSClock"):
 							tm = b[9:19].strip()

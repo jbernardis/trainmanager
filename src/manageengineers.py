@@ -318,6 +318,7 @@ class ManageEngineersDlg(wx.Dialog):
 		ix = self.availableEngs.index(eng)
 
 		self.lbAll.SetSelection(ix)		
+		self.setAllSelection(ix)
 		
 	def bDelEngPressed(self, _):
 		sx = self.lbAll.GetSelection()
