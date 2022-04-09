@@ -17,13 +17,12 @@ class ActiveTrainList(wx.ListCtrl):
 		self.parent = parent
 		
 		wx.ListCtrl.__init__(
-			self, parent, wx.ID_ANY, size=(1200, 280),
+			self, parent, wx.ID_ANY, size=(1210, 280),
 			style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_VRULES|wx.LC_SINGLE_SEL
 			)
 		
 		font = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
 		self.SetFont(font)
-
 
 		self.InsertColumn(0, "Train")
 		self.InsertColumn(1, "Origin")

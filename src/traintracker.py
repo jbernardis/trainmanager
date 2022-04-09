@@ -581,12 +581,8 @@ class TrainTrackerPanel(wx.Panel):
 		
 		wsizer = wx.BoxSizer(wx.HORIZONTAL)
 		wsizer.Add(wsizerl)
-		wsizer.AddSpacer(20)
 		wsizer.Add(wsizerr)
-		wsizer.AddSpacer(20)
-		
-		
-		
+		wsizer.AddSpacer(10)
 
 		self.SetSizer(wsizer)
 		self.Layout()
@@ -767,8 +763,7 @@ class TrainTrackerPanel(wx.Panel):
 		
 		self.settings.dispatchport = newPort
 		self.settings.setModified()
-		self.log.append("modified IP port to %s" % newPort)
-		
+		self.log.append("modified IP port to %s" % newPort)		
 		
 	def setupDCCtty(self, _):
 		dlg = wx.TextEntryDialog(self, 'Enter/Modify COM port for DCC', 'COM Port', self.settings.dccsnifferport)
@@ -955,8 +950,11 @@ class TrainTrackerPanel(wx.Panel):
 			
 		self.setSelectedTrain(tid)
 	
-	def setExtraTrains(self):		
-		self.extraTrains = self.trainOrder.getExtras()
+	def setExtraTrains(self):
+		if self.settings.allowextrarerun:		
+			self.extraTrains = [t for t in self.trainOrder.getExtras() if not self.activeTrainList.hasTrain(t)]
+		else:
+			self.extraTrains = [t for t in self.trainOrder.getExtras() if not self.activeTrainList.hasTrain(t) and t not in self.completedTrains]
 		self.chExtra.SetItems(self.extraTrains)
 		if len(self.extraTrains) > 0:
 			self.chExtra.SetSelection(0)
@@ -1302,6 +1300,7 @@ class TrainTrackerPanel(wx.Panel):
 				self.chTrain.SetSelection(0)
 				self.setSelectedTrain(self.chTrain.GetString(0))
 		else:
+			self.setExtraTrains()
 			self.enableExtraMode(False)
 		
 		if not self.cbATC.IsChecked():
@@ -1419,21 +1418,29 @@ class TrainTrackerPanel(wx.Panel):
 			self.setSelectedTrain(self.chTrain.GetString(0))
 		
 	def returnActiveTrain(self, t):
-		dlg = wx.MessageDialog(self, "This removes train %s (and its engineer) from the\nactive list, and places it back to the top of the schedule.\nThis cannot be undone.\n\nPress OK to continue, or Cancel" % t["tid"],
-							'Return Train', wx.OK | wx.CANCEL | wx.OK_DEFAULT | wx.ICON_QUESTION)
+		tid = t["tid"]
+		if self.trainOrder.isExtraTrain(tid):			
+			dlg = wx.MessageDialog(self, "This removes train %s (and its engineer) from the\nactive list, and places it back on the list of extra trains.\nThis cannot be undone.\n\nPress OK to continue, or Cancel" % tid,
+								'Return Train', wx.OK | wx.CANCEL | wx.OK_DEFAULT | wx.ICON_QUESTION)
+		else:
+			dlg = wx.MessageDialog(self, "This removes train %s (and its engineer) from the\nactive list, and places it back to the top of the schedule.\nThis cannot be undone.\n\nPress OK to continue, or Cancel" % tid,
+								'Return Train', wx.OK | wx.CANCEL | wx.OK_DEFAULT | wx.ICON_QUESTION)
 		rc = dlg.ShowModal()
 		dlg.Destroy()
 		if rc == wx.ID_CANCEL:
 			return
 
-		self.log.append("Returned train %s from active list" % t["tid"])
 		self.activeTrainList.delSelected()
-		self.pendingTrains = [t["tid"]] + self.pendingTrains
-		self.chTrain.SetItems(self.pendingTrains)
+		if self.trainOrder.isExtraTrain(tid):
+			self.log.append("Returned train %s from active list to extra train list" % tid)
+			self.setExtraTrains()
+		else:
+			self.log.append("Returned train %s from active list to scheduled train list" % tid)
+			self.pendingTrains = [tid] + self.pendingTrains
+			self.chTrain.SetItems(self.pendingTrains)
 
-		self.chTrain.SetSelection(0)
-		tid = self.chTrain.GetString(0)
-		self.setSelectedTrain(tid)
+			self.chTrain.SetSelection(0)
+			self.setSelectedTrain(self.chTrain.GetString(0))
 
 		if t["engineer"] in self.selectedEngineers:
 			self.log.append("Returned engineer %s to head of pool" % t["engineer"])
@@ -1461,10 +1468,15 @@ class TrainTrackerPanel(wx.Panel):
 		mins = int(t["time"] / 60)
 		secs = t["time"] % 60
 		runtime = "%2d:%02d" % (mins, secs)
-		self.log.append("Removed train %s from active list.  Run time %s" % (t["tid"], runtime))
-		self.completedTrains.append(t["tid"], t["engineer"], t["loco"])
+		tid = t["tid"]
+		self.log.append("Removed train %s from active list.  Run time %s" % (tid, runtime))
+		self.completedTrains.append(tid, t["engineer"], t["loco"])
 		self.completedTrainList.update()
 		self.activeTrainList.delSelected()
+		
+		if self.settings.allowextrarerun and self.trainOrder.isExtraTrain(tid):
+			self.setExtraTrains()
+			
 		if t["engineer"] in self.selectedEngineers:
 			self.log.append("Returned engineer %s to pool" % t["engineer"])
 			if t["engineer"] not in self.idleEngineers:

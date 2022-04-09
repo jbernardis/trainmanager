@@ -147,9 +147,3 @@ class Listener():
 		if callable(self.cbMessage):
 			self.cbMessage("Thread execution ended")
 		print("Thread execution ended")
-					
-
-
-
-
-

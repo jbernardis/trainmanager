@@ -16,6 +16,9 @@ class Order():
 	
 	def getExtras(self):
 		return self.extras
+	
+	def isExtraTrain(self, tid):
+		return tid in self.extras
 		
 	def getTid(self, tx):
 		if tx < 0 or tx >= len(self.order):
