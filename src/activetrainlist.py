@@ -249,6 +249,9 @@ class ActiveTrainList(wx.ListCtrl):
 			return speedStr
 	
 	def ticker(self):
+		if self.GetItemCount() <= 0:
+			return
+		
 		for tx in range(len(self.activeTrains)):
 			self.activeTrains[tx]["time"] += 1
 			

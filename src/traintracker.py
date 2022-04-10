@@ -1906,8 +1906,8 @@ import sys
 
 ofp = open("tracker.out", "w")
 efp = open("tracker.err", "w")
-#sys.stdout = ofp
-#sys.stderr = efp
+sys.stdout = ofp
+sys.stderr = efp
 
 app = App(False)
 app.MainLoop()
