@@ -44,12 +44,16 @@ class ManageEngineersDlg(wx.Dialog):
 		self.lbAll.SetFont(textFont)
 		self.Bind(wx.EVT_LISTBOX, self.onLbAllSelect, self.lbAll)
 		self.Bind(wx.EVT_LISTBOX_DCLICK, self.bRightPressed, self.lbAll)
-		self.lbActive = wx.ListBox(self, wx.ID_ANY, choices=self.activeEngs, size=(160, 200))
-		self.lbActive.SetFont(textFont)
-		self.Bind(wx.EVT_LISTBOX, self.onLbActiveSelect, self.lbActive)
-		self.Bind(wx.EVT_LISTBOX_DCLICK, self.bLeftPressed, self.lbActive)
+
+		self.stCountAll = wx.StaticText(self, wx.ID_ANY, "(0 Available/0 Total)")
+		self.stCountAll.SetFont(textFont)
 		
-		sz.Add(self.lbAll)
+		vsz = wx.BoxSizer(wx.VERTICAL)
+		vsz.Add(self.lbAll)
+		vsz.AddSpacer(5)
+		vsz.Add(self.stCountAll)
+		
+		sz.Add(vsz)
 		
 		sz.AddSpacer(40)
 		
@@ -92,7 +96,20 @@ class ManageEngineersDlg(wx.Dialog):
 		
 		sz.AddSpacer(40)
 		
-		sz.Add(self.lbActive)
+		self.lbActive = wx.ListBox(self, wx.ID_ANY, choices=self.activeEngs, size=(160, 200))
+		self.lbActive.SetFont(textFont)
+		self.Bind(wx.EVT_LISTBOX, self.onLbActiveSelect, self.lbActive)
+		self.Bind(wx.EVT_LISTBOX_DCLICK, self.bLeftPressed, self.lbActive)
+
+		self.stCountActive = wx.StaticText(self, wx.ID_ANY, "(0 Active)")
+		self.stCountActive.SetFont(textFont)
+		
+		vsz = wx.BoxSizer(wx.VERTICAL)
+		vsz.Add(self.lbActive)
+		vsz.AddSpacer(5)
+		vsz.Add(self.stCountActive)
+				
+		sz.Add(vsz)
 		
 		vsizer.Add(sz, 0, wx.ALIGN_CENTER_HORIZONTAL)
 		vsizer.AddSpacer(20)
@@ -165,6 +182,8 @@ class ManageEngineersDlg(wx.Dialog):
 		
 		self.setModified(False)
 		
+		self.setCounts()
+		
 		self.SetSizer(hsizer)
 		self.Layout()
 		self.Fit();
@@ -221,6 +240,7 @@ class ManageEngineersDlg(wx.Dialog):
 		
 		self.lbAll.SetItems(self.availableEngs)
 		self.lbActive.SetItems(self.activeEngs)
+		self.setCounts()
 		
 		self.setActiveSelection(wx.NOT_FOUND)
 		self.setAllSelection(wx.NOT_FOUND)
@@ -239,6 +259,7 @@ class ManageEngineersDlg(wx.Dialog):
 		
 		self.lbAll.SetItems(self.availableEngs)
 		self.lbActive.SetItems(self.activeEngs)
+		self.setCounts()
 		
 		self.setActiveSelection(wx.NOT_FOUND)
 		self.setAllSelection(wx.NOT_FOUND)
@@ -316,6 +337,7 @@ class ManageEngineersDlg(wx.Dialog):
 		
 		self.lbAll.SetItems(self.availableEngs)
 		ix = self.availableEngs.index(eng)
+		self.setCounts()
 
 		self.lbAll.SetSelection(ix)		
 		self.setAllSelection(ix)
@@ -329,9 +351,17 @@ class ManageEngineersDlg(wx.Dialog):
 		self.lbAll.Delete(sx)
 		self.allEngs.remove(eng)
 		self.availableEngs.remove(eng)
+		self.setCounts()
 		sx = self.lbAll.GetSelection()
 		self.setAllSelection(sx)
 		self.setModified()
+		
+	def setCounts(self):
+		cAll = len(self.allEngs)
+		cAvail = len(self.availableEngs)
+		cActive = len(self.activeEngs)
+		self.stCountAll.SetLabel("( %d Available/%d total)" % (cAvail, cAll))
+		self.stCountActive.SetLabel("(%d Active)" % cActive)
 		
 	def bSaveAllPressed(self, _):
 		self.saveEngineers(sorted(self.allEngs), "ALL engineers")

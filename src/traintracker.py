@@ -26,6 +26,7 @@ from listener import Listener
 from backup import saveData, restoreData
 from dccsniffer import DCCSniffer
 from serial import SerialException
+from optionsdlg import OptionsDlg
 
 BTNSZ = (120, 46)
 
@@ -45,6 +46,7 @@ MENU_MANAGE_ENGINEERS = 201
 MENU_MANAGE_ASSIGN_LOCOS = 203
 MENU_MANAGE_LOCOS = 204
 MENU_MANAGE_ORDER = 205
+MENU_MANAGE_OPTIONS = 206
 MENU_MANAGE_RESET = 299
 MENU_REPORT_OP_WORKSHEET = 301
 MENU_REPORT_TRAIN_CARDS = 302
@@ -162,6 +164,10 @@ class MainFrame(wx.Frame):
 		i.SetFont(font)
 		self.menuManage.Append(i)
 		self.menuManage.AppendSeparator()
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_OPTIONS, "Manage Preferences", helpString="Change preferences")
+		i.SetFont(font)
+		self.menuManage.Append(i)
+		self.menuManage.AppendSeparator()
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_RESET, "Reset Session", helpString="Reset Operating Session")
 		i.SetFont(font)
 		self.menuManage.Append(i)
@@ -246,6 +252,7 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.panel.onManageOrder, id=MENU_MANAGE_ORDER)
 		self.Bind(wx.EVT_MENU, self.panel.onAssignLocos, id=MENU_MANAGE_ASSIGN_LOCOS)
 		self.Bind(wx.EVT_MENU, self.panel.onManageLocos, id=MENU_MANAGE_LOCOS)
+		self.Bind(wx.EVT_MENU, self.panel.onManageOptions, id=MENU_MANAGE_OPTIONS)
 		self.Bind(wx.EVT_MENU, self.panel.onResetSession, id=MENU_MANAGE_RESET)
 		
 		self.Bind(wx.EVT_MENU, self.panel.onReportOpWorksheet, id=MENU_REPORT_OP_WORKSHEET)
@@ -1708,6 +1715,26 @@ class TrainTrackerPanel(wx.Panel):
 		self.showInfo(self.selectedTrain)
 		self.updateActiveListLocos()
 		
+	def onManageOptions(self, _):
+		dlg = OptionsDlg(self, self.settings)
+		rc = dlg.ShowModal()
+		
+		if rc == wx.ID_OK:
+			fSaveLog, fRerunExtra = dlg.getValues()
+		
+		dlg.Destroy()
+		
+		if rc != wx.ID_OK:
+			return 
+		
+		if fSaveLog is not None:
+			self.settings.savelogonexit = fSaveLog
+			self.settings.setModified()
+			
+		if fRerunExtra is not None:
+			self.settings.allowextrarerun = fRerunExtra
+			self.settings.setModified()
+		
 	def onAssignLocos(self, _):
 		order = [x for x in self.trainOrder]
 		dlg = AssignLocosDlg(self, self.roster, order, self.extraTrains, self.locos)
@@ -1879,8 +1906,8 @@ import sys
 
 ofp = open("tracker.out", "w")
 efp = open("tracker.err", "w")
-sys.stdout = ofp
-sys.stderr = efp
+#sys.stdout = ofp
+#sys.stderr = efp
 
 app = App(False)
 app.MainLoop()

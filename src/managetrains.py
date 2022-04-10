@@ -208,6 +208,15 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		btnSizer.AddSpacer(10)
 		
+		self.bModID = wx.Button(self, wx.ID_ANY, "Change\nTrain ID", size=BTNSZ)
+		self.bModID.SetFont(btnFont)
+		self.bModID.SetToolTip("Change the ID of the currently selected train")
+		self.Bind(wx.EVT_BUTTON, self.bModIDPressed, self.bModID)
+		btnSizer.Add(self.bModID)
+		self.bModID.Enable(False)
+		
+		btnSizer.AddSpacer(10)
+		
 		self.bMod = wx.Button(self, wx.ID_ANY, "Modify\nTrain", size=BTNSZ)
 		self.bMod.SetFont(btnFont)
 		self.bMod.SetToolTip("Update the currently selected train with the above direction/description/loco number")
@@ -354,6 +363,46 @@ class ManageTrainsDlg(wx.Dialog):
 		self.setSelectedTrain(self.selectedTid)
 		self.setModified()
 		
+	def bModIDPressed(self, _):
+		if self.selectedTid is None:
+			return
+		if self.selectedTrainInfo is None:
+			return
+
+		oldID = self.selectedTid
+		newID = None
+		while newID is None:
+			dlg = wx.TextEntryDialog(self, 'Enter New Train Number/Name', 'Train ID', '')
+			rc = dlg.ShowModal()
+			if rc == wx.ID_OK:
+				newID = dlg.GetValue()
+	
+			dlg.Destroy()
+			
+			if rc != wx.ID_OK:
+				return
+			
+			if newID in self.trainList:
+				dlg = wx.MessageDialog(self, "A train with the ID/Name \"%s\" already exists" % newID, 
+			                               "Duplicate Name",
+			                               wx.OK | wx.ICON_WARNING)
+				dlg.ShowModal()
+				dlg.Destroy()
+				newID = None
+				
+		t = self.roster[oldID]
+		self.roster[newID] = t
+
+		tx = self.trainList.index(oldID)
+		del(self.trainList[tx])
+		del(self.roster[oldID])
+
+		self.trainList = sorted(self.trainList + [newID])
+		self.cbTrains.SetItems(self.trainList)
+		self.cbTrains.SetSelection(self.trainList.index(newID))
+		self.setSelectedTrain(newID)
+		self.setModified()
+		
 	def bDelPressed(self, _):
 		if self.selectedTid is None:
 			return
@@ -459,6 +508,7 @@ class ManageTrainsDlg(wx.Dialog):
 			self.selectedTid = None
 			self.selectedTrainInfo = None
 			self.bMod.Enable(False)
+			self.bModID.Enable(False)
 			self.bDel.Enable(False)
 			self.cbEast.SetValue(False)
 			self.teDesc.SetValue("")
@@ -466,6 +516,7 @@ class ManageTrainsDlg(wx.Dialog):
 			return
 		
 		self.bMod.Enable(True)
+		self.bModID.Enable(True)
 		self.bDel.Enable(True)
 		self.selectedTid = tid
 		self.selectedTrainInfo = self.roster[tid]
