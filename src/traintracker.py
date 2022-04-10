@@ -109,115 +109,153 @@ class MainFrame(wx.Frame):
 		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_TRAIN, "Load Train Roster", helpString ="Load a Train Roster file")
 		i.SetFont(font)
 		self.menuFile.Append(i)
+		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_ORDER, "Load Train Order", helpString="Load Train Order/Sequence file")
 		i.SetFont(font)
 		self.menuFile.Append(i)
+		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_LOCOS, "Load Loco List", helpString="Load locomotive descriptions")
 		i.SetFont(font)
 		self.menuFile.Append(i)
+		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_ENG, "Load Engineer list", helpString="Load Engineer List")
 		i.SetFont(font)
 		self.menuFile.Append(i)
+		
 		self.menuFile.AppendSeparator()
+		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_VIEW_LOG, "View Log", helpString="View Log")
 		i.SetFont(font)
 		self.menuFile.Append(i)
+		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_SAVE_LOG, "Save Log", helpString="Save Log")
 		i.SetFont(font)
 		self.menuFile.Append(i)
+		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_CLEAR_LOG, "Clear Log", helpString="Clear Log")
 		i.SetFont(font)
 		self.menuFile.Append(i)
+		
 		self.menuFile.AppendSeparator()
+		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_BACKUP, "Backup", helpString="Backup data files to a ZIP file")
 		i.SetFont(font)
 		self.menuFile.Append(i)
+		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_RESTORE, "Restore", helpString="Restore data files from a ZIP file")
 		i.SetFont(font)
 		self.menuFile.Append(i)
+		
 		self.menuFile.AppendSeparator()
+		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_ABOUT, "About", helpString="About")
 		i.SetFont(font)
 		self.menuFile.Append(i)
+		
 		self.menuFile.AppendSeparator()
+		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_EXIT, "Exit", helpString="Exit Program")
 		i.SetFont(font)
 		self.menuFile.Append(i)
 		
 		self.menuManage = wx.Menu()
-		i = wx.MenuItem(self.menuManage, MENU_MANAGE_TRAINS, "Manage Trains", helpString="Manage the train rodter")
+		
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_TRAINS, "Trains", helpString="Manage the train rodter")
 		i.SetFont(font)
 		self.menuManage.Append(i)
+		
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ENGINEERS, "Engineers", helpString="Manage the content and ordering of active engineers list")
+		i.SetFont(font)
+		self.menuManage.Append(i)
+		
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_LOCOS, "Locomotives", helpString="Define, modify, delete locomotives")
+		i.SetFont(font)
+		self.menuManage.Append(i)
+		
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ORDER, "Train Order", helpString="Add/remove trains and modify sequence")
+		i.SetFont(font)
+		self.menuManage.Append(i)
+		
 		self.menuManage.AppendSeparator()
-		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ENGINEERS, "Manage Engineers", helpString="Manage the content and ordering of active engineers list")
-		i.SetFont(font)
-		self.menuManage.Append(i)
-		self.menuManage.AppendSeparator()
-		i = wx.MenuItem(self.menuManage, MENU_MANAGE_LOCOS, "Manage Locomotives", helpString="Define, modify, delete locomotives")
-		i.SetFont(font)
-		self.menuManage.Append(i)
+		
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ASSIGN_LOCOS, "Assign Locomotives", helpString="Assign locomotives to trains")
 		i.SetFont(font)
 		self.menuManage.Append(i)
+		
 		self.menuManage.AppendSeparator()
-		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ORDER, "Manage Train Order", helpString="Add/remove trains and modify sequence")
+		
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_OPTIONS, "Preferences", helpString="Change preferences")
 		i.SetFont(font)
 		self.menuManage.Append(i)
+		
 		self.menuManage.AppendSeparator()
-		i = wx.MenuItem(self.menuManage, MENU_MANAGE_OPTIONS, "Manage Preferences", helpString="Change preferences")
-		i.SetFont(font)
-		self.menuManage.Append(i)
-		self.menuManage.AppendSeparator()
+		
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_RESET, "Reset Session", helpString="Reset Operating Session")
 		i.SetFont(font)
 		self.menuManage.Append(i)
 		
 		self.menuReports = wx.Menu()
+		
 		i = wx.MenuItem(self.menuReports, MENU_REPORT_OP_WORKSHEET, "Operating Worksheet", helpString="Print an Operating Worksheet")
 		i.SetFont(font)
 		self.menuReports.Append(i)
+		
 		i = wx.MenuItem(self.menuReports, MENU_REPORT_TRAIN_CARDS, "Train Cards", helpString="Print Train Cards")
 		i.SetFont(font)
 		self.menuReports.Append(i)
+		
 		i = wx.MenuItem(self.menuReports, MENU_REPORT_LOCOS, "Locomotives", helpString="Print Locomotive Roster")
 		i.SetFont(font)
 		self.menuReports.Append(i)
+		
 		i = wx.MenuItem(self.menuReports, MENU_REPORT_STATUS, "Train Status", helpString="List of all active and completed trains")
 		i.SetFont(font)
 		self.menuReports.Append(i)
 		
 		self.menuDispatch = wx.Menu()
+		
 		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_CONNECT, "Connect", helpString="Connect to dispatcher")
 		i.SetFont(font)
 		self.menuDispatch.Append(i)
+		
 		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_DISCONNECT, "Disconnect", helpString="Disconnect from dispatcher")
 		i.SetFont(font)
 		self.menuDispatch.Append(i)
 		self.menuDispatch.Enable(MENU_DISPATCH_DISCONNECT, False)
+		
 		self.menuDispatch.AppendSeparator()
+		
 		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_SETUPIP, "Configure IP Address", helpString="Configure IP address")
 		i.SetFont(font)
 		self.menuDispatch.Append(i)
+		
 		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_SETUPPORT, "Configure Port", helpString="Configure Port")
 		i.SetFont(font)
 		self.menuDispatch.Append(i)
+		
 		self.menuDispatch.AppendSeparator()
+		
 		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_RESET, "Reset Connection", helpString="Reset connection to dispatcher")
 		i.SetFont(font)
 		self.menuDispatch.Append(i)
 		
 		self.menuDCC = wx.Menu()
+		
 		i = wx.MenuItem(self.menuDCC, MENU_DCC_CONNECT, "Connect", helpString="Connect to DCC Sniffer")
 		i.SetFont(font)
 		self.menuDCC.Append(i)
+		
 		i = wx.MenuItem(self.menuDCC, MENU_DCC_DISCONNECT, "Disconnect", helpString="Disconnect from DCC Sniffer")
 		i.SetFont(font)
 		self.menuDCC.Append(i)
 		self.menuDCC.Enable(MENU_DCC_DISCONNECT, False)
+		
 		self.menuDCC.AppendSeparator()
+		
 		i = wx.MenuItem(self.menuDCC, MENU_DCC_SETUPPORT, "Configure DCC Port Name", helpString="Configure DCC Port Name")
 		i.SetFont(font)
 		self.menuDCC.Append(i)
+		
 		i = wx.MenuItem(self.menuDCC, MENU_DCC_SETUPBAUD, "Configure DCC Baud Rate", helpString="Configure DCC Baud Rate")
 		i.SetFont(font)
 		self.menuDCC.Append(i)

@@ -372,7 +372,7 @@ class ManageTrainsDlg(wx.Dialog):
 		oldID = self.selectedTid
 		newID = None
 		while newID is None:
-			dlg = wx.TextEntryDialog(self, 'Enter New Train Number/Name', 'Train ID', '')
+			dlg = wx.TextEntryDialog(self, "Enter New Train Number/Name for train %s" % oldID, 'Train ID', '')
 			rc = dlg.ShowModal()
 			if rc == wx.ID_OK:
 				newID = dlg.GetValue()
