@@ -951,7 +951,9 @@ class TrainTrackerPanel(wx.Panel):
 		self.setSelectedTrain(tid)
 	
 	def setExtraTrains(self):
-		if self.settings.allowextrarerun:		
+		if self.trainOrder is None:
+			self.extraTrains = []
+		elif self.settings.allowextrarerun:		
 			self.extraTrains = [t for t in self.trainOrder.getExtras() if not self.activeTrainList.hasTrain(t)]
 		else:
 			self.extraTrains = [t for t in self.trainOrder.getExtras() if not self.activeTrainList.hasTrain(t) and t not in self.completedTrains]
@@ -1200,7 +1202,14 @@ class TrainTrackerPanel(wx.Panel):
 		self.settings.logdir = os.path.split(path)[0]
 		self.settings.setModified()
 
-		self.log.saveAs(path)
+		try:
+			self.log.saveAs(path)
+		except:
+			dlg = wx.MessageDialog(self, "Unable to write to log file: %s" % path,
+								'Error saving log',
+								wx.OK | wx.ICON_ERROR)
+			dlg.ShowModal()
+			dlg.Destroy()
 		
 	def onCbATC(self, _):
 		if self.cbATC.IsChecked():
@@ -1851,7 +1860,11 @@ class TrainTrackerPanel(wx.Panel):
 		self.settings.save()
 		if self.settings.savelogonexit:
 			path = os.path.join(self.settings.logdir, "tracker.log")
-			self.log.saveAs(path)
+			try:
+				self.log.saveAs(path)
+			except:
+				print("Unable to save to log file: %s" % path)
+				
 		self.Destroy()
 
 
