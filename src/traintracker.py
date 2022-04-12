@@ -27,6 +27,7 @@ from backup import saveData, restoreData
 from dccsniffer import DCCSniffer
 from serial import SerialException
 from optionsdlg import OptionsDlg
+from engqueuedlg import EngQueueDlg
 
 BTNSZ = (120, 46)
 
@@ -61,6 +62,7 @@ MENU_DCC_CONNECT = 501
 MENU_DCC_DISCONNECT = 502
 MENU_DCC_SETUPPORT = 503
 MENU_DCC_SETUPBAUD = 504
+MENU_VIEW_ENG_QUEUE = 601
 
 DEADMANSET = 10
 
@@ -158,9 +160,15 @@ class MainFrame(wx.Frame):
 		i.SetFont(font)
 		self.menuFile.Append(i)
 		
+		self.menuView = wx.Menu()
+		
+		i = wx.MenuItem(self.menuView, MENU_VIEW_ENG_QUEUE, "Engineer Queue", helpString="Display Engineer Queue")
+		i.SetFont(font)
+		self.menuView.Append(i)
+		
 		self.menuManage = wx.Menu()
 		
-		i = wx.MenuItem(self.menuManage, MENU_MANAGE_TRAINS, "Trains", helpString="Manage the train rodter")
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_TRAINS, "Trains", helpString="Manage the train roster")
 		i.SetFont(font)
 		self.menuManage.Append(i)
 		
@@ -261,6 +269,7 @@ class MainFrame(wx.Frame):
 		self.menuDCC.Append(i)
 
 		menuBar.Append(self.menuFile, "File")
+		menuBar.Append(self.menuView, "View")
 		menuBar.Append(self.menuManage, "Manage")
 		menuBar.Append(self.menuReports, "Reports")
 		menuBar.Append(self.menuDispatch, "Dispatch")
@@ -284,6 +293,8 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.panel.onSaveData, id=MENU_FILE_BACKUP)
 		self.Bind(wx.EVT_MENU, self.panel.onRestoreData, id=MENU_FILE_RESTORE)
 		self.Bind(wx.EVT_MENU, self.onClose, id=MENU_FILE_EXIT)
+		
+		self.Bind(wx.EVT_MENU, self.panel.onViewEngQueue, id=MENU_VIEW_ENG_QUEUE)
 		
 		self.Bind(wx.EVT_MENU, self.panel.onManageTrains, id=MENU_MANAGE_TRAINS)
 		self.Bind(wx.EVT_MENU, self.panel.onManageEngineers, id=MENU_MANAGE_ENGINEERS)
@@ -389,6 +400,7 @@ class TrainTrackerPanel(wx.Panel):
 		
 		self.listener = None
 		self.sniffer = None
+		self.dlgEngQueue = None
 
 		self.pendingTrains = []
 		self.selectedEngineers = [] 
@@ -659,6 +671,7 @@ class TrainTrackerPanel(wx.Panel):
 		
 		self.completedTrains.clear()
 		self.completedTrainList.update()
+
 		self.loadLocoFile(os.path.join(self.settings.locodir, self.settings.locofile))		
 		self.loadEngineerFile(os.path.join(self.settings.engineerdir, self.settings.engineerfile))
 		self.loadTrainFile(os.path.join(self.settings.traindir, self.settings.trainfile))		
@@ -700,8 +713,10 @@ class TrainTrackerPanel(wx.Panel):
 			return
 
 		self.idleEngineers = [t for t in self.selectedEngineers]
+		self.updateEngQueue()
 		self.completedTrains.clear()
 		self.completedTrainList.update()
+		self.log.append("Completed trains list cleared")
 		self.loadLocoFile(os.path.join(self.settings.locodir, self.settings.locofile))		
 		self.loadEngineerFile(os.path.join(self.settings.engineerdir, self.settings.engineerfile), preserveActive = True)
 		self.loadTrainFile(os.path.join(self.settings.traindir, self.settings.trainfile))		
@@ -994,6 +1009,24 @@ class TrainTrackerPanel(wx.Panel):
 			tid = None
 			
 		self.setSelectedTrain(tid)
+		
+	def onViewEngQueue(self, _):
+		if self.dlgEngQueue is None:
+			self.dlgEngQueue = EngQueueDlg(self, self.idleEngineers, self.onCloseEngQueue)
+			self.dlgEngQueue.Show()
+			
+	def onCloseEngQueue(self):
+		if self.dlgEngQueue is None:
+			return
+		
+		self.dlgEngQueue.Destroy()
+		self.dlgEngQueue = None
+		
+	def updateEngQueue(self):
+		if self.dlgEngQueue is None:
+			return
+		
+		self.dlgEngQueue.updateEngQueue(self.idleEngineers)
 	
 	def setExtraTrains(self):
 		if self.trainOrder is None:
@@ -1002,6 +1035,9 @@ class TrainTrackerPanel(wx.Panel):
 			self.extraTrains = [t for t in self.trainOrder.getExtras() if not self.activeTrainList.hasTrain(t)]
 		else:
 			self.extraTrains = [t for t in self.trainOrder.getExtras() if not self.activeTrainList.hasTrain(t) and t not in self.completedTrains]
+			
+		self.log.append("Setting extra train list to %s" % str(self.extraTrains))
+
 		self.chExtra.SetItems(self.extraTrains)
 		if len(self.extraTrains) > 0:
 			self.chExtra.SetSelection(0)
@@ -1132,6 +1168,8 @@ class TrainTrackerPanel(wx.Panel):
 			
 		if not preserveActive:
 			self.idleEngineers = []
+			self.updateEngQueue()
+			
 		self.selectedEngineers = [x for x in self.idleEngineers]
 		self.chEngineer.SetItems(self.idleEngineers)
 		self.chEngineer.Enable(len(self.idleEngineers) > 0)
@@ -1274,6 +1312,7 @@ class TrainTrackerPanel(wx.Panel):
 		
 		self.log.append("Removed engineer %s from active list" % self.selectedEngineer)
 		self.idleEngineers.remove(self.selectedEngineer)
+		self.updateEngQueue()
 		self.selectedEngineers.remove(self.selectedEngineer)
 		self.chEngineer.SetItems(self.idleEngineers)
 		if len(self.idleEngineers) == 0:
@@ -1359,6 +1398,7 @@ class TrainTrackerPanel(wx.Panel):
 		
 		if not self.cbATC.IsChecked():
 			self.idleEngineers.remove(self.selectedEngineer)
+			self.updateEngQueue()
 			self.chEngineer.SetItems(self.idleEngineers)
 			if len(self.idleEngineers) == 0:
 				self.chEngineer.Enable(False)
@@ -1400,6 +1440,7 @@ class TrainTrackerPanel(wx.Panel):
 		if t["engineer"] in self.selectedEngineers:
 			if t["engineer"] not in self.idleEngineers:
 				self.idleEngineers.append(t["engineer"])
+				self.updateEngQueue()
 			self.chEngineer.Enable(True)
 			self.bRmEng.Enable(True)
 			self.chEngineer.SetItems(self.idleEngineers)
@@ -1408,6 +1449,7 @@ class TrainTrackerPanel(wx.Panel):
 
 		if neng in self.idleEngineers:
 			self.idleEngineers.remove(neng)
+			self.updateEngQueue()
 			self.chEngineer.SetItems(self.idleEngineers)
 			if len(self.idleEngineers) == 0:
 				self.chEngineer.Enable(False)
@@ -1500,6 +1542,7 @@ class TrainTrackerPanel(wx.Panel):
 			self.log.append("Returned engineer %s to head of pool" % t["engineer"])
 			if t["engineer"] not in self.idleEngineers:
 				self.idleEngineers = [t["engineer"]] + self.idleEngineers
+				self.updateEngQueue()
 			self.chEngineer.Enable(True)
 			self.bRmEng.Enable(True)
 			self.chEngineer.SetItems(self.idleEngineers)
@@ -1526,6 +1569,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.log.append("Removed train %s from active list.  Run time %s" % (tid, runtime))
 		self.completedTrains.append(tid, t["engineer"], t["loco"])
 		self.completedTrainList.update()
+		self.log.append("Train %s added to Completed trains list" % tid)
 		self.activeTrainList.delSelected()
 		
 		if self.settings.allowextrarerun and self.trainOrder.isExtraTrain(tid):
@@ -1535,6 +1579,7 @@ class TrainTrackerPanel(wx.Panel):
 			self.log.append("Returned engineer %s to pool" % t["engineer"])
 			if t["engineer"] not in self.idleEngineers:
 				self.idleEngineers.append(t["engineer"])
+				self.updateEngQueue()
 			self.chEngineer.Enable(True)
 			self.bRmEng.Enable(True)
 			self.chEngineer.SetItems(self.idleEngineers)
@@ -1721,7 +1766,8 @@ class TrainTrackerPanel(wx.Panel):
 
 		self.log.append("New Engineer list: %s" % str(newSelEngs))
 		self.log.append("Currently assigned engineers = %s" % str(busyEngineers))
-		self.idleEngineers = newSelEngs		
+		self.idleEngineers = newSelEngs	
+		self.updateEngQueue()	
 		self.chEngineer.SetItems(self.idleEngineers)
 		self.chEngineer.Enable(len(self.idleEngineers) > 0)
 		self.bRmEng.Enable(len(self.idleEngineers) > 0)
@@ -1767,11 +1813,14 @@ class TrainTrackerPanel(wx.Panel):
 		
 		if fSaveLog is not None:
 			self.settings.savelogonexit = fSaveLog
+			self.log.append("Changed option SaveLogOnExit to %s" % str(fSaveLog))
 			self.settings.setModified()
 			
 		if fRerunExtra is not None:
 			self.settings.allowextrarerun = fRerunExtra
+			self.log.append("Changed option AllowExtraRerun to %s" % str(fRerunExtra))
 			self.settings.setModified()
+			self.setExtraTrains()
 		
 	def onAssignLocos(self, _):
 		order = [x for x in self.trainOrder]
@@ -1833,9 +1882,10 @@ class TrainTrackerPanel(wx.Panel):
 		self.enableDCCDisconnect(self.sniffer is not None)
 		if self.sniffer:
 			self.parent.setTitle(dcc="DCC Connected(%s)" % self.settings.dccsnifferport)
+			self.log.append("Connection to DCC sniffer successful on port %s" % self.settings.dccsnifferport)
 		else:
 			self.parent.setTitle(dcc="DCC Not Connected")
-
+			self.log.append("Connection to DCC sniffer failed on port %s" % self.settings.dccsnifferport)
 
 	def onDisconnectSnifferPressed(self, _):
 		self.disconnectSniffer()
@@ -1852,6 +1902,7 @@ class TrainTrackerPanel(wx.Panel):
 		
 		self.sniffer = None
 		self.enableDCCDisconnect(False)
+		self.log.append("DCC sniffer disconnected")
 		self.parent.setTitle(dcc="DCC Not Connected")
 		
 	def enableDCCDisconnect(self, flag=True):
@@ -1916,6 +1967,9 @@ class TrainTrackerPanel(wx.Panel):
 			dlg.Destroy()
 			if rc != wx.ID_YES:
 				return
+			
+		if self.dlgEngQueue is not None:
+			self.dlgEngQueue.Destroy()
 			
 		if self.listener is not None:
 			self.listener.kill()

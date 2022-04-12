@@ -21,6 +21,9 @@ class CompletedTrains:
 			loco = ""
 		return tid, eng, loco
 	
+	def getTrainList(self):
+		return self.entryOrder
+	
 	def count(self):
 		return len(self.entryOrder)
 		
