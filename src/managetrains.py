@@ -46,6 +46,7 @@ class ManageTrainsDlg(wx.Dialog):
 		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
 		textFontBold = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
+		labelFontBold = wx.Font(wx.Font(14, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD, faceName="Monospace"))
 		
 		hsizer = wx.BoxSizer(wx.HORIZONTAL)
 		hsizer.AddSpacer(20)
@@ -75,33 +76,55 @@ class ManageTrainsDlg(wx.Dialog):
 		sz.Add(self.stDescription)
 		sz.AddSpacer(50)
 		
+		boxModify = wx.StaticBox(self, wx.ID_ANY, "Modify")
+		boxModify.SetFont(labelFontBold)
+		topBorder = boxModify.GetBordersForSizer()[0]
+		bsizer = wx.BoxSizer(wx.VERTICAL)
+		bsizer.AddSpacer(topBorder+5)
+		
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
-		st = wx.StaticText(self, wx.ID_ANY, "Eastbound:", size=(120, -1))
+		st = wx.StaticText(boxModify, wx.ID_ANY, "Eastbound:", size=(120, -1))
 		st.SetFont(textFont)
 		hsz.Add(st)
 		hsz.AddSpacer(5)
-		self.cbEast = wx.CheckBox(self, wx.ID_ANY, "", style=wx.ALIGN_RIGHT)
+		self.cbEast = wx.CheckBox(boxModify, wx.ID_ANY, "", style=wx.ALIGN_RIGHT)
 		self.cbEast.SetFont(textFont)
 		hsz.Add(self.cbEast)
 		
-		sz.Add(hsz)
-		sz.AddSpacer(10)
+		bsizer.Add(hsz)
+		bsizer.AddSpacer(10)
 		
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
-		st = wx.StaticText(self, wx.ID_ANY, "Description:", size=(120, -1))
+		st = wx.StaticText(boxModify, wx.ID_ANY, "Description:", size=(120, -1))
 		st.SetFont(textFont)
 		hsz.Add(st, 0, wx.TOP, 5)
 		hsz.AddSpacer(5)
-		self.teDesc = wx.TextCtrl(self, wx.ID_ANY, "", size=(200, -1))
+		self.teDesc = wx.TextCtrl(boxModify, wx.ID_ANY, "", size=(200, -1))
 		self.teDesc.SetFont(textFont)
 		hsz.Add(self.teDesc)
 		
-		sz.Add(hsz)
+		bsizer.Add(hsz)
+		bsizer.AddSpacer(20)
 		
-		hsizer.AddSpacer(20)
+		self.bMod = wx.Button(boxModify, wx.ID_ANY, "Apply", size=BTNSZ)
+		self.bMod.SetFont(btnFont)
+		self.bMod.SetToolTip("Update the currently selected train with the above direction/description/loco number")
+		self.Bind(wx.EVT_BUTTON, self.bModPressed, self.bMod)
+		bsizer.Add(self.bMod, 0, wx.ALIGN_CENTER_HORIZONTAL)
+		self.bMod.Enable(False)
 		
+		bsizer.AddSpacer(10)
+
+		bhsizer = wx.BoxSizer(wx.HORIZONTAL)
+		bhsizer.AddSpacer(20)
+		bhsizer.Add(bsizer)
+		bhsizer.AddSpacer(20)
+		boxModify.SetSizer(bhsizer)
+
+		sz.Add(boxModify)
+
+		hsizer.AddSpacer(10)		
 		hsizer.Add(sz)
-		
 
 		hsizer.AddSpacer(20)
 		
@@ -217,12 +240,12 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		btnSizer.AddSpacer(10)
 		
-		self.bMod = wx.Button(self, wx.ID_ANY, "Modify\nTrain", size=BTNSZ)
-		self.bMod.SetFont(btnFont)
-		self.bMod.SetToolTip("Update the currently selected train with the above direction/description/loco number")
-		self.Bind(wx.EVT_BUTTON, self.bModPressed, self.bMod)
-		btnSizer.Add(self.bMod)
-		self.bMod.Enable(False)
+		self.bCopy = wx.Button(self, wx.ID_ANY, "Copy\nTrain", size=BTNSZ)
+		self.bCopy.SetFont(btnFont)
+		self.bCopy.SetToolTip("Copy the currently selected train to a new train")
+		self.Bind(wx.EVT_BUTTON, self.bCopyPressed, self.bCopy)
+		btnSizer.Add(self.bCopy)
+		self.bCopy.Enable(False)
 		
 		btnSizer.AddSpacer(10)
 		
@@ -348,6 +371,45 @@ class ManageTrainsDlg(wx.Dialog):
 		self.setSelectedTrain(trainID)
 		self.setModified()
 		
+	def bCopyPressed(self, _):
+		if self.selectedTid is None:
+			return
+		if self.selectedTrainInfo is None:
+			return
+		
+		dlg = wx.TextEntryDialog(self, 'Enter New Train Number/Name', 'Train ID', '')
+		rc = dlg.ShowModal()
+		if rc == wx.ID_OK:
+			trainID = dlg.GetValue()
+
+		dlg.Destroy()
+		
+		if rc != wx.ID_OK:
+			return
+		
+		if trainID in self.trainList:
+			dlg = wx.MessageDialog(self, "A train with the ID/Name \"%s\" already exists" % trainID, 
+		                               "Duplicate Name",
+		                               wx.OK | wx.ICON_WARNING)
+			dlg.ShowModal()
+			dlg.Destroy()
+			return
+
+		steps = [s for s in self.selectedTrainInfo["steps"]]		
+		self.trainList = sorted(self.trainList + [trainID])
+		self.roster[trainID] = {
+			'dir': "East" if self.cbEast.IsChecked() else "West",
+			'desc': self.teDesc.GetValue(),
+			'loco': None,
+			'steps': steps,
+			'block': None
+			}
+		
+		self.cbTrains.SetItems(self.trainList)
+		self.cbTrains.SetSelection(self.trainList.index(trainID))
+		self.setSelectedTrain(trainID)
+		self.setModified()
+		
 	def bModPressed(self, _):
 		if self.selectedTid is None:
 			return
@@ -407,6 +469,15 @@ class ManageTrainsDlg(wx.Dialog):
 		if self.selectedTid is None:
 			return
 		if self.selectedTrainInfo is None:
+			return
+		
+		dlg = wx.MessageDialog(self, "This will delete train %s from the roster.\n\nAre you sure?\n\nYes to Delete, No to Cancel" % self.selectedTid, 
+	                               "Confirm Delete",
+	                               wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING)
+		rc = dlg.ShowModal()
+		
+		dlg.Destroy()
+		if rc != wx.ID_YES:
 			return
 		
 		tx = self.trainList.index(self.selectedTid)
@@ -508,6 +579,7 @@ class ManageTrainsDlg(wx.Dialog):
 			self.selectedTid = None
 			self.selectedTrainInfo = None
 			self.bMod.Enable(False)
+			self.bCopy.Enable(False)
 			self.bModID.Enable(False)
 			self.bDel.Enable(False)
 			self.cbEast.SetValue(False)
@@ -516,6 +588,7 @@ class ManageTrainsDlg(wx.Dialog):
 			return
 		
 		self.bMod.Enable(True)
+		self.bCopy.Enable(True)
 		self.bModID.Enable(True)
 		self.bDel.Enable(True)
 		self.selectedTid = tid

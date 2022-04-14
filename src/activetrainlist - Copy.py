@@ -21,10 +21,6 @@ class ActiveTrainList(wx.ListCtrl):
 			style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_VRULES|wx.LC_SINGLE_SEL
 			)
 		
-		self.sortAscending = False
-		self.sortGroupDir = False
-		self.sortKey = "time"
-		
 		font = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
 		self.SetFont(font)
 
@@ -53,6 +49,7 @@ class ActiveTrainList(wx.ListCtrl):
 
 		self.SetItemCount(0)
 		self.activeTrains = []
+		self.highlight = []
 
 		self.normalA = wx.ItemAttr()
 		self.normalB = wx.ItemAttr()
@@ -143,6 +140,7 @@ class ActiveTrainList(wx.ListCtrl):
 	def clear(self):
 		self.SetItemCount(0)
 		self.activeTrains = []
+		self.highlight = []
 		
 	def count(self):
 		return len(self.activeTrains)
@@ -192,7 +190,7 @@ class ActiveTrainList(wx.ListCtrl):
 					self.activeTrains[tx]["loco"] = loco
 				if block is not None:
 					if self.activeTrains[tx]["block"] != block:
-						self.activeTrains[tx]["highlight"] = 5 # 5 second highlight time
+						self.highlight[tx] = 5 # 5 second highlight time
 					self.activeTrains[tx]["block"] = block
 				if desc is not None:
 					self.activeTrains[tx]["desc"] = desc
@@ -201,7 +199,6 @@ class ActiveTrainList(wx.ListCtrl):
 		
 	def addTrain(self, tr):
 		tr["time"] = 0
-		tr["highlight"] = 0
 		if "throttle" not in tr:
 			tr["throttle"] = None
 		if "speed" not in tr:
@@ -209,30 +206,8 @@ class ActiveTrainList(wx.ListCtrl):
 		if "limit" not in tr:
 			tr["limit"] = None
 		self.activeTrains.append(tr)
+		self.highlight.append(0)
 		self.SetItemCount(len(self.activeTrains))
-		self.sortTrains()
-		
-	def setSortKey(self, sortKey, groupDir=False, ascending=False):
-		self.sortAscending = ascending
-		self.sortGroupDir = groupDir
-		self.sortKey = sortKey
-		self.sortTrains()
-		
-	def buildSortKey(self, tr):
-		if self.sortKey == "time":
-			kf = "%06d" & tr["time"]
-		else:
-			kf = tr[self.sortKey]
-			
-		if self.sortGroupDir:
-			return tr["dir"] + kf
-		else:
-			return kf
-		
-	def sortTrains(self):
-		a = sorted(self.activeTrains, key=self.buildSortKey, reverse=not self.sortAscending)
-		self.activeTrains = a
-		self.RefreshItems(0, self.GetItemCount()-1)
 		
 	def getEngineers(self):
 		return [x["engineer"] for x in self.activeTrains if x["engineer"] != "ATC"]
@@ -279,11 +254,15 @@ class ActiveTrainList(wx.ListCtrl):
 		
 		for tx in range(len(self.activeTrains)):
 			self.activeTrains[tx]["time"] += 1
-			if self.activeTrains[tx]["highlight"] > 0:
-				self.activeTrains[tx]["highlight"] -= 1
 			
 		self.RefreshItems(0, self.GetItemCount()-1)
-				
+		
+		for tx in range(len(self.highlight)):
+			if self.highlight[tx] > 0:
+				self.highlight[tx] -= 1
+				if self.highlight[tx] == 0:
+					self.RefreshItem(tx)
+		
 	def delSelected(self):
 		if self.selected is None:
 			return False
@@ -291,6 +270,7 @@ class ActiveTrainList(wx.ListCtrl):
 			return False
 		
 		del self.activeTrains[self.selected]
+		del self.highlight[self.selected]
 		self.SetItemCount(len(self.activeTrains))
 		self.setSelection(None)
 		ct = self.GetItemCount()
@@ -376,7 +356,7 @@ class ActiveTrainList(wx.ListCtrl):
 
 	def OnGetItemAttr(self, item):
 		tr = self.activeTrains[item]
-		hilite = self.activeTrains[item]["highlight"] > 0
+		hilite = self.highlight[item] > 0
 		if hilite:
 			return self.hilite
 

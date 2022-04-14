@@ -63,6 +63,11 @@ MENU_DCC_DISCONNECT = 502
 MENU_DCC_SETUPPORT = 503
 MENU_DCC_SETUPBAUD = 504
 MENU_VIEW_ENG_QUEUE = 601
+MENU_VIEW_SORT = 602
+MENU_SORT_TID = 650
+MENU_SORT_TIME = 651
+MENU_SORT_GROUP = 652
+MENU_SORT_ASCENDING = 653
 
 DEADMANSET = 10
 
@@ -160,7 +165,38 @@ class MainFrame(wx.Frame):
 		i.SetFont(font)
 		self.menuFile.Append(i)
 		
+		self.menuSort = wx.Menu()
+		
+		i = wx.MenuItem(self.menuSort, MENU_SORT_TID, "Train ID", helpString="Sort Based on Train ID", kind=wx.ITEM_RADIO)
+		i.SetFont(font)
+		self.menuSort.Append(i)
+		
+		i = wx.MenuItem(self.menuSort, MENU_SORT_TIME, "Time", helpString="Sort Based on Train running time", kind=wx.ITEM_RADIO)
+		i.SetFont(font)
+		self.menuSort.Append(i)
+		i.Check()
+		
+		self.menuSort.AppendSeparator()
+				
+		i = wx.MenuItem(self.menuSort, MENU_SORT_GROUP, "Group by Direction", helpString="Group East and West trains together", kind=wx.ITEM_CHECK)
+		i.SetFont(font)
+		self.menuSort.Append(i)
+		i.Check(False)
+		
+		self.menuSort.AppendSeparator()
+				
+		i = wx.MenuItem(self.menuSort, MENU_SORT_ASCENDING, "Ascending", helpString="Sort ascending", kind=wx.ITEM_CHECK)
+		i.SetFont(font)
+		self.menuSort.Append(i)
+		i.Check(False)
+		
 		self.menuView = wx.Menu()
+		
+		i = wx.MenuItem(self.menuView, MENU_VIEW_SORT, "Sort Active Trains", helpString="Change sorting parameters", subMenu=self.menuSort)
+		i.SetFont(font)
+		self.menuView.Append(i)
+		
+		self.menuView.AppendSeparator()
 		
 		i = wx.MenuItem(self.menuView, MENU_VIEW_ENG_QUEUE, "Engineer Queue", helpString="Display Engineer Queue")
 		i.SetFont(font)
@@ -295,6 +331,10 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.onClose, id=MENU_FILE_EXIT)
 		
 		self.Bind(wx.EVT_MENU, self.panel.onViewEngQueue, id=MENU_VIEW_ENG_QUEUE)
+		self.Bind(wx.EVT_MENU, self.panel.onChangeSort, id=MENU_SORT_TID)	
+		self.Bind(wx.EVT_MENU, self.panel.onChangeSort, id=MENU_SORT_TIME)		
+		self.Bind(wx.EVT_MENU, self.panel.onChangeSort, id=MENU_SORT_GROUP)		
+		self.Bind(wx.EVT_MENU, self.panel.onChangeSort, id=MENU_SORT_ASCENDING)
 		
 		self.Bind(wx.EVT_MENU, self.panel.onManageTrains, id=MENU_MANAGE_TRAINS)
 		self.Bind(wx.EVT_MENU, self.panel.onManageEngineers, id=MENU_MANAGE_ENGINEERS)
@@ -1512,7 +1552,18 @@ class TrainTrackerPanel(wx.Panel):
 		else:
 			self.chTrain.SetSelection(0)
 			self.setSelectedTrain(self.chTrain.GetString(0))
+			
+	def onChangeSort(self, evt):
+		if self.parent.menuSort.FindItemById(MENU_SORT_TID).IsChecked():
+			sortKey = "tid"
+		else:
+			sortKey = "time"
+
+		grp = self.parent.menuSort.FindItemById(MENU_SORT_GROUP).IsChecked()
+		asc = self.parent.menuSort.FindItemById(MENU_SORT_ASCENDING).IsChecked()
 		
+		self.activeTrainList.setSortKey(sortKey, groupDir=grp, ascending=asc)
+
 	def returnActiveTrain(self, t):
 		tid = t["tid"]
 		if self.trainOrder.isExtraTrain(tid):			
