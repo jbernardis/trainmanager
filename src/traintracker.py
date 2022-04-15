@@ -2010,6 +2010,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.log.append(logMsg)
 			
 	def onClose(self, _):
+		self.ticker.Stop()
 		if self.activeTrainList.count() > 0:
 			dlg = wx.MessageDialog(self, 'Trains are still active.\nPress "Yes" to exit program, or "No" to cancel.',
 	                               'Active Trains',
