@@ -220,7 +220,7 @@ class ActiveTrainList(wx.ListCtrl):
 		
 	def buildSortKey(self, tr):
 		if self.sortKey == "time":
-			kf = "%06d" & tr["time"]
+			kf = "%06d" % tr["time"]
 		else:
 			kf = tr[self.sortKey]
 			
