@@ -172,21 +172,15 @@ class ChooseRestoreFiles(wx.Dialog):
 		
 		self.files = files
 
-		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
-		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
-		textFontBold = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
-
 		vsizer = wx.BoxSizer(wx.VERTICAL)
 		vsizer.AddSpacer(20)
 		st = wx.StaticText(self, wx.ID_ANY, "Choose Files to restore:")
-		st.SetFont(textFontBold)
 		vsizer.Add(st, 0, wx.ALIGN_CENTER_HORIZONTAL)
 		
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
 		self.fchoices = [y for y in [self.formatName(x) for x in self.files] if y is not None]
 		
 		clb = wx.CheckListBox(self, wx.ID_ANY, choices=self.fchoices, size=(-1, 200))
-		clb.SetFont(textFont)
 		self.Bind(wx.EVT_CHECKLISTBOX, self.onClbFiles, clb)
 		self.clbFiles = clb
 		hsz.Add(clb)
@@ -195,11 +189,9 @@ class ChooseRestoreFiles(wx.Dialog):
 		
 		self.bCheckAll = wx.Button(self, wx.ID_ANY, "Select\nAll", size=BTNSZ)
 		self.Bind(wx.EVT_BUTTON, self.bCheckAllPressed, self.bCheckAll)
-		self.bCheckAll.SetFont(btnFont)
 		
 		self.bUncheckAll = wx.Button(self, wx.ID_ANY, "Unselect\nAll", size=BTNSZ)
 		self.Bind(wx.EVT_BUTTON, self.bUncheckAllPressed, self.bUncheckAll)
-		self.bUncheckAll.SetFont(btnFont)
 		
 		vsz.Add(self.bCheckAll)
 		vsz.AddSpacer(20)
@@ -213,17 +205,14 @@ class ChooseRestoreFiles(wx.Dialog):
 		vsizer.AddSpacer(10)
 		
 		self.stCheckCount = wx.StaticText(self, wx.ID_ANY, " 0 Files Selected")
-		self.stCheckCount.SetFont(textFontBold)
 		vsizer.Add(self.stCheckCount, 0, wx.ALIGN_CENTER_HORIZONTAL)
 
 		vsizer.AddSpacer(20)
 		
 		self.bOK = wx.Button(self, wx.ID_ANY, "OK", size=BTNSZ)
-		self.bOK.SetFont(btnFont)
 		self.Bind(wx.EVT_BUTTON, self.bOKPressed, self.bOK)
 		
 		self.bCancel = wx.Button(self, wx.ID_ANY, "Cancel", size=BTNSZ)
-		self.bCancel.SetFont(btnFont)
 		self.Bind(wx.EVT_BUTTON, self.bCancelPressed, self.bCancel)
 		
 		btnSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -311,20 +300,14 @@ class ChooseOverwriteFiles(wx.Dialog):
 		
 		self.files = files
 
-		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
-		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
-		textFontBold = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
-
 		vsizer = wx.BoxSizer(wx.VERTICAL)
 		vsizer.AddSpacer(20)
 		st = wx.StaticText(self, wx.ID_ANY, "Confirm files to overwrite:")
-		st.SetFont(textFontBold)
 		vsizer.Add(st, 0, wx.ALIGN_CENTER_HORIZONTAL)
 		
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
 		
 		clb = wx.CheckListBox(self, wx.ID_ANY, choices=self.files, size=(-1, 200))
-		clb.SetFont(textFont)
 		self.Bind(wx.EVT_CHECKLISTBOX, self.onClbFiles, clb)
 		self.clbFiles = clb
 		hsz.Add(clb)
@@ -333,11 +316,9 @@ class ChooseOverwriteFiles(wx.Dialog):
 		
 		self.bCheckAll = wx.Button(self, wx.ID_ANY, "Select\nAll", size=BTNSZ)
 		self.Bind(wx.EVT_BUTTON, self.bCheckAllPressed, self.bCheckAll)
-		self.bCheckAll.SetFont(btnFont)
 		
 		self.bUncheckAll = wx.Button(self, wx.ID_ANY, "Unselect\nAll", size=BTNSZ)
 		self.Bind(wx.EVT_BUTTON, self.bUncheckAllPressed, self.bUncheckAll)
-		self.bUncheckAll.SetFont(btnFont)
 		
 		vsz.Add(self.bCheckAll)
 		vsz.AddSpacer(20)
@@ -351,17 +332,14 @@ class ChooseOverwriteFiles(wx.Dialog):
 		vsizer.AddSpacer(10)
 		
 		self.stCheckCount = wx.StaticText(self, wx.ID_ANY, " 0 Files Selected")
-		self.stCheckCount.SetFont(textFontBold)
 		vsizer.Add(self.stCheckCount, 0, wx.ALIGN_CENTER_HORIZONTAL)
 
 		vsizer.AddSpacer(20)
 		
 		self.bOK = wx.Button(self, wx.ID_ANY, "OK", size=BTNSZ)
-		self.bOK.SetFont(btnFont)
 		self.Bind(wx.EVT_BUTTON, self.bOKPressed, self.bOK)
 		
 		self.bCancel = wx.Button(self, wx.ID_ANY, "Cancel", size=BTNSZ)
-		self.bCancel.SetFont(btnFont)
 		self.Bind(wx.EVT_BUTTON, self.bCancelPressed, self.bCancel)
 		
 		btnSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -384,6 +362,7 @@ class ChooseOverwriteFiles(wx.Dialog):
 		
 		for i in range(len(self.files)):
 			self.clbFiles.Check(i, check=True)
+		self.reportCheckCount()
 			
 	def onClbFiles(self, _):
 		self.reportCheckCount()

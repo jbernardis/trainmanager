@@ -6,20 +6,16 @@ class CompletedTrainList(wx.ListCtrl):
 		self.completedTrains = ct
 		
 		wx.ListCtrl.__init__(
-			self, parent, wx.ID_ANY, size=(280, 700),
+			self, parent, wx.ID_ANY, size=(210, 700),
 			style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_VRULES|wx.LC_SINGLE_SEL
 			)
 		
-		font = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
-		self.SetFont(font)
-
-
 		self.InsertColumn(0, "Train")
 		self.InsertColumn(1, "Engineer")
 		self.InsertColumn(2, "Loco #")
-		self.SetColumnWidth(0, 80)
-		self.SetColumnWidth(1, 120)
-		self.SetColumnWidth(2, 80)
+		self.SetColumnWidth(0, 60)
+		self.SetColumnWidth(1, 90)
+		self.SetColumnWidth(2, 60)
 
 		self.SetItemCount(0)
 

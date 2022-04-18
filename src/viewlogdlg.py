@@ -10,16 +10,13 @@ class ViewLogDlg(wx.Dialog):
 		self.parent = parent
 		self.index = 0
 		self.textToFind = None
-		
-		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
-		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
 
 		hsizer=wx.BoxSizer(wx.HORIZONTAL)
 		vsizer = wx.BoxSizer(wx.VERTICAL)
 		vsizer.AddSpacer(20)
 		
-		self.teLog = wx.TextCtrl(self, wx.ID_ANY, "", style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_NOHIDESEL, size=(800, 800))
-		self.teLog.SetFont(textFont)
+		self.teLog = wx.TextCtrl(self, wx.ID_ANY, "", style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_NOHIDESEL, size=(800, 500))
+		#self.teLog.SetFont(textFont)
 		self.logData = ""
 		for ln in log:
 			line = "%s\n" % ln
@@ -37,18 +34,18 @@ class ViewLogDlg(wx.Dialog):
 		bsizer = wx.BoxSizer(wx.HORIZONTAL)
 
 		self.teTextToFind = wx.TextCtrl(self, wx.ID_ANY, "")
-		self.teTextToFind.SetFont(textFont)
+		#self.teTextToFind.SetFont(textFont)
 		bsizer.Add(self.teTextToFind, 0, wx.TOP, 8)	
 		bsizer.AddSpacer(20)	
 		self.bFind = wx.Button(self, wx.ID_ANY, "Find", size=BTNSZ)
-		self.bFind.SetFont(btnFont)
+		#self.bFind.SetFont(btnFont)
 		bsizer.Add(self.bFind)
 		bsizer.AddSpacer(20)	
 		self.bNext = wx.Button(self, wx.ID_ANY, "Next", size=BTNSZ)
-		self.bNext.SetFont(btnFont)
+		#self.bNext.SetFont(btnFont)
 		bsizer.Add(self.bNext)
 		self.bSave = wx.Button(self, wx.ID_ANY, "Save", size=BTNSZ)
-		self.bSave.SetFont(btnFont)
+		#self.bSave.SetFont(btnFont)
 		bsizer.AddSpacer(30)
 		bsizer.Add(self.bSave)
 		self.Bind(wx.EVT_BUTTON, self.onBFind, self.bFind)

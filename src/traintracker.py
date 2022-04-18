@@ -71,6 +71,8 @@ MENU_SORT_ASCENDING = 653
 
 DEADMANSET = 10
 
+MAX_STEPS = 9
+
 
 wildcard = "JSON file (*.json)|*.json|"	 \
 		   "All files (*.*)|*.*"
@@ -95,8 +97,6 @@ class MainFrame(wx.Frame):
 	def __init__(self):
 		wx.Frame.__init__(self, None, size=(900, 800), style=wx.DEFAULT_FRAME_STYLE)
 		self.Bind(wx.EVT_CLOSE, self.onClose)
-		
-		font = wx.Font(wx.Font(14, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
 
 		icon = wx.Icon()
 		icon.CopyFromBitmap(wx.Bitmap("traintracker.ico", wx.BITMAP_TYPE_ANY))
@@ -114,194 +114,157 @@ class MainFrame(wx.Frame):
 
 		self.menuFile = wx.Menu()	
 		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_TRAIN, "Load Train Roster", helpString ="Load a Train Roster file")
-		i.SetFont(font)
 		self.menuFile.Append(i)
 		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_ORDER, "Load Train Order", helpString="Load Train Order/Sequence file")
-		i.SetFont(font)
 		self.menuFile.Append(i)
 		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_LOCOS, "Load Loco List", helpString="Load locomotive descriptions")
-		i.SetFont(font)
 		self.menuFile.Append(i)
 		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_ENG, "Load Engineer list", helpString="Load Engineer List")
-		i.SetFont(font)
 		self.menuFile.Append(i)
 		
 		self.menuFile.AppendSeparator()
 		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_VIEW_LOG, "View Log", helpString="View Log")
-		i.SetFont(font)
 		self.menuFile.Append(i)
 		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_SAVE_LOG, "Save Log", helpString="Save Log")
-		i.SetFont(font)
 		self.menuFile.Append(i)
 		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_CLEAR_LOG, "Clear Log", helpString="Clear Log")
-		i.SetFont(font)
 		self.menuFile.Append(i)
 		
 		self.menuFile.AppendSeparator()
 		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_BACKUP, "Backup", helpString="Backup data files to a ZIP file")
-		i.SetFont(font)
 		self.menuFile.Append(i)
 		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_RESTORE, "Restore", helpString="Restore data files from a ZIP file")
-		i.SetFont(font)
 		self.menuFile.Append(i)
 		
 		self.menuFile.AppendSeparator()
 		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_ABOUT, "About", helpString="About")
-		i.SetFont(font)
 		self.menuFile.Append(i)
 		
 		self.menuFile.AppendSeparator()
 		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_EXIT, "Exit", helpString="Exit Program")
-		i.SetFont(font)
 		self.menuFile.Append(i)
 		
 		self.menuSort = wx.Menu()
 		
 		i = wx.MenuItem(self.menuSort, MENU_SORT_TID, "Train ID", helpString="Sort Based on Train ID", kind=wx.ITEM_RADIO)
-		i.SetFont(font)
 		self.menuSort.Append(i)
 		
 		i = wx.MenuItem(self.menuSort, MENU_SORT_TIME, "Time", helpString="Sort Based on Train running time", kind=wx.ITEM_RADIO)
-		i.SetFont(font)
 		self.menuSort.Append(i)
 		i.Check()
 		
 		self.menuSort.AppendSeparator()
 				
 		i = wx.MenuItem(self.menuSort, MENU_SORT_GROUP, "Group by Direction", helpString="Group East and West trains together", kind=wx.ITEM_CHECK)
-		i.SetFont(font)
 		self.menuSort.Append(i)
 		i.Check(False)
 		
 		self.menuSort.AppendSeparator()
 				
 		i = wx.MenuItem(self.menuSort, MENU_SORT_ASCENDING, "Ascending", helpString="Sort ascending", kind=wx.ITEM_CHECK)
-		i.SetFont(font)
 		self.menuSort.Append(i)
 		i.Check(False)
 		
 		self.menuView = wx.Menu()
 		
 		i = wx.MenuItem(self.menuView, MENU_VIEW_SORT, "Sort Active Trains", helpString="Change sorting parameters", subMenu=self.menuSort)
-		i.SetFont(font)
 		self.menuView.Append(i)
 		
 		self.menuView.AppendSeparator()
 		
 		i = wx.MenuItem(self.menuView, MENU_VIEW_ENG_QUEUE, "Engineer Queue", helpString="Display Engineer Queue")
-		i.SetFont(font)
 		self.menuView.Append(i)
 		
 		self.menuManage = wx.Menu()
 		
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_TRAINS, "Trains", helpString="Manage the train roster")
-		i.SetFont(font)
 		self.menuManage.Append(i)
 		
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ENGINEERS, "Engineers", helpString="Manage the content and ordering of active engineers list")
-		i.SetFont(font)
 		self.menuManage.Append(i)
 		
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_LOCOS, "Locomotives", helpString="Define, modify, delete locomotives")
-		i.SetFont(font)
 		self.menuManage.Append(i)
 		
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ORDER, "Train Order", helpString="Add/remove trains and modify sequence")
-		i.SetFont(font)
 		self.menuManage.Append(i)
 		
 		self.menuManage.AppendSeparator()
 		
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ASSIGN_LOCOS, "Assign Locomotives", helpString="Assign locomotives to trains")
-		i.SetFont(font)
 		self.menuManage.Append(i)
 		
 		self.menuManage.AppendSeparator()
 		
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_OPTIONS, "Preferences", helpString="Change preferences")
-		i.SetFont(font)
 		self.menuManage.Append(i)
 		
 		self.menuManage.AppendSeparator()
 		
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_RESET, "Reset Session", helpString="Reset Operating Session")
-		i.SetFont(font)
 		self.menuManage.Append(i)
 		
 		self.menuReports = wx.Menu()
 		
 		i = wx.MenuItem(self.menuReports, MENU_REPORT_OP_WORKSHEET, "Operating Worksheet", helpString="Print an Operating Worksheet")
-		i.SetFont(font)
 		self.menuReports.Append(i)
 		
 		i = wx.MenuItem(self.menuReports, MENU_REPORT_TRAIN_CARDS, "Train Cards", helpString="Print Train Cards")
-		i.SetFont(font)
 		self.menuReports.Append(i)
 		
 		i = wx.MenuItem(self.menuReports, MENU_REPORT_LOCOS, "Locomotives", helpString="Print Locomotive Roster")
-		i.SetFont(font)
 		self.menuReports.Append(i)
 		
 		i = wx.MenuItem(self.menuReports, MENU_REPORT_STATUS, "Train Status", helpString="List of all active and completed trains")
-		i.SetFont(font)
 		self.menuReports.Append(i)
 		
 		self.menuDispatch = wx.Menu()
 		
 		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_CONNECT, "Connect", helpString="Connect to dispatcher")
-		i.SetFont(font)
 		self.menuDispatch.Append(i)
 		
 		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_DISCONNECT, "Disconnect", helpString="Disconnect from dispatcher")
-		i.SetFont(font)
 		self.menuDispatch.Append(i)
 		self.menuDispatch.Enable(MENU_DISPATCH_DISCONNECT, False)
 		
 		self.menuDispatch.AppendSeparator()
 		
 		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_SETUPIP, "Configure IP Address", helpString="Configure IP address")
-		i.SetFont(font)
 		self.menuDispatch.Append(i)
 		
 		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_SETUPPORT, "Configure Port", helpString="Configure Port")
-		i.SetFont(font)
 		self.menuDispatch.Append(i)
 		
 		self.menuDispatch.AppendSeparator()
 		
 		i = wx.MenuItem(self.menuDispatch, MENU_DISPATCH_RESET, "Reset Connection", helpString="Reset connection to dispatcher")
-		i.SetFont(font)
 		self.menuDispatch.Append(i)
 		
 		self.menuDCC = wx.Menu()
 		
 		i = wx.MenuItem(self.menuDCC, MENU_DCC_CONNECT, "Connect", helpString="Connect to DCC Sniffer")
-		i.SetFont(font)
 		self.menuDCC.Append(i)
 		
 		i = wx.MenuItem(self.menuDCC, MENU_DCC_DISCONNECT, "Disconnect", helpString="Disconnect from DCC Sniffer")
-		i.SetFont(font)
 		self.menuDCC.Append(i)
 		self.menuDCC.Enable(MENU_DCC_DISCONNECT, False)
 		
 		self.menuDCC.AppendSeparator()
 		
 		i = wx.MenuItem(self.menuDCC, MENU_DCC_SETUPPORT, "Configure DCC Port Name", helpString="Configure DCC Port Name")
-		i.SetFont(font)
 		self.menuDCC.Append(i)
 		
 		i = wx.MenuItem(self.menuDCC, MENU_DCC_SETUPBAUD, "Configure DCC Baud Rate", helpString="Configure DCC Baud Rate")
-		i.SetFont(font)
 		self.menuDCC.Append(i)
 
 		menuBar.Append(self.menuFile, "File")
@@ -360,9 +323,12 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.panel.setupDCCtty, id=MENU_DCC_SETUPPORT)
 		self.Bind(wx.EVT_MENU, self.panel.setupDCCBaud, id=MENU_DCC_SETUPBAUD)
 		
+		sizer.AddSpacer(100)
 		self.SetSizer(sizer)
 		self.Layout()
 		self.Fit();
+		print("main window: ", self.GetSize())
+		print(self.panel.GetSize())
 		
 	def setTitle(self, train=None, order=None, engineer=None, loco=None, connection=None, dcc=None):
 		if train is not None:
@@ -448,17 +414,14 @@ class TrainTrackerPanel(wx.Panel):
 		self.trainOrder = None
 		self.speeds = {}
 		
-		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
-		labelFont = wx.Font(wx.Font(12, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.NORMAL, faceName="Monospace"))
 		labelFontBold = wx.Font(wx.Font(14, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD, faceName="Monospace"))
-		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
-		textFontBold = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
+		textFont = wx.Font(wx.Font(9, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
+		textFontBold = wx.Font(wx.Font(9, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 		
 		vsizerl = wx.BoxSizer(wx.VERTICAL)
 		vsizerl.AddSpacer(20)
 
 		boxTrain = wx.StaticBox(self, wx.ID_ANY, "Train")
-		boxTrain.SetFont(labelFontBold)
 		topBorder = boxTrain.GetBordersForSizer()[0]
 		bsizer = wx.BoxSizer(wx.VERTICAL)
 		bsizer.AddSpacer(topBorder)
@@ -466,12 +429,10 @@ class TrainTrackerPanel(wx.Panel):
 		
 		self.chTrain = wx.Choice(boxTrain, wx.ID_ANY, choices=self.pendingTrains, size=(120, -1))
 		self.chTrain.SetSelection(0)
-		self.chTrain.SetFont(textFont)
 		self.Bind(wx.EVT_CHOICE, self.onChoiceTID, self.chTrain)
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		st = wx.StaticText(boxTrain, wx.ID_ANY, "Scheduled: ", size=(120, -1))
-		st.SetFont(textFontBold)
 		sz.Add(st, 1, wx.TOP, 4)
 		sz.Add(self.chTrain)
 		
@@ -486,7 +447,6 @@ class TrainTrackerPanel(wx.Panel):
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		self.cbExtra = wx.CheckBox(boxTrain, wx.ID_ANY, "Run Extra")
-		self.cbExtra.SetFont(textFontBold)
 		self.Bind(wx.EVT_CHECKBOX, self.onCbExtra, self.cbExtra)
 		sz.AddSpacer(100)
 		sz.Add(self.cbExtra)
@@ -496,12 +456,10 @@ class TrainTrackerPanel(wx.Panel):
 		bsizer.AddSpacer(10)
 
 		self.chExtra = wx.Choice(boxTrain, wx.ID_ANY, choices=[], size=(120, -1))
-		self.chExtra.SetFont(textFont)
 		self.chExtra.Enable(False)
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		st = wx.StaticText(boxTrain, wx.ID_ANY, "Extra: ", size=(120, -1))
-		st.SetFont(textFontBold)
 		sz.Add(st, 1, wx.TOP, 4)
 		sz.Add(self.chExtra)
 		bsizer.Add(sz)
@@ -519,7 +477,6 @@ class TrainTrackerPanel(wx.Panel):
 		vsizerl.AddSpacer(20)
 
 		boxEng = wx.StaticBox(self, wx.ID_ANY, "Engineer")
-		boxEng.SetFont(labelFontBold)
 		topBorder = boxEng.GetBordersForSizer()[0]
 		bsizer = wx.BoxSizer(wx.VERTICAL)
 		bsizer.AddSpacer(topBorder)
@@ -527,13 +484,11 @@ class TrainTrackerPanel(wx.Panel):
 
 		self.chEngineer = wx.Choice(boxEng, wx.ID_ANY, choices=self.idleEngineers, size=(120, -1))
 		self.chEngineer.SetSelection(0)
-		self.chEngineer.SetFont(textFont)
 		self.selectedEngineer = self.chEngineer.GetString(0)
 		self.Bind(wx.EVT_CHOICE, self.onChoiceEngineer, self.chEngineer)
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		st = wx.StaticText(boxEng, wx.ID_ANY, "Engineer: ", size=(120, -1))
-		st.SetFont(textFontBold)
 		sz.Add(st, 1, wx.TOP, 4)
 		sz.Add(self.chEngineer)
 		
@@ -548,7 +503,6 @@ class TrainTrackerPanel(wx.Panel):
 		
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		self.cbATC = wx.CheckBox(boxEng, wx.ID_ANY, "ATC")
-		self.cbATC.SetFont(textFontBold)
 		self.Bind(wx.EVT_CHECKBOX, self.onCbATC, self.cbATC)
 		sz.AddSpacer(100)
 		sz.Add(self.cbATC)
@@ -567,7 +521,6 @@ class TrainTrackerPanel(wx.Panel):
 		btnsizer = wx.BoxSizer(wx.HORIZONTAL)
 		
 		self.bAssign = wx.Button(self, wx.ID_ANY, "Assign\nTrain/Engineer", size=BTNSZ)
-		self.bAssign.SetFont(btnFont)
 		self.Bind(wx.EVT_BUTTON, self.bAssignPressed, self.bAssign)
 		btnsizer.Add(self.bAssign)
 		self.bAssign.Enable(len(self.idleEngineers) != 0 and len(self.pendingTrains) != 0)
@@ -576,7 +529,7 @@ class TrainTrackerPanel(wx.Panel):
 		vsizerl.Add(btnsizer, 1, wx.ALIGN_CENTER_HORIZONTAL)
 
 		vsizerr = wx.BoxSizer(wx.VERTICAL)
-		vsizerr.AddSpacer(20)
+		vsizerr.AddSpacer(10)
 		
 		self.teBreaker = wx.TextCtrl(self, wx.ID_ANY, "", size=(240, -1), style=wx.TE_CENTER)
 		self.setBreakerValue("All OK")
@@ -592,45 +545,56 @@ class TrainTrackerPanel(wx.Panel):
 		b = wx.StaticBitmap(self, wx.ID_ANY, self.pngPSRY)
 		
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
-		hsz.Add(self.teBreaker, 1, wx.TOP, 50)
+		hsz.Add(self.teBreaker, 1, wx.TOP, 40)
 		hsz.AddSpacer(40)
 		hsz.Add(b)
 		hsz.AddSpacer(40)
-		hsz.Add(self.clock, 1, wx.TOP, 40)
+		hsz.Add(self.clock, 1, wx.TOP, 30)
 		
 		vsizerr.Add(hsz, 0, wx.ALIGN_CENTER_HORIZONTAL)
-		vsizerr.AddSpacer(20)
+		vsizerr.AddSpacer(10)
 
 		boxDetails = wx.StaticBox(self, wx.ID_ANY, "Train Details")
-		boxDetails.SetFont(labelFontBold)
 		topBorder = boxDetails.GetBordersForSizer()[0]
 		bsizer = wx.BoxSizer(wx.VERTICAL)
 		bsizer.AddSpacer(topBorder)
-		
-		bsizer.Add(wx.StaticText(boxDetails, wx.ID_ANY, "", size=(300, -1)))
-		bsizer.AddSpacer(5)
 
 		self.stDescription = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(400, -1))
 		self.stDescription.SetFont(labelFontBold)
 		bsizer.Add(self.stDescription)
-		bsizer.AddSpacer(10)
-		self.stStepsTower = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(100, 170))
-		self.stStepsLoc = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(60, 170))
-		self.stStepsStop = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(300, 170))
-		self.stStepsTower.SetFont(labelFont)
-		self.stStepsLoc.SetFont(labelFont)
-		self.stStepsStop.SetFont(labelFont)
-		sz = wx.BoxSizer(wx.HORIZONTAL)
-		sz.Add(self.stStepsTower)
-		sz.Add(self.stStepsLoc)
-		sz.Add(self.stStepsStop)
-		bsizer.Add(sz)
+		bsizer.AddSpacer(5)
+		self.stStepTowers = []
+		self.stStepLocs = []
+		self.stStepStops = []
+		for i in range(MAX_STEPS):
+			tower = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(100, -1))
+			loc = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(60, -1))
+			stop = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(300, -1))
+			if i % 2 == 0:
+				tower.SetBackgroundColour(wx.Colour(225, 255, 240))
+				loc.SetBackgroundColour(wx.Colour(225, 255, 240))
+				stop.SetBackgroundColour(wx.Colour(225, 255, 240))
+			else:
+				tower.SetBackgroundColour(wx.Colour(138, 255, 197))
+				loc.SetBackgroundColour(wx.Colour(138, 255, 197))
+				stop.SetBackgroundColour(wx.Colour(138, 255, 197))
+			tower.SetFont(textFontBold)
+			loc.SetFont(textFont)
+			stop.SetFont(textFont)
+			sz = wx.BoxSizer(wx.HORIZONTAL)
+			sz.Add(tower)
+			sz.Add(loc)
+			sz.Add(stop)
+			self.stStepTowers.append(tower)
+			self.stStepLocs.append(loc)
+			self.stStepStops.append(stop)
+			bsizer.Add(sz)
 		
 		self.stLocoInfo = wx.StaticText(boxDetails, wx.ID_ANY, "", size=(600, -1))
 		self.stLocoInfo.SetFont(labelFontBold)
 		bsizer.AddSpacer(5)
 		bsizer.Add(self.stLocoInfo)
-		bsizer.AddSpacer(10)
+		bsizer.AddSpacer(5)
 		
 		bhsizer = wx.BoxSizer(wx.HORIZONTAL)
 		bhsizer.AddSpacer(20)
@@ -639,7 +603,7 @@ class TrainTrackerPanel(wx.Panel):
 		boxDetails.SetSizer(bhsizer)
 		
 		vsizerr.Add(boxDetails)
-		vsizerr.AddSpacer(20)
+		vsizerr.AddSpacer(5)
 		
 		hsizer = wx.BoxSizer(wx.HORIZONTAL)
 		hsizer.AddSpacer(20)
@@ -684,6 +648,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.SetSizer(wsizer)
 		self.Layout()
 		self.Fit()
+		print("panel: ", self.GetSize())
 
 		# events from dispatcher		
 		self.Bind(EVT_TRAINLOC, self.setTrainLocation)
@@ -1706,44 +1671,42 @@ class TrainTrackerPanel(wx.Panel):
 		
 	def showInfo(self, tid):
 		if tid is None or tid == "":
+			for i in range(MAX_STEPS):
+				self.stStepTowers[i].SetLabel("")
+				self.stStepLocs[i].SetLabel("")
+				self.stStepStops[i].SetLabel("")
 			self.stDescription.SetLabel("")
-			self.stStepsTower.SetLabel("")
-			self.stStepsLoc.SetLabel("")
-			self.stStepsStop.SetLabel("")
 			return
 		
 		if self.roster is None:
+			for i in range(MAX_STEPS):
+				self.stStepTowers[i].SetLabel("")
+				self.stStepLocs[i].SetLabel("")
+				self.stStepStops[i].SetLabel("")
 			self.stDescription.SetLabel("Train Roster is empty")
-			self.stStepsTower.SetLabel("")
-			self.stStepsLoc.SetLabel("")
-			self.stStepsStop.SetLabel("")
 			return
 		else:
 			tInfo = self.roster.getTrain(tid)
 			
 		if tInfo is None:
 			self.stDescription.SetLabel("Train %s is not in Train Roster" % tid)
-			self.stStepsTower.SetLabel("")
-			self.stStepsLoc.SetLabel("")
-			self.stStepsStop.SetLabel("")
+			for i in range(MAX_STEPS):
+				self.stStepTowers[i].SetLabel("")
+				self.stStepLocs[i].SetLabel("")
+				self.stStepStops[i].SetLabel("")
 			return
 
 		descr = "%s   %sbound %s" % (tid, tInfo["dir"], tInfo["desc"])		
 		self.stDescription.SetLabel(descr)
-		locs = []
+		i = 0
 		for step in tInfo["steps"]:
+			self.stStepTowers[i].SetLabel(step[0])
+			self.stStepStops[i].SetLabel(step[1])
 			if step[2] == 0:
-				locs.append("")
+				self.stStepLocs[i].SetLabel("")
 			else:
-				locs.append("(%2d)" % step[2])
-		towers = "\n".join([step[0] for step in tInfo["steps"]])
-		loc = "\n".join(locs)
-		stops  = "\n".join([step[1] for step in tInfo["steps"]])
-
-		self.stStepsTower.SetLabel(towers)
-		self.stStepsLoc.SetLabel(loc)
-		self.stStepsStop.SetLabel(stops)
-		# TODO - May have to limit how many lines we see here - or come up with other approach
+				self.stStepLocs[i].SetLabel("(%2d)" % step[2])
+			i += 1
 		
 		if tInfo["loco"] is None:
 			locoString = ""
@@ -1756,11 +1719,11 @@ class TrainTrackerPanel(wx.Panel):
 				locoString = "Loco: %s - %s" % (lId, lInfo.replace('&', '&&'))
 
 		if tInfo["block"] is None or tInfo["block"] == "":
-			blockString = ""
+			self.stLocoInfo.SetLabel("%-50.50s" % locoString)
 		else:
 			blockString = "Block: %s" % tInfo["block"]	
+			self.stLocoInfo.SetLabel("%-40.40s %s" % (locoString, blockString))
 						
-		self.stLocoInfo.SetLabel("%-40.40s %s" % (locoString, blockString))
 				
 	def onManageOrder(self, _):
 		dlg = ManageOrderDlg(self, self.trainOrder, self.roster.getTrainList(), self.pendingTrains, self.extraTrains, self.settings)
@@ -2043,6 +2006,7 @@ class App(wx.App):
 	def OnInit(self):
 		self.frame = MainFrame()
 		self.frame.Show()
+		self.frame.Maximize(True)
 		self.SetTopWindow(self.frame)
 		return True
 

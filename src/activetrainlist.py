@@ -17,16 +17,13 @@ class ActiveTrainList(wx.ListCtrl):
 		self.parent = parent
 		
 		wx.ListCtrl.__init__(
-			self, parent, wx.ID_ANY, size=(1210, 280),
+			self, parent, wx.ID_ANY, size=(1070, 280),
 			style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_VRULES|wx.LC_SINGLE_SEL
 			)
 		
 		self.sortAscending = False
 		self.sortGroupDir = False
 		self.sortKey = "time"
-		
-		font = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
-		self.SetFont(font)
 
 		self.InsertColumn(0, "Train")
 		self.InsertColumn(1, "Origin")
@@ -43,9 +40,9 @@ class ActiveTrainList(wx.ListCtrl):
 		self.SetColumnWidth(1, 120)
 		self.SetColumnWidth(2, 80)
 		self.SetColumnWidth(3, 120)
-		self.SetColumnWidth(4, 120)
+		self.SetColumnWidth(4, 90)
 		self.SetColumnWidth(5, 80)
-		self.SetColumnWidth(6, 340)
+		self.SetColumnWidth(6, 230)
 		self.SetColumnWidth(7, 60)
 		self.SetColumnWidth(8, 70)
 		self.SetColumnWidth(9, 60)
