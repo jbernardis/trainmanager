@@ -1058,6 +1058,8 @@ class TrainTrackerPanel(wx.Panel):
 		if self.dlgEngQueue is None:
 			self.dlgEngQueue = EngQueueDlg(self, self.idleEngineers, self.onCloseEngQueue)
 			self.dlgEngQueue.Show()
+		else:
+			self.dlgEngQueue.Raise()
 			
 	def onCloseEngQueue(self):
 		if self.dlgEngQueue is None:
@@ -1078,6 +1080,8 @@ class TrainTrackerPanel(wx.Panel):
 			self.dlgActiveTrains.Show()
 			self.assertSortOrder()
 			self.copyActiveTrains()
+		else:
+			self.dlgActiveTrains.Raise()
 			
 	def copyActiveTrains(self):
 		if not self.dlgActiveTrains:
@@ -2090,6 +2094,9 @@ class TrainTrackerPanel(wx.Panel):
 			
 		if self.dlgEngQueue is not None:
 			self.dlgEngQueue.Destroy()
+			
+		if self.dlgActiveTrains is not None:
+			self.dlgActiveTrains.Destroy()
 			
 		if self.listener is not None:
 			self.listener.kill()
