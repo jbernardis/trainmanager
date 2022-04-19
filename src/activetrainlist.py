@@ -417,7 +417,7 @@ class ActiveTrainList(wx.ListCtrl):
 
 class ActiveTrainListDlg(wx.Dialog):
 	def __init__(self, parent, cbClose):
-		wx.Dialog.__init__(self, parent, wx.ID_ANY, "Active Train List")
+		wx.Dialog.__init__(self, parent, wx.ID_ANY, "Active Train List", style=wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT)
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 		
 		self.modified = False

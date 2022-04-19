@@ -2061,6 +2061,9 @@ class TrainTrackerPanel(wx.Panel):
 		if self.dlgEngQueue is not None:
 			self.dlgEngQueue.Destroy()
 			
+		if self.dlgActiveTrains is not None:
+			self.dlgActiveTrains.Destroy()
+			
 		if self.listener is not None:
 			self.listener.kill()
 			
