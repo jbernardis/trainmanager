@@ -30,7 +30,7 @@ from optionsdlg import OptionsDlg
 from engqueuedlg import EngQueueDlg
 
 DEVELOPMODE = False
-VERSIONDATE = "18-April-2022"
+VERSIONDATE = "19-April-2022"
 
 BTNSZ = (120, 46)
 
@@ -86,6 +86,7 @@ wildcardLog = "Log file (*.log)|*.log|"	 \
 		   "All files (*.*)|*.*"
 
 (TrainLocationEvent, EVT_TRAINLOC) = newevent.NewEvent()  
+(TrainSignalEvent, EVT_TRAINSIG) = newevent.NewEvent()  
 (ClockEvent, EVT_CLOCK) = newevent.NewEvent()  
 (BreakerEvent, EVT_BREAKER) = newevent.NewEvent()  
 (SocketConnectEvent, EVT_SOCKET_CONNECT) = newevent.NewEvent()
@@ -659,6 +660,7 @@ class TrainTrackerPanel(wx.Panel):
 
 		# events from dispatcher		
 		self.Bind(EVT_TRAINLOC, self.setTrainLocation)
+		self.Bind(EVT_TRAINSIG, self.setTrainSignal)
 		self.Bind(EVT_CLOCK, self.setClockEvent)
 		self.Bind(EVT_BREAKER, self.setBreakersEvent)
 		self.Bind(EVT_SOCKET_CONNECT, self.socketConnectEvent)
@@ -742,7 +744,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.parent.setTitle(connection="Connecting...")
 		self.log.append("Connecting to dispatch at %s:%s" % (self.settings.dispatchip, self.settings.dispatchport))
 		self.listener = Listener(self.settings.dispatchip, self.settings.dispatchport)
-		self.listener.bind(self.socketConnect, self.socketDisconnect, self.connectFailure, self.trainReport, self.setClock, self.setBreakers, self.setMessage)
+		self.listener.bind(self.socketConnect, self.socketDisconnect, self.connectFailure, self.trainReport, self.signalReport, self.setClock, self.setBreakers, self.setMessage)
 		self.listener.start()
 		
 	def setConnected(self, flag=True):
@@ -913,6 +915,29 @@ class TrainTrackerPanel(wx.Panel):
 		if tid == self.selectedTrain:
 			self.showInfo(self.selectedTrain)
 			
+	def signalReport(self, loco, limit):
+		# This method executes in thread context - don't touch the wxpython elements here
+		evt = TrainSignalEvent(loco=loco, limit=limit)
+		wx.PostEvent(self, evt)
+
+	def setTrainSignal(self, evt):
+		loco = evt.loco
+		if loco == "":
+			return 
+		
+		limit = evt.limit
+		
+		self.log.append("Trying to identify train by loco id")
+		tid = self.roster.getTrainByLoco(loco)
+						
+		if tid is None:
+			self.log.append("Unable to determine train ID")
+			return 
+		
+		self.activeTrainList.setLimit(loco, limit)
+		if self.dlgActiveTrains:
+			self.dlgActiveTrains.atl.setLimit(loco, limit)
+
 	def setClock(self, tm): # thread context
 		evt = ClockEvent(tm=tm)
 		wx.PostEvent(self, evt)
@@ -1423,7 +1448,7 @@ class TrainTrackerPanel(wx.Panel):
 			"desc": descr,
 			"engineer": eng,
 			"throttle": None,
-			"speed": None,
+			"speed": 0,
 			"limit": None,
 			"highlight": 0,
 			"time": 0}
@@ -2026,11 +2051,16 @@ class TrainTrackerPanel(wx.Panel):
 			else:
 				speedType = STOP
 
-			speed = int(dccMsg["param"])
-			self.speeds[dccMsg["loco"]] = [speed, speedType]
-			self.activeTrainList.setThrottle(dccMsg["loco"], speed, speedType)
-			if self.dlgActiveTrains:
-				self.dlgActiveTrains.atl.setThrottle(dccMsg["loco"], speed, speedType)
+			try:
+				speed = int(dccMsg["param"])
+			except:
+				speed = None
+				
+			if speed is not None:
+				self.speeds[dccMsg["loco"]] = [speed, speedType]
+				self.activeTrainList.setThrottle(dccMsg["loco"], speed, speedType)
+				if self.dlgActiveTrains:
+					self.dlgActiveTrains.atl.setThrottle(dccMsg["loco"], speed, speedType)
 		
 	def DCCClosed(self): # thread context
 		evt = DCCClosedEvent()

@@ -11,6 +11,7 @@ class Listener():
 		self.isRunning = False
 		
 		self.cbTrainID = None
+		self.cbTrainSignal = None
 		self.cbConnect = None
 		self.cbDisconnect = None
 		self.cbFailure = None
@@ -31,7 +32,7 @@ class Listener():
 			self.isRunning = False
 			self.thread.join()
 		
-	def bind(self, cbConnect, cbDisconnect, cbFailure, cbTrainID, cbClock, cbBreakers, cbMessage):
+	def bind(self, cbConnect, cbDisconnect, cbFailure, cbTrainID, cbTrainSignal, cbClock, cbBreakers, cbMessage):
 		self.cbConnect = cbConnect
 		self.cbDisconnect = cbDisconnect
 		self.cbFailure = cbFailure
@@ -39,6 +40,7 @@ class Listener():
 		self.cbClock = cbClock
 		self.cbBreakers = cbBreakers
 		self.cbMessage = cbMessage
+		self.cbTrainSignal = cbTrainSignal
 		
 	def run(self):
 		try:
@@ -75,13 +77,30 @@ class Listener():
 						if b == "":
 							continue
 						
-						if b.startswith("TrnMgr"):
-							print("TrnMgr: (%s)" % b)
-							train = b[9:19].strip()
-							block = b[19:29].strip()
-							loco = b[29:39].strip()
+						if b.startswith("TrnTkr"):
+							print("TrnTkr: (%s)" % b)
+							loco = b[9:17].strip()
+							train = b[17:25].strip()
+							block = b[25:33].strip()
 							if callable(self.cbTrainID):
 								self.cbTrainID(train, loco, block)
+										
+						elif b.startswith("TrnSig"):
+							print("TrnSig: (%s)" % b)
+							loco = b[9:17].strip()
+							slimit = b[25:29].strip()
+							try:
+								limit = int(slimit)
+							except:
+								limit = None
+							if limit is not None:
+								if callable(self.cbTrainSignal):
+									self.cbTrainSignal(loco, limit)
+							else:
+								if callable(self.cbMessage):
+									self.cbMessage("Unable to parse X speed from (%s)" % slimit)
+									self.cbMessage("Message = (%s)" % b)
+
 										
 						elif b.startswith("TrainID"):
 							print("TrainID: (%s)" % b)

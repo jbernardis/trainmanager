@@ -274,13 +274,21 @@ class ActiveTrainList(wx.ListCtrl):
 		
 		return True
 	
-	def setThrottle(self, loco, throttle, speedType, limit=None):
+	def setThrottle(self, loco, throttle, speedType):
 		tx = 0
 		for tx in range(len(self.activeTrains)):
 			tr = self.activeTrains[tx]
 			if tr["loco"] == loco:
 				self.activeTrains[tx]["throttle"] = self.formatThrottle(throttle, speedType)
 				self.activeTrains[tx]["speed"] = throttle
+				self.RefreshItem(tx)
+				return
+			
+	def setLimit(self, loco, limit):
+		tx = 0
+		for tx in range(len(self.activeTrains)):
+			tr = self.activeTrains[tx]
+			if tr["loco"] == loco:
 				self.activeTrains[tx]["limit"] = limit
 				self.RefreshItem(tx)
 				return
