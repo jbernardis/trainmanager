@@ -19,6 +19,7 @@ class ManageOrderDlg(wx.Dialog):
 		self.availableTrains = [t for t in self.allTrains if t not in self.scheduledTrains and t not in self.extraTrains]
 		
 		self.modified = None
+		self.everModified = False
 		self.setModified(False)
 
 		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
@@ -178,6 +179,9 @@ class ManageOrderDlg(wx.Dialog):
 		self.SetTitle(title)
 		
 	def setModified(self, flag=True):
+		if flag:
+			self.everModified = True
+			
 		if self.modified == flag:
 			return
 		
@@ -275,7 +279,11 @@ class ManageOrderDlg(wx.Dialog):
 		del(self.scheduledTrains[ix])
 		self.lbSchedule.SetItems(self.scheduledTrains)
 		self.setAvailableTrains()
-		ix = self.availableTrains.index(tid)
+		try:
+			ix = self.availableTrains.index(tid)
+		except:
+			ix = None
+			
 		self.bLeftSch.Enable(False)
 		self.setModified()
 		if ix is not None:
@@ -340,6 +348,8 @@ class ManageOrderDlg(wx.Dialog):
 	def bOKPressed(self, _):
 		if self.modified:
 			self.doSave()
+			self.EndModal(wx.ID_OK)
+		elif self.everModified:
 			self.EndModal(wx.ID_OK)
 		else:
 			self.EndModal(wx.ID_EXIT)

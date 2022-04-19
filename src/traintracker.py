@@ -8,7 +8,7 @@ from trainroster import TrainRoster
 from locomotives import Locomotives
 from engineers import Engineers
 from order import Order
-from activetrainlist import ActiveTrainList, FWD_128, FWD_28, REV_128, REV_28, STOP
+from activetrainlist import ActiveTrainList, ActiveTrainListDlg, FWD_128, FWD_28, REV_128, REV_28, STOP
 from completedtrainlist import CompletedTrainList
 from managetrains import ManageTrainsDlg
 from manageengineers import ManageEngineersDlg
@@ -28,6 +28,9 @@ from dccsniffer import DCCSniffer
 from serial import SerialException
 from optionsdlg import OptionsDlg
 from engqueuedlg import EngQueueDlg
+
+DEVELOPMODE = False
+VERSIONDATE = "18-April-2022"
 
 BTNSZ = (120, 46)
 
@@ -63,7 +66,8 @@ MENU_DCC_DISCONNECT = 502
 MENU_DCC_SETUPPORT = 503
 MENU_DCC_SETUPBAUD = 504
 MENU_VIEW_ENG_QUEUE = 601
-MENU_VIEW_SORT = 602
+MENU_VIEW_ACTIVE_TRAINS = 602
+MENU_VIEW_SORT = 610
 MENU_SORT_TID = 650
 MENU_SORT_TIME = 651
 MENU_SORT_GROUP = 652
@@ -185,6 +189,9 @@ class MainFrame(wx.Frame):
 		i = wx.MenuItem(self.menuView, MENU_VIEW_ENG_QUEUE, "Engineer Queue", helpString="Display Engineer Queue")
 		self.menuView.Append(i)
 		
+		i = wx.MenuItem(self.menuView, MENU_VIEW_ACTIVE_TRAINS, "Active Train List", helpString="Display Active Train List")
+		self.menuView.Append(i)
+		
 		self.menuManage = wx.Menu()
 		
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_TRAINS, "Trains", helpString="Manage the train roster")
@@ -294,6 +301,7 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.onClose, id=MENU_FILE_EXIT)
 		
 		self.Bind(wx.EVT_MENU, self.panel.onViewEngQueue, id=MENU_VIEW_ENG_QUEUE)
+		self.Bind(wx.EVT_MENU, self.panel.onViewActiveTrains, id=MENU_VIEW_ACTIVE_TRAINS)
 		self.Bind(wx.EVT_MENU, self.panel.onChangeSort, id=MENU_SORT_TID)	
 		self.Bind(wx.EVT_MENU, self.panel.onChangeSort, id=MENU_SORT_TIME)		
 		self.Bind(wx.EVT_MENU, self.panel.onChangeSort, id=MENU_SORT_GROUP)		
@@ -327,8 +335,6 @@ class MainFrame(wx.Frame):
 		self.SetSizer(sizer)
 		self.Layout()
 		self.Fit();
-		print("main window: ", self.GetSize())
-		print(self.panel.GetSize())
 		
 	def setTitle(self, train=None, order=None, engineer=None, loco=None, connection=None, dcc=None):
 		if train is not None:
@@ -407,6 +413,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.listener = None
 		self.sniffer = None
 		self.dlgEngQueue = None
+		self.dlgActiveTrains = None
 
 		self.pendingTrains = []
 		self.selectedEngineers = [] 
@@ -620,6 +627,7 @@ class TrainTrackerPanel(wx.Panel):
 		wsizerl.Add(st, 0, wx.ALIGN_CENTER_HORIZONTAL)
 		
 		self.activeTrainList = ActiveTrainList(self)
+		self.activeTrainList.setSortKey("time")
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		sz.AddSpacer(20)
 		sz.Add(self.activeTrainList)
@@ -648,7 +656,6 @@ class TrainTrackerPanel(wx.Panel):
 		self.SetSizer(wsizer)
 		self.Layout()
 		self.Fit()
-		print("panel: ", self.GetSize())
 
 		# events from dispatcher		
 		self.Bind(EVT_TRAINLOC, self.setTrainLocation)
@@ -707,6 +714,8 @@ class TrainTrackerPanel(wx.Panel):
 				dlg.Destroy()
 				
 		self.activeTrainList.ticker()
+		if self.dlgActiveTrains:
+			self.dlgActiveTrains.atl.ticker()
 		
 	def onResetSession(self, _):
 		dlg = wx.MessageDialog(self, 'This will reload all data files and will delete all active trains\nAre you sure you want to proceed?\n\nPress "Yes" to proceed, or "No" to cancel.',
@@ -898,6 +907,9 @@ class TrainTrackerPanel(wx.Panel):
 			self.log.append("Setting locomotive for train %s to %s" % (tid, loco))
 
 		self.activeTrainList.updateTrain(tid, loco, desc, block)
+		if self.dlgActiveTrains:
+			self.dlgActiveTrains.atl.updateTrain(tid, loco, desc, block)
+			
 		if tid == self.selectedTrain:
 			self.showInfo(self.selectedTrain)
 			
@@ -1000,6 +1012,8 @@ class TrainTrackerPanel(wx.Panel):
 		self.bSkip.Enable(len(self.pendingTrains) > 0)
 
 		self.activeTrainList.clear()
+		if self.dlgActiveTrains:
+			self.dlgActiveTrains.atl.clear()
 		self.cbATC.SetValue(False)
 
 		self.chTrain.SetItems(self.pendingTrains)
@@ -1032,6 +1046,28 @@ class TrainTrackerPanel(wx.Panel):
 			return
 		
 		self.dlgEngQueue.updateEngQueue(self.idleEngineers)
+		
+	def onViewActiveTrains(self, _):
+		if self.dlgActiveTrains is None:
+			self.dlgActiveTrains = ActiveTrainListDlg(self, self.onCloseActiveTrains)
+			self.dlgActiveTrains.Show()
+			self.assertSortOrder()
+			self.copyActiveTrains()
+			
+	def copyActiveTrains(self):
+		if not self.dlgActiveTrains:
+			return 
+		
+		tl = self.activeTrainList.getTrainList()
+		for t in tl:
+			self.dlgActiveTrains.atl.addTrain(t)
+			
+	def onCloseActiveTrains(self):
+		if self.dlgActiveTrains is None:
+			return
+		
+		self.dlgActiveTrains.Destroy()
+		self.dlgActiveTrains = None
 	
 	def setExtraTrains(self):
 		if self.trainOrder is None:
@@ -1128,6 +1164,8 @@ class TrainTrackerPanel(wx.Panel):
 					ndesc = self.locos.getLoco(rloco)
 
 				self.activeTrainList.updateTrain(tid, rloco, ndesc, tInfo["block"])
+				if self.dlgActiveTrains:
+					self.dlgActiveTrains.atl.updateTrain(tid, rloco, ndesc, tInfo["block"])
 					
 	def onOpenEngineer(self, _):
 		if self.activeTrainList.count() > 0:
@@ -1181,6 +1219,8 @@ class TrainTrackerPanel(wx.Panel):
 		self.bRmEng.Enable(len(self.idleEngineers) > 0)
 
 		self.activeTrainList.clear()
+		if self.dlgActiveTrains:
+			self.dlgActiveTrains.atl.clear()
 		self.cbATC.SetValue(False)
 		self.bAssign.Enable(len(self.pendingTrains) > 0 and len(self.idleEngineers) > 0)
 		
@@ -1257,6 +1297,8 @@ class TrainTrackerPanel(wx.Panel):
 
 		if not preserveActive:
 			self.activeTrainList.clear()
+			if self.dlgActiveTrains:
+				self.dlgActiveTrains.atl.clear()
 			
 		self.cbATC.SetValue(False)
 		
@@ -1370,6 +1412,7 @@ class TrainTrackerPanel(wx.Panel):
 			block = tInfo["block"]
 		else:
 			block = ""	
+
 		acttr = {
 			"tid": tid,
 			"dir": tInfo["dir"],
@@ -1378,10 +1421,19 @@ class TrainTrackerPanel(wx.Panel):
 			"block": block,
 			"loco": loco,
 			"desc": descr,
-			"engineer": eng}
+			"engineer": eng,
+			"throttle": None,
+			"speed": None,
+			"limit": None,
+			"highlight": 0,
+			"time": 0}
 		self.activeTrainList.addTrain(acttr)
+		if self.dlgActiveTrains:
+			self.dlgActiveTrains.atl.addTrain(acttr)
 		if loco in self.speeds:
 			self.activeTrainList.setThrottle(loco, self.speeds[loco][0], self.speeds[loco][1])
+			if self.dlgActiveTrains:
+				self.dlgActiveTrains.atl.setThrottle(loco, self.speeds[loco][0], self.speeds[loco][1])
 			
 		self.log.append("Assigned %strain %s to %s" % ("extra " if runningExtra else "", tid, eng))
 
@@ -1418,7 +1470,7 @@ class TrainTrackerPanel(wx.Panel):
 			self.cbATC.SetValue(False)
 			self.bAssign.Enable(len(self.pendingTrains) != 0 and len(self.idleEngineers) != 0)
 		
-	def reassignTrain(self, t):
+	def reassignTrain(self, t, tx):
 		engActive = self.activeTrainList.getEngineers()	
 		if t["engineer"] != "ATC":
 			eng = ["ATC"]
@@ -1469,15 +1521,17 @@ class TrainTrackerPanel(wx.Panel):
 			self.bAssign.Enable(True)
 
 		oeng = t["engineer"]		
-		self.activeTrainList.setNewEngineer(neng)
+		self.activeTrainList.setNewEngineer(tx, neng)
+		if self.dlgActiveTrains:
+			self.dlgActiveTrains.atl.setNewEngineer(tx, neng)
 		self.log.append("Reassigned train %s from %s to %s" % (t["tid"], oeng, neng))
 		
 	def onAbout(self, _):
-		dlg = AboutDlg(self, self.pngPSRY)
+		dlg = AboutDlg(self, self.pngPSRY, VERSIONDATE)
 		dlg.ShowModal()
 		dlg.Destroy()
 		
-	def showDetails(self, t):
+	def showDetails(self, t, tx):
 		if t is None:
 			return
 		
@@ -1519,6 +1573,9 @@ class TrainTrackerPanel(wx.Panel):
 			self.setSelectedTrain(self.chTrain.GetString(0))
 			
 	def onChangeSort(self, evt):
+		self.assertSortOrder()
+		
+	def assertSortOrder(self):
 		if self.parent.menuSort.FindItemById(MENU_SORT_TID).IsChecked():
 			sortKey = "tid"
 		else:
@@ -1528,8 +1585,10 @@ class TrainTrackerPanel(wx.Panel):
 		asc = self.parent.menuSort.FindItemById(MENU_SORT_ASCENDING).IsChecked()
 		
 		self.activeTrainList.setSortKey(sortKey, groupDir=grp, ascending=asc)
+		if self.dlgActiveTrains:
+			self.dlgActiveTrains.atl.setSortKey(sortKey, groupDir=grp, ascending=asc)
 
-	def returnActiveTrain(self, t):
+	def returnActiveTrain(self, t, tx):
 		tid = t["tid"]
 		if self.trainOrder.isExtraTrain(tid):			
 			dlg = wx.MessageDialog(self, "This removes train %s (and its engineer) from the\nactive list, and places it back on the list of extra trains.\nThis cannot be undone.\n\nPress OK to continue, or Cancel" % tid,
@@ -1542,7 +1601,9 @@ class TrainTrackerPanel(wx.Panel):
 		if rc == wx.ID_CANCEL:
 			return
 
-		self.activeTrainList.delSelected()
+		self.activeTrainList.delActiveTrain(tx)
+		if self.dlgActiveTrains:
+			self.dlgActiveTrains.atl.delActiveTrain(tx)
 		if self.trainOrder.isExtraTrain(tid):
 			self.log.append("Returned train %s from active list to extra train list" % tid)
 			self.setExtraTrains()
@@ -1570,7 +1631,7 @@ class TrainTrackerPanel(wx.Panel):
 		if len(self.pendingTrains) > 0 and (len(self.idleEngineers) > 0 or self.cbATC.IsChecked()):
 			self.bAssign.Enable(True)
 		
-	def removeActiveTrain(self, t):
+	def removeActiveTrain(self, t, tx):
 		dlg = wx.MessageDialog(self, "This indicates that train %s has reached its destination.\nThis cannot be undone.\n\nPress OK to continue, or Cancel" % t["tid"],
 							'Remove Train', wx.OK | wx.CANCEL | wx.OK_DEFAULT | wx.ICON_QUESTION)
 		rc = dlg.ShowModal()
@@ -1586,7 +1647,9 @@ class TrainTrackerPanel(wx.Panel):
 		self.completedTrains.append(tid, t["engineer"], t["loco"])
 		self.completedTrainList.update()
 		self.log.append("Train %s added to Completed trains list" % tid)
-		self.activeTrainList.delSelected()
+		self.activeTrainList.delActiveTrain(tx)
+		if self.dlgActiveTrains:
+			self.dlgActiveTrains.atl.delActiveTrain(tx)
 		
 		if self.settings.allowextrarerun and self.trainOrder.isExtraTrain(tid):
 			self.setExtraTrains()
@@ -1605,7 +1668,7 @@ class TrainTrackerPanel(wx.Panel):
 		if len(self.pendingTrains) > 0 and (len(self.idleEngineers) > 0 or self.cbATC.IsChecked()):
 			self.bAssign.Enable(True)
 		
-	def changeLoco(self, t):
+	def changeLoco(self, t, tx):
 		dlg = wx.SingleChoiceDialog(
 				self, 'Choose a Locomotive', 'Change Locomotive',
 				self.locos.getLocoList(),
@@ -1625,9 +1688,13 @@ class TrainTrackerPanel(wx.Panel):
 		
 		desc = self.locos.getLoco(loco)
 		self.activeTrainList.updateTrain(tid, loco, desc, None)
+		if self.dlgActiveTrains:
+			self.dlgActiveTrains.atl.updateTrain(tid, loco, desc, None)
 		
 		if loco in self.speeds:
 			self.activeTrainList.setThrottle(loco, self.speeds[loco][0], self.speeds[loco][1])
+			if self.dlgActiveTrains:
+				self.dlgActiveTrains.atl.setThrottle(loco, self.speeds[loco][0], self.speeds[loco][1])
 		
 		tinfo = self.roster.getTrain(tid)
 		if tinfo is not None:
@@ -1656,7 +1723,7 @@ class TrainTrackerPanel(wx.Panel):
 	def reportDoubleClick(self, tx):
 		self.reportSelection(tx)
 		tinfo = self.activeTrainList.getTrain(tx)
-		self.showDetails(tinfo)
+		self.showDetails(tinfo, tx)
 		
 	def onChoiceEngineer(self, _):
 		ex = self.chEngineer.GetSelection()
@@ -1706,6 +1773,12 @@ class TrainTrackerPanel(wx.Panel):
 				self.stStepLocs[i].SetLabel("")
 			else:
 				self.stStepLocs[i].SetLabel("(%2d)" % step[2])
+			i += 1
+			
+		while i < MAX_STEPS:
+			self.stStepTowers[i].SetLabel("")
+			self.stStepLocs[i].SetLabel("")
+			self.stStepStops[i].SetLabel("")
 			i += 1
 		
 		if tInfo["loco"] is None:
@@ -1956,6 +2029,8 @@ class TrainTrackerPanel(wx.Panel):
 			speed = int(dccMsg["param"])
 			self.speeds[dccMsg["loco"]] = [speed, speedType]
 			self.activeTrainList.setThrottle(dccMsg["loco"], speed, speedType)
+			if self.dlgActiveTrains:
+				self.dlgActiveTrains.atl.setThrottle(dccMsg["loco"], speed, speedType)
 		
 	def DCCClosed(self): # thread context
 		evt = DCCClosedEvent()
@@ -2006,7 +2081,9 @@ class App(wx.App):
 	def OnInit(self):
 		self.frame = MainFrame()
 		self.frame.Show()
-		self.frame.Maximize(True)
+		if not DEVELOPMODE:
+			self.frame.Maximize(True)
+			
 		self.SetTopWindow(self.frame)
 		return True
 
@@ -2014,8 +2091,10 @@ import sys
 
 ofp = open("tracker.out", "w")
 efp = open("tracker.err", "w")
-sys.stdout = ofp
-sys.stderr = efp
+
+if not DEVELOPMODE:
+	sys.stdout = ofp
+	sys.stderr = efp
 
 app = App(False)
 app.MainLoop()

@@ -12,6 +12,10 @@ REV_128 = 3
 REV_28 = 4
 STOP = 5
 
+TIMECOL = 10
+TIDCOL = 0
+DIRCOL = 2		
+
 class ActiveTrainList(wx.ListCtrl):
 	def __init__(self, parent):
 		self.parent = parent
@@ -123,19 +127,19 @@ class ActiveTrainList(wx.ListCtrl):
 		menu.Destroy()
 		
 	def onRemoveTrain(self, evt):
-		self.parent.removeActiveTrain(self.activeTrains[self.itemSelected])
+		self.parent.removeActiveTrain(self.activeTrains[self.itemSelected], self.itemSelected)
 		
 	def onChangeEngineer(self, evt):
-		self.parent.reassignTrain(self.activeTrains[self.itemSelected])
+		self.parent.reassignTrain(self.activeTrains[self.itemSelected], self.itemSelected)
 		
 	def onChangeLoco(self, evt):
-		self.parent.changeLoco(self.activeTrains[self.itemSelected])
+		self.parent.changeLoco(self.activeTrains[self.itemSelected], self.selected)
 		
 	def onShowDetails(self, evt):
-		self.parent.showDetails(self.activeTrains[self.itemSelected])
+		self.parent.showDetails(self.activeTrains[self.itemSelected], self.selected)
 		
 	def onReturnTrain(self, evt):
-		self.parent.returnActiveTrain(self.activeTrains[self.itemSelected])
+		self.parent.returnActiveTrain(self.activeTrains[self.itemSelected], self.itemSelected)
 
 	def clear(self):
 		self.SetItemCount(0)
@@ -165,6 +169,9 @@ class ActiveTrainList(wx.ListCtrl):
 		
 	def getTrains(self):
 		return [tr["tid"] for tr in self.activeTrains]
+	
+	def getTrainList(self):
+		return self.activeTrains
 	
 	def getTrain(self, tx):
 		if tx < 0 or tx >= len(self.activeTrains):
@@ -196,23 +203,47 @@ class ActiveTrainList(wx.ListCtrl):
 				self.RefreshItem(tx)
 				return
 		
-	def addTrain(self, tr):
-		tr["time"] = 0
-		tr["highlight"] = 0
-		if "throttle" not in tr:
-			tr["throttle"] = None
-		if "speed" not in tr:
-			tr["speed"] = None
-		if "limit" not in tr:
-			tr["limit"] = None
+	def addTrain(self, trp):
+		tr = trp.copy()
 		self.activeTrains.append(tr)
 		self.SetItemCount(len(self.activeTrains))
 		self.sortTrains()
-		
+
 	def setSortKey(self, sortKey, groupDir=False, ascending=False):
 		self.sortAscending = ascending
 		self.sortGroupDir = groupDir
 		self.sortKey = sortKey
+		
+		col = self.GetColumn(TIMECOL)
+		if self.sortKey == "time":
+			if self.sortAscending:
+				hText = u"Time  \u21D1"
+			else:
+				hText = u"Time  \u21D3"
+		else:
+			hText = "Time"
+		col.SetText(hText)
+		self.SetColumn(TIMECOL, col)
+		
+		col = self.GetColumn(TIDCOL)
+		if self.sortKey == "tid":
+			if self.sortAscending:
+				hText = u"Train  \u21D1"
+			else:
+				hText = u"Train  \u21D3"
+		else:
+			hText = "Train"
+		col.SetText(hText)
+		self.SetColumn(TIDCOL, col)
+		
+		col = self.GetColumn(DIRCOL)
+		if self.sortGroupDir:
+			hText = u"Dir  \u21D4"
+		else:
+			hText = "Dir"
+		col.SetText(hText)
+		self.SetColumn(DIRCOL, col)
+		
 		self.sortTrains()
 		
 	def buildSortKey(self, tr):
@@ -234,14 +265,12 @@ class ActiveTrainList(wx.ListCtrl):
 	def getEngineers(self):
 		return [x["engineer"] for x in self.activeTrains if x["engineer"] != "ATC"]
 	
-	def setNewEngineer(self, neng):
-		if self.selected is None:
-			return False
-		if self.selected < 0 or self.selected >= len(self.activeTrains):
+	def setNewEngineer(self, tx, neng):
+		if tx < 0 or tx >= len(self.activeTrains):
 			return False
 		
-		self.activeTrains[self.selected]["engineer"] = neng
-		self.RefreshItem(self.selected)
+		self.activeTrains[tx]["engineer"] = neng
+		self.RefreshItem(tx)
 		
 		return True
 	
@@ -281,13 +310,11 @@ class ActiveTrainList(wx.ListCtrl):
 			
 		self.RefreshItems(0, self.GetItemCount()-1)
 				
-	def delSelected(self):
-		if self.selected is None:
-			return False
-		if self.selected < 0 or self.selected >= len(self.activeTrains):
+	def delActiveTrain(self, tx):
+		if tx < 0 or tx >= len(self.activeTrains):
 			return False
 		
-		del self.activeTrains[self.selected]
+		del self.activeTrains[tx]
 		self.SetItemCount(len(self.activeTrains))
 		self.setSelection(None)
 		ct = self.GetItemCount()
@@ -387,3 +414,58 @@ class ActiveTrainList(wx.ListCtrl):
 				return self.normalB
 			else:
 				return self.normalA
+
+class ActiveTrainListDlg(wx.Dialog):
+	def __init__(self, parent, cbClose):
+		wx.Dialog.__init__(self, parent, wx.ID_ANY, "Active Train List")
+		self.Bind(wx.EVT_CLOSE, self.onClose)
+		
+		self.modified = False
+		self.parent = parent
+		self.cbClose = cbClose
+
+		vsz = wx.BoxSizer(wx.VERTICAL)
+		
+		vsz.AddSpacer(20)
+		
+		self.atl = ActiveTrainList(self)
+		vsz.Add(self.atl)
+		
+		vsz.AddSpacer(20)
+		
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		hsz.AddSpacer(20)
+		hsz.Add(vsz)
+		hsz.AddSpacer(20)
+		
+		self.SetSizer(hsz)
+		self.Layout()
+		self.Fit();
+		
+	def removeActiveTrain(self, t, tx):
+		self.parent.removeActiveTrain(t, tx)
+		
+	def reassignTrain(self, t, tx):
+		self.parent.reassignTrain(t, tx)
+		
+	def changeLoco(self, t, tx):
+		self.parent.changeLoco(t, tx)
+		
+	def showDetails(self, t, tx):
+		self.parent.showDetails(t, tx)
+		
+	def returnActiveTrain(self, t, tx):
+		self.parent.returnActiveTrain(t, tx)
+		
+	def reportSelection(self, _):
+		pass
+	
+	def reportDoubleClick(self, tx):
+		self.parent.reportDoubleClick(tx)
+		
+	def onClose(self, _):
+		if callable(self.cbClose):
+			self.cbClose()
+			
+		
+		
