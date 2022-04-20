@@ -395,7 +395,11 @@ class ManageTrainsDlg(wx.Dialog):
 			dlg.Destroy()
 			return
 
-		steps = [s for s in self.selectedTrainInfo["steps"]]		
+		steps = []
+		for s in self.selectedTrainInfo["steps"]:
+			step = [st for st in s]
+			steps.append(step)
+					
 		self.trainList = sorted(self.trainList + [trainID])
 		self.roster[trainID] = {
 			'dir': "East" if self.cbEast.IsChecked() else "West",
