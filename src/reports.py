@@ -260,7 +260,7 @@ class Report:
 		
 		html += HTML.startbody()
 		
-		html += HTML.h1({}, "Active Trains")
+		html += HTML.h1({'align': 'center'}, "Active Trains")
 		
 		header = HTML.tr({},
 			HTML.th({}, "Train"),
@@ -269,18 +269,18 @@ class Report:
 			HTML.th({}, "Block"))
 		
 		rows = []
-		for tr in active.getTrains():
-			ti = active.getTrainByTid(tr)
+		for tid in active.getTrains():
+			at = active.getTrainByTid(tid)
 			rows.append(HTML.tr({},
-					HTML.td({}, ti["tid"]),
-					HTML.td({}, ti["engineer"]),
-					HTML.td({}, ti["loco"]),
-					HTML.td({}, ti["block"]))
+					HTML.td({}, at.tid),
+					HTML.td({}, at.engineer),
+					HTML.td({}, at.loco),
+					HTML.td({}, at.block))
 			)
 		html += HTML.table({}, header, "".join(rows))
 
 		
-		html += HTML.h1({}, "Completed Trains")
+		html += HTML.h1({'align': 'center'}, "Completed Trains")
 		
 		header = HTML.tr({},
 			HTML.th({}, "Train"),

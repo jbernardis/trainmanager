@@ -28,7 +28,7 @@ class ManageLocosDlg(wx.Dialog):
 		self.setModified(False)
 	
 		self.locoObj = locos
-		self.locoOrder = sorted(self.locoObj.getLocoList())
+		self.locoOrder = self.locoObj.getLocoList()
 		self.locos = {}
 		for lId in self.locoOrder:
 			self.locos[lId] = self.locoObj.getLoco(lId)
@@ -220,6 +220,7 @@ class ManageLocosDlg(wx.Dialog):
 			self.selectesDesc = None
 			return
 
+		self.locoOrder = self.locoList.getLocoOrder()
 		self.selectedLoco = self.locoOrder[lx]
 		self.selectedDesc = self.locos[self.selectedLoco]
 		self.teDesc.SetValue(self.selectedDesc)
@@ -324,7 +325,7 @@ class LocoList(wx.ListCtrl):
 		
 	def setData(self, locos, locoOrder):
 		self.locos = locos
-		self.locoOrder = sorted(locoOrder)
+		self.locoOrder = [l for l in locoOrder]
 		self.SetItemCount(len(self.locoOrder))
 			
 	def getSelection(self):
@@ -337,7 +338,7 @@ class LocoList(wx.ListCtrl):
 		return self.order[self.selected]
 	
 	def getLocoOrder(self):
-		return self.locoOrder
+		return [l for l in self.locoOrder]
 			
 	def setSelection(self, tx):
 		self.selected = tx;
@@ -346,8 +347,11 @@ class LocoList(wx.ListCtrl):
 			
 		self.parent.reportSelection(tx)
 		
+	def buildSortKey(self, lid):
+		return int(lid)
+		
 	def add(self, lid, desc):
-		lo = sorted(self.locoOrder + [lid])
+		lo = sorted(self.locoOrder + [lid], key=self.buildSortKey)
 		self.locoOrder = lo
 		self.locos[lid] = desc
 		ct = len(self.locoOrder)

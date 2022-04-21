@@ -5,9 +5,16 @@ class Locomotives:
 		self.filename = fn
 		with open(fn, "r") as fp:	
 			self.locos = json.load(fp)
+			
+	def buildSortKey(self, lid):
+		return int(lid)
 		
 	def getLocoList(self):
-		return sorted(list(self.locos.keys()))
+		return sorted(list(self.locos.keys()), key=self.buildSortKey)
+		
+	def getLocoListFull(self):
+		ll = sorted(list(self.locos.keys()), key=self.buildSortKey)
+		return ["%s - %s" % (lid, self.locos[lid]) for lid in ll]
 		
 	def getLoco(self, lId):
 		if lId not in self.locos:
