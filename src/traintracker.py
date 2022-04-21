@@ -32,7 +32,7 @@ from serial import SerialException
 from optionsdlg import OptionsDlg
 from engqueuedlg import EngQueueDlg
 
-DEVELOPMODE = True
+DEVELOPMODE = False
 VERSIONDATE = "21-April-2022"
 
 BTNSZ = (120, 46)
