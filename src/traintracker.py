@@ -33,7 +33,7 @@ from optionsdlg import OptionsDlg
 from engqueuedlg import EngQueueDlg
 
 DEVELOPMODE = False
-VERSIONDATE = "21-April-2022"
+VERSIONDATE = "22-April-2022"
 
 BTNSZ = (120, 46)
 
@@ -201,13 +201,13 @@ class MainFrame(wx.Frame):
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_TRAINS, "Trains", helpString="Manage the train roster")
 		self.menuManage.Append(i)
 		
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ORDER, "Train Order", helpString="Add/remove/reorder trains to/from the schedule and extra train list")
+		self.menuManage.Append(i)
+		
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ENGINEERS, "Engineers", helpString="Manage the content and ordering of active engineers list")
 		self.menuManage.Append(i)
 		
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_LOCOS, "Locomotives", helpString="Define, modify, delete locomotives")
-		self.menuManage.Append(i)
-		
-		i = wx.MenuItem(self.menuManage, MENU_MANAGE_ORDER, "Train Order", helpString="Add/remove trains and modify sequence")
 		self.menuManage.Append(i)
 		
 		self.menuManage.AppendSeparator()

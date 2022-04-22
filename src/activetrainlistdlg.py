@@ -5,7 +5,7 @@ from activetrainlistctrl import ActiveTrainListCtrl
 		
 class ActiveTrainListDlg(wx.Dialog):
 	def __init__(self, parent, atl, cbClose):
-		wx.Dialog.__init__(self, parent, wx.ID_ANY, "Active Train List", style=wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT)
+		wx.Dialog.__init__(self, parent, wx.ID_ANY, "PSRY Train Ticker", style=wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT)
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 		
 		self.modified = False
