@@ -42,7 +42,9 @@ class Report:
 
 	def OpWorksheetReport(self, roster, order, locos, extras):	
 		css = HTML.StyleSheet()
-		css.addElement("table", {'width': '650px', 'border-spacing': '15px',  'margin-left': 'auto', 'margin-right': 'auto'})
+		css.addElement("div.page", {"page-break-inside": "avoid"})
+		css.addElement("table.schedule", {'width': '700px', 'border-spacing': '15px',  'margin-left': 'auto', 'margin-right': 'auto'})
+		css.addElement("table.extra", {'width': '650px', 'border-spacing': '15px',  'margin-left': 'auto', 'margin-right': 'auto'})
 		css.addElement("table, th, td", { 'border': "1px solid black", 'border-collapse': 'collapse'})
 		css.addElement("td, th", {'text-align': 'center', 'width': '80px', 'overflow': 'hidden'})
 		css.addElement("td.seq", {'text-align': 'center', 'width': '40px', 'overflow': 'hidden'})
@@ -64,6 +66,7 @@ class Report:
 		header = HTML.tr({},
 			HTML.th({}, "Card"),
 			HTML.th({}, "Train"),
+			HTML.th({}, "Block"),
 			HTML.th({}, "Loco"),
 			HTML.th({}, "Description"),
 			HTML.th({}, "Engineer"))
@@ -82,18 +85,24 @@ class Report:
 				desc = locos.getLoco(lid)
 				if desc is None:
 					desc = ""
+			block = tInfo["block"]
+			if block is None:
+				block = ""
+				
 			rows.append(HTML.tr({},
 				HTML.td({"class": "seq"}, "%2d" % seq),
 				HTML.td({"bgcolor": c}, tid),
+				HTML.td({}, block),
 				HTML.td({}, lid),
 				HTML.td({'class': 'description'}, HTML.nbsp(2), desc),
 				HTML.td({'class': 'engineer'}, ""))
 				)
 			seq += 1
 
-		html += HTML.h2({}, "Scheduled Trains")
-		
-		html += HTML.table({}, header, "".join(rows))
+		html += HTML.div({"class": "page"}, 
+			HTML.h2({'align': 'center'}, "Scheduled Trains"),
+			HTML.table({"class": "schedule"}, header, "".join(rows))
+		)
 
 		header = HTML.tr({},
 			HTML.th({}, "Card"),
@@ -126,10 +135,10 @@ class Report:
 				)
 			seq += 1
 
-		
-		html += HTML.h2({}, "Extra Trains")
-
-		html += HTML.table({}, header, "".join(rows))
+		html += HTML.div({"class": "page"}, 
+			HTML.h2({'align': 'center'}, "Extra Trains"),
+			HTML.table({"class": "extra"}, header, "".join(rows))
+		)
 
 		html += HTML.endbody()
 		html += HTML.endhtml()
