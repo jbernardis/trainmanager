@@ -33,7 +33,7 @@ from optionsdlg import OptionsDlg
 from engqueuedlg import EngQueueDlg
 
 DEVELOPMODE = False
-VERSIONDATE = "22-April-2022"
+VERSIONDATE = "26-April-2022"
 
 BTNSZ = (120, 46)
 
