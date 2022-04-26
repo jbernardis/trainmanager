@@ -84,7 +84,15 @@ class Listener():
 							block = b[25:33].strip()
 							if callable(self.cbTrainID):
 								self.cbTrainID(train, loco, block)
-										
+
+						elif b.startswith("TrnMgr"):
+							print("TrnMgr: (%s)" % b)
+							train = b[9:19].strip()
+							block = b[19:29].strip()
+							loco = b[29:39].strip()
+							if callable(self.cbTrainID):
+								self.cbTrainID(train, loco, block)
+							
 						elif b.startswith("TrnSig"):
 							print("TrnSig: (%s)" % b)
 							loco = b[9:17].strip()
@@ -143,6 +151,9 @@ class Listener():
 							text = b[9:39].strip()
 							if callable(self.cbBreakers):
 								self.cbBreakers(text)
+						elif b.startswith("Trn"):
+							print("Trn: (%s)" % b)
+
 					
 		if callable(self.cbMessage):
 			self.cbMessage("Attempting socket close")
