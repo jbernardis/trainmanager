@@ -33,7 +33,7 @@ from optionsdlg import OptionsDlg
 from engqueuedlg import EngQueueDlg
 from updateschedule import updateSchedule
 
-DEVELOPMODE = False
+DEVELOPMODE = True
 VERSIONDATE = "28-May-2022"
 
 BTNSZ = (120, 46)
@@ -1958,9 +1958,8 @@ class TrainTrackerPanel(wx.Panel):
 		self.roster.save()
 		
 	def onUpdateSchedule(self, _):
-		baseSched = "PSRTrainSchedule.xlsx"
 		try:
-			nfn = updateSchedule(baseSched, self.roster, self.locos)
+			nfn = updateSchedule(self.roster, self.locos, self.settings)
 			if nfn is None:
 				dlg = wx.MessageDialog(self, 'No update to schedule - nothing changed',
                     'No Schedule Updates',
@@ -1973,7 +1972,7 @@ class TrainTrackerPanel(wx.Panel):
 			dlg.Destroy()
 
 		except FileNotFoundError:
-			dlg = wx.MessageDialog(self, 'Unable to open base Train Schedule: ' + baseSched,
+			dlg = wx.MessageDialog(self, 'Unable to open base Train Schedule: ' + self.settings.schedulebase,
                     'Schedule Update Failed',
                     wx.OK | wx.ICON_ERROR)
 			dlg.ShowModal()

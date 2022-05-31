@@ -31,6 +31,8 @@ class Settings:
 		self.orderdir = os.path.join(os.getcwd(), "orders")
 		self.orderfile = "order.json"
 		self.logdir = os.path.join(os.getcwd(), "logs")
+		self.scheduledir = os.path.join(os.getcwd(), "schedules")
+		self.schedulebase = "PSRTrainSchedule.xlsx"
 		self.dispatchip = "192.168.1.157"
 		self.dispatchport = "5204"
 		self.dccsnifferport = "COM5"
@@ -73,6 +75,10 @@ class Settings:
 					self.orderfile = value
 				elif opt == "logdir":
 					self.logdir = value
+				elif opt == "scheduledir":
+					self.scheduledir = value
+				elif opt == "schedulebase":
+					self.schedulebase = value
 				elif opt == "dispatchip":
 					self.dispatchip = value
 				elif opt == "dispatchport":
@@ -122,6 +128,8 @@ class Settings:
 		self.cfg.set(self.section, "orderdir", str(self.orderdir))
 		self.cfg.set(self.section, "orderfile", str(self.orderfile))
 		self.cfg.set(self.section, "logdir", str(self.logdir))
+		self.cfg.set(self.section, "scheduledir", str(self.scheduledir))
+		self.cfg.set(self.section, "schedulebase", str(self.schedulebase))
 		self.cfg.set(self.section, "dispatchip", str(self.dispatchip))
 		self.cfg.set(self.section, "dispatchport", str(self.dispatchport))
 		self.cfg.set(self.section, "dccsnifferport", str(self.dccsnifferport))

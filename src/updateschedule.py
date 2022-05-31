@@ -2,8 +2,8 @@ import os
 import openpyxl as pyxl
 from datetime import date
 
-def updateSchedule(fn, roster, locos):
-	wb = pyxl.load_workbook(fn)
+def updateSchedule(roster, locos, settings):
+	wb = pyxl.load_workbook(settings.schedulebase)
 	ws = wb.active
 
 	changed = False
@@ -39,11 +39,19 @@ def updateSchedule(fn, roster, locos):
 				changed = True
 
 	if changed:
+		try:
+			os.mkdir(settings.scheduledir)
+		except FileExistsError:
+			pass
+
 		td = date.today()
-		ofn = "%s%02d-%02d-%02d.xlsx" % (os.path.splitext(fn)[0], td.year%100, td.month, td.day)
+		base, ext = os.path.splitext(settings.schedulebase)
+		bn = "%s%02d-%02d-%02d%s" % (base, td.year%100, td.month, td.day, ext)
+		ofn = os.path.join(settings.scheduledir, bn)
 		
 		wb.save(ofn)
-		return ofn
+		return bn
+		
 	else:
 		return None
 
