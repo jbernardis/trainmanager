@@ -3,8 +3,6 @@ import wx
 import os
 import webbrowser
 
-import pprint
-
 BTNSZ = (120, 46)
 
 class Report:
@@ -102,7 +100,6 @@ class Report:
 				extraList = extraResults[lastTrain]
 				for extid in extraList:
 					tInfo = roster.getTrain(extid)
-					pprint.pprint(tInfo)
 					if tInfo is not None:
 						rows.append(self.generateOpWorksheetRow(extid, tInfo, locos, cardNumbers, True))
 
@@ -116,7 +113,6 @@ class Report:
 			extraList = extraResults[lastTrain]
 			for extid in extraList:
 				tInfo = roster.getTrain(extid)
-				pprint.pprint(tInfo)
 				if tInfo is not None:
 					rows.append(self.generateOpWorksheetRow(extid, tInfo, locos, cardNumbers, True))
 
