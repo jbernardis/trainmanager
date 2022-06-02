@@ -3,6 +3,8 @@ import wx
 import os
 import webbrowser
 
+import pprint
+
 BTNSZ = (120, 46)
 
 class Report:
@@ -40,16 +42,24 @@ class Report:
 		self.browser.open_new(fileURL)
 
 
-	def OpWorksheetReport(self, roster, order, locos, extras):	
+	def OpWorksheetReport(self, roster, order, locos, extras):
+		if len(extras) > 0:	
+			dlg = ChooseExtrasDlg(self.parent, order, extras)
+			rc = dlg.ShowModal()
+			
+			if rc == wx.ID_OK:
+				extraResults = dlg.getValues()
+				
+			dlg.Destroy()
+
 		css = HTML.StyleSheet()
 		css.addElement("div.page", {"page-break-inside": "avoid"})
 		css.addElement("table.schedule", {'width': '700px', 'border-spacing': '15px',  'margin-left': 'auto', 'margin-right': 'auto'})
-		css.addElement("table.extra", {'width': '650px', 'border-spacing': '15px',  'margin-left': 'auto', 'margin-right': 'auto'})
+		css.addElement("table.extra", {'width': '700px', 'border-spacing': '15px',  'margin-left': 'auto', 'margin-right': 'auto'})
 		css.addElement("table, th, td", { 'border': "1px solid black", 'border-collapse': 'collapse'})
 		css.addElement("td, th", {'text-align': 'center', 'width': '80px', 'overflow': 'hidden'})
 		css.addElement("td.seq", {'text-align': 'center', 'width': '40px', 'overflow': 'hidden'})
 		css.addElement("td.description", {'text-align': 'left', 'width': '300px', 'overflow': 'hidden'})
-		css.addElement("td.engineer", {'width': '180px'})
 		
 		html  = HTML.starthtml()
 		html += HTML.head(HTML.style({'type': "text/css", 'media': "screen, print"}, css))
@@ -60,90 +70,109 @@ class Report:
 		html += HTML.h1({'align': 'center'}, "Operating Worksheet")	
 		html += "<br><br>"
 		
-		colorEast = "#c1e2b4"
-		colorWest = "#fdc4a8"
-		
-		header = HTML.tr({},
-			HTML.th({}, "Card"),
-			HTML.th({}, "Train"),
-			HTML.th({}, "Block"),
-			HTML.th({}, "Loco"),
-			HTML.th({}, "Description"),
-			HTML.th({}, "Engineer"))
-		
-		rows = []
+
+		cardNumbers = {}
 		seq = 1
-		
 		for tid in order:
-			tInfo = roster.getTrain(tid)
-			c = colorEast if tInfo["dir"].lower() == "east" else colorWest
-			lid = tInfo["loco"]
-			if lid is None:
-				lid = ""
-				desc = ""
-			else:
-				desc = locos.getLoco(lid)
-				if desc is None:
-					desc = ""
-			block = tInfo["block"]
-			if block is None:
-				block = ""
-				
-			rows.append(HTML.tr({},
-				HTML.td({"class": "seq"}, "%2d" % seq),
-				HTML.td({"bgcolor": c}, tid),
-				HTML.td({}, block),
-				HTML.td({}, lid),
-				HTML.td({'class': 'description'}, HTML.nbsp(2), desc),
-				HTML.td({'class': 'engineer'}, ""))
-				)
+			cardNumbers[tid] = "%2d" % seq
 			seq += 1
 
-		html += HTML.div({"class": "page"}, 
-			HTML.h2({'align': 'center'}, "Scheduled Trains"),
-			HTML.table({"class": "schedule"}, header, "".join(rows))
-		)
-
+		seq = 0
+		for tid in extras:
+			cardNumbers[tid] = chr(ord('A') + seq)
+			seq += 1
+		
 		header = HTML.tr({},
 			HTML.th({}, "Card"),
+			HTML.th({}, "Start"),
+			HTML.th({}, "Track"),
+			HTML.th({}, "Dir"),
 			HTML.th({}, "Train"),
 			HTML.th({}, "Loco"),
 			HTML.th({}, "Description"),
-			HTML.th({}, "Engineer"))
+			HTML.th({}, "End"),
+			HTML.th({}, "Track"))
 		
 		rows = []
-		seq = 0
-		
-		for tid in extras:
+
+		lastTrain = None
+	
+		for tid in order:
+			if lastTrain in extraResults.keys():
+				extraList = extraResults[lastTrain]
+				for extid in extraList:
+					tInfo = roster.getTrain(extid)
+					pprint.pprint(tInfo)
+					if tInfo is not None:
+						rows.append(self.generateOpWorksheetRow(extid, tInfo, locos, cardNumbers, True))
+
 			tInfo = roster.getTrain(tid)
-			c = colorEast if tInfo["dir"].lower() == "east" else colorWest
-			lid = tInfo["loco"]
-			if lid is None:
-				lid = ""
-				desc = ""
-			else:
-				desc = locos.getLoco(lid)
-				if desc is None:
-					desc = ""
-			cn = chr(ord('A') + seq)
-			rows.append(HTML.tr({},
-				HTML.td({"class": "seq"}, cn),
-				HTML.td({"bgcolor": c}, tid),
-				HTML.td({}, lid),
-				HTML.td({'class': 'description'}, HTML.nbsp(2), desc),
-				HTML.td({'class': 'engineer'}, ""))
-				)
-			seq += 1
+
+			if tInfo is not None:
+				rows.append(self.generateOpWorksheetRow(tid, tInfo, locos, cardNumbers))
+				lastTrain = tid
+
+		if lastTrain in extraResults.keys():
+			extraList = extraResults[lastTrain]
+			for extid in extraList:
+				tInfo = roster.getTrain(extid)
+				pprint.pprint(tInfo)
+				if tInfo is not None:
+					rows.append(self.generateOpWorksheetRow(extid, tInfo, locos, cardNumbers, True))
 
 		html += HTML.div({"class": "page"}, 
-			HTML.h2({'align': 'center'}, "Extra Trains"),
-			HTML.table({"class": "extra"}, header, "".join(rows))
+			HTML.h2({'align': 'center'}, "Train Sequence"),
+			HTML.table({"class": "schedule"}, header, "".join(rows))
 		)
 
 		html += HTML.endbody()
 		html += HTML.endhtml()
 		
 		self.openBrowser("Operating Worksheet", html)
+
+	def generateOpWorksheetRow(self, tid, tInfo, locos, cardNumbers, extra=False):
+		rowColor = "#cdffb9"  if tInfo["dir"].lower() == "east" else "#ffaeae"
+		cardColor = "#ff0000" if extra else "#000000"
+
+		lid = tInfo["loco"]
+		if lid is None:
+			lid = ""
+			desc = ""
+		else:
+			desc = locos.getLoco(lid)
+			if desc is None:
+				desc = ""
+
+		if tInfo["origin"]["loc"] is None:
+			start = ""
+		else:
+			start = tInfo["origin"]["loc"]
+		if tInfo["origin"]["track"] is None:
+			startTrack = ""
+		else:
+			startTrack = tInfo["origin"]["track"]
+
+		if tInfo["terminus"]["loc"] is None:
+			terminus = ""
+		else:
+			terminus = tInfo["terminus"]["loc"]
+		if tInfo["terminus"]["track"] is None:
+			terminusTrack = ""
+		else:
+			terminusTrack = tInfo["terminus"]["track"]
+
+
+		return HTML.tr({},
+			HTML.td({"class": "seq"}, "<font color=\"%s\">%s</font>" % (cardColor, cardNumbers[tid])),
+			HTML.td({}, start),
+			HTML.td({}, startTrack),
+			HTML.td({}, tInfo["dir"]),
+			HTML.td({"bgcolor": rowColor}, tid),
+			HTML.td({"bgcolor": rowColor}, lid),
+			HTML.td({'class': 'description', "bgcolor": rowColor}, HTML.nbsp(2), desc),
+			HTML.td({}, terminus),
+			HTML.td({}, terminusTrack))
+
 
 	def TrainCards(self, roster, extra, order):	
 		dlg = ChooseCardsDlg(self.parent, list(order), extra)
@@ -345,7 +374,120 @@ class Report:
 		html += HTML.endhtml()
 		
 		self.openBrowser("Locomotives Report", html)
-	
+
+class ChooseExtrasDlg(wx.Dialog):
+	def __init__(self, parent, order, extra):
+		wx.Dialog.__init__(self, parent, wx.ID_ANY, "Choose Extra Trains")
+		self.Bind(wx.EVT_CLOSE, self.onClose)
+		
+		self.order = order
+		self.extra = extra
+
+		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
+		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
+		textFontBold = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
+
+		self.firstLabel = "<first>"
+		schedule = [self.firstLabel] + [t for t in order]
+
+		vsizer = wx.BoxSizer(wx.VERTICAL)
+		vsizer.AddSpacer(20)
+
+		self.cbList = {}
+		self.chList = {}
+
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		st = wx.StaticText(self, wx.ID_ANY, "Select extra trains to include:")
+		st.SetFont(textFont)
+		hsz.Add(st)
+		hsz.AddSpacer(20)
+		st = wx.StaticText(self, wx.ID_ANY, "And their position in the schedule:")
+		st.SetFont(textFont)
+		hsz.Add(st)
+		vsizer.Add(hsz)
+		vsizer.AddSpacer(10)
+
+		for t in self.extra:
+			cb = wx.CheckBox(self, wx.ID_ANY, t, size=(100, -1), name=t)
+			self.cbList[t] = cb
+			cb.SetFont(textFontBold)
+			self.Bind(wx.EVT_CHECKBOX, self.onCheckExtra, cb)
+			ch = wx.Choice(self, wx.ID_ANY, choices=schedule, name=t)
+			ch.SetFont(textFontBold)
+			ch.SetSelection(0)
+			ch.Enable(False)
+			self.chList[t] = ch
+			hsz = wx.BoxSizer(wx.HORIZONTAL)
+			hsz.AddSpacer(50)
+			hsz.Add(cb)
+			hsz.AddSpacer(80)
+			hsz.Add(ch)
+
+			vsizer.Add(hsz)
+
+		vsizer.AddSpacer(20)
+		
+		self.bOK = wx.Button(self, wx.ID_ANY, "OK", size=BTNSZ)
+		self.bOK.SetFont(btnFont)
+		self.Bind(wx.EVT_BUTTON, self.bOKPressed, self.bOK)
+		
+		self.bCancel = wx.Button(self, wx.ID_ANY, "Cancel", size=BTNSZ)
+		self.bCancel.SetFont(btnFont)
+		self.Bind(wx.EVT_BUTTON, self.bCancelPressed, self.bCancel)
+		
+		btnSizer = wx.BoxSizer(wx.HORIZONTAL)
+		btnSizer.Add(self.bOK)
+		btnSizer.AddSpacer(30)
+		btnSizer.Add(self.bCancel)
+		
+		vsizer.Add(btnSizer, 0, wx.ALIGN_CENTER_HORIZONTAL)
+
+		vsizer.AddSpacer(20)
+		
+		hsizer = wx.BoxSizer(wx.HORIZONTAL)
+		hsizer.AddSpacer(20)
+		hsizer.Add(vsizer)
+		hsizer.AddSpacer(20)
+		
+		self.SetSizer(hsizer)
+		self.Layout()
+		self.Fit()
+
+	def onCheckExtra(self, evt):
+		cb = evt.GetEventObject()
+		name = cb.GetName()
+		self.chList[name].Enable(cb.IsChecked())
+
+	def bOKPressed(self, _):
+		self.EndModal(wx.ID_OK)
+		
+	def bCancelPressed(self, _):
+		self.doCancel()
+		
+	def onClose(self, _):
+		self.doCancel()
+		
+	def doCancel(self):
+		self.EndModal(wx.ID_CANCEL)
+
+	def getValues(self):
+		results = {}
+		for cb in self.cbList:
+			if self.cbList[cb].IsChecked():
+				tid = self.cbList[cb].GetName()
+				ax = self.chList[tid].GetSelection()
+				after = self.chList[tid].GetString(ax)
+				if after == self.firstLabel:
+					after = None
+
+				if after in results.keys():
+					results[after].append(tid)
+				else:
+					results[after] = [tid]
+
+		return results
+		
+
 class ChooseCardsDlg(wx.Dialog):
 	def __init__(self, parent, order, extra):
 		wx.Dialog.__init__(self, parent, wx.ID_ANY, "Choose Train Cards")
@@ -464,7 +606,7 @@ class ChooseCardsDlg(wx.Dialog):
 		
 		self.SetSizer(hsizer)
 		self.Layout()
-		self.Fit();
+		self.Fit()
 		
 	def bCheckAllPressed(self, _):
 		for i in range(len(self.order)):

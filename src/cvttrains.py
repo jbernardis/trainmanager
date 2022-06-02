@@ -6,11 +6,13 @@ with open(os.path.join("trains", "trains.json"), "r") as fp:
 	
 for tid in trains:
 	trn = trains[tid]
-	if 'extra' not in trn:
-		trn['extra'] = False
-		
-	for step in trn["steps"]:
-		step.append(0)
+	trn["origin"] = {}
+	trn["origin"]["loc"] = None
+	trn["origin"]["track"] = None
+	trn["terminus"] = {}
+	trn["terminus"]["loc"] = None
+	trn["terminus"]["track"] = None
+	trn["normalloco"] = None
 		
 with open(os.path.join("trains", "newtrains.json"), "w") as fp:
 	json.dump(trains, fp, indent=4, sort_keys=True)

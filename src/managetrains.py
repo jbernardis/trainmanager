@@ -10,6 +10,19 @@ wildcard = "JSON file (*.json)|*.json|"	 \
 BTNSZ = (120, 46)
 BTNSZSMALL = (80, 30)
 
+locs = ["<none>", "CA", "CF", "DE", "GM", "HF", "HY", "JY", "KR", "LA", "LV", "NA", "PT", "SH", "WC", "YD" ]
+
+def formatLocation(info, tp):
+	if info[tp]["loc"] is None:
+		return ""
+
+	if info[tp]["track"] is None:
+		return info[tp]["loc"]
+
+	return ("%s / %s" % (info[tp]["loc"], info[tp]["track"]))
+	
+
+
 class ManageTrainsDlg(wx.Dialog):
 	def __init__(self, parent, roster, locos, settings):
 		wx.Dialog.__init__(self, parent, wx.ID_ANY, "")
@@ -26,6 +39,8 @@ class ManageTrainsDlg(wx.Dialog):
 	
 		self.trains = roster
 		self.locos = locos
+		self.locoList = ["<none>"] + locos.getLocoListFull()
+		self.locoOnlyList = ["<none>"] + locos.getLocoList()
 		
 		self.trainList = [t for t in self.trains]
 		
@@ -36,7 +51,16 @@ class ManageTrainsDlg(wx.Dialog):
 				"loco": ti["loco"],
 				"desc": ti["desc"],
 				"block": ti["block"],
+				"normalloco": ti["normalloco"],
+				"origin": {
+					"loc": ti["origin"]["loc"],
+					"track": ti["origin"]["track"]
+				},
+				"terminus": {
+					"loc": ti["terminus"]["loc"],
+					"track": ti["terminus"]["track"]
 				}
+			}
 			
 			steps = [[s[0], s[1], s[2]] for s in ti["steps"]]
 			info["steps"] = steps
@@ -69,11 +93,42 @@ class ManageTrainsDlg(wx.Dialog):
 		self.stDirection.SetFont(textFontBold)
 		self.stDescription = wx.StaticText(self, wx.ID_ANY, "", size=(200, -1))
 		self.stDescription.SetFont(textFontBold)
+		labelOrigin = wx.StaticText(self, wx.ID_ANY,   "Origin:", size=(100, -1))
+		labelOrigin.SetFont(textFont)
+		labelTerminus = wx.StaticText(self, wx.ID_ANY, "Terminus:", size=(100, -1))
+		labelTerminus.SetFont(textFont)
+		labelLoco = wx.StaticText(self, wx.ID_ANY, "Locomotive:", size=(100, -1))
+		labelLoco.SetFont(textFont)
+		self.stOrigin = wx.StaticText(self, wx.ID_ANY, "", size=(100, -1))
+		self.stOrigin.SetFont(textFontBold)
+		self.stTerminus = wx.StaticText(self, wx.ID_ANY, "", size=(100, -1))
+		self.stTerminus.SetFont(textFontBold)
+		self.stStdLoco = wx.StaticText(self, wx.ID_ANY, "", size=(400, -1))
+		self.stStdLoco.SetFont(textFontBold)
 		
 		sz.AddSpacer(5)
 		sz.Add(self.stDirection)
-		sz.AddSpacer(10)
+		sz.AddSpacer(5)
 		sz.Add(self.stDescription)
+		sz.AddSpacer(5)
+
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		hsz.Add(labelOrigin)
+		hsz.Add(self.stOrigin)
+		sz.Add(hsz)
+		sz.AddSpacer(5)
+
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		hsz.Add(labelTerminus)
+		hsz.Add(self.stTerminus)
+		sz.Add(hsz)
+		sz.AddSpacer(5)
+
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		hsz.Add(labelLoco)
+		hsz.Add(self.stStdLoco)
+		sz.Add(hsz)
+
 		sz.AddSpacer(50)
 		
 		boxModify = wx.StaticBox(self, wx.ID_ANY, "Modify")
@@ -92,7 +147,7 @@ class ManageTrainsDlg(wx.Dialog):
 		hsz.Add(self.cbEast)
 		
 		bsizer.Add(hsz)
-		bsizer.AddSpacer(10)
+		bsizer.AddSpacer(5)
 		
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
 		st = wx.StaticText(boxModify, wx.ID_ANY, "Description:", size=(120, -1))
@@ -104,7 +159,51 @@ class ManageTrainsDlg(wx.Dialog):
 		hsz.Add(self.teDesc)
 		
 		bsizer.Add(hsz)
-		bsizer.AddSpacer(20)
+		bsizer.AddSpacer(5)
+		
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		st = wx.StaticText(boxModify, wx.ID_ANY, "Origin:", size=(120, -1))
+		st.SetFont(textFont)
+		hsz.Add(st, 0, wx.TOP, 5)
+		hsz.AddSpacer(5)
+		self.chOLoc = wx.Choice(boxModify, wx.ID_ANY, choices = locs)
+		self.chOLoc.SetFont(textFontBold)
+		hsz.Add(self.chOLoc)
+		hsz.AddSpacer(5)
+		self.teOTrk = wx.TextCtrl(boxModify, wx.ID_ANY, "", size=(50, -1))
+		self.teOTrk.SetFont(textFont)
+		hsz.Add(self.teOTrk)
+		
+		bsizer.Add(hsz)
+		bsizer.AddSpacer(5)
+
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		st = wx.StaticText(boxModify, wx.ID_ANY, "Terminus:", size=(120, -1))
+		st.SetFont(textFont)
+		hsz.Add(st, 0, wx.TOP, 5)
+		hsz.AddSpacer(5)
+		self.chTLoc = wx.Choice(boxModify, wx.ID_ANY, choices = locs)
+		self.chTLoc.SetFont(textFontBold)
+		hsz.Add(self.chTLoc)
+		hsz.AddSpacer(5)
+		self.teTTrk = wx.TextCtrl(boxModify, wx.ID_ANY, "", size=(50, -1))
+		self.teTTrk.SetFont(textFont)
+		hsz.Add(self.teTTrk)
+		
+		bsizer.Add(hsz)
+		bsizer.AddSpacer(5)
+
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		st = wx.StaticText(boxModify, wx.ID_ANY, "Locomotive:", size=(120, -1))
+		st.SetFont(textFont)
+		hsz.Add(st, 0, wx.TOP, 5)
+		hsz.AddSpacer(5)
+		self.chLoco = wx.Choice(boxModify, wx.ID_ANY, choices = self.locoList)
+		self.chLoco.SetFont(textFontBold)
+		hsz.Add(self.chLoco)
+		
+		bsizer.Add(hsz)
+		bsizer.AddSpacer(10)
 		
 		self.bMod = wx.Button(boxModify, wx.ID_ANY, "Apply", size=BTNSZ)
 		self.bMod.SetFont(btnFont)
@@ -358,10 +457,36 @@ class ManageTrainsDlg(wx.Dialog):
 			return
 		
 		self.trainList = sorted(self.trainList + [trainID])
+
+		l = self.chLoco.GetSelection()
+		loco = self.locoOnlyList[l] if l != wx.NOT_FOUND and l != 0 else None
+		
+		l = self.chLoco.GetSelection()
+		loco = self.locoOnlyList[l] if l != wx.NOT_FOUND and l != 0 else None
+
+		l = self.chOLoc.GetSelection()
+		oloc = locs[l] if l != wx.NOT_FOUND and l != 0 else None
+		t = self.teOTrk.GetValue().strip()
+		otrk = t if t != "" else None
+
+		l = self.chTLoc.GetSelection()
+		tloc = locs[l] if l != wx.NOT_FOUND and l != 0 else None
+		t = self.teTTrk.GetValue().strip()
+		ttrk = t if t != "" else None
+
 		self.roster[trainID] = {
 			'dir': "East" if self.cbEast.IsChecked() else "West",
 			'desc': self.teDesc.GetValue(),
 			'loco': None,
+			'normalloco': loco,
+			'origin': {
+				'loc': oloc,
+				'track': otrk
+			},
+			'terminus': {
+				'loc': tloc,
+				'track': ttrk
+			},
 			'steps': [],
 			'block': None
 			}
@@ -401,10 +526,33 @@ class ManageTrainsDlg(wx.Dialog):
 			steps.append(step)
 					
 		self.trainList = sorted(self.trainList + [trainID])
+
+		l = self.chLoco.GetSelection()
+		loco = self.locoOnlyList[l] if l != wx.NOT_FOUND and l != 0 else None
+
+		l = self.chOLoc.GetSelection()
+		oloc = locs[l] if l != wx.NOT_FOUND and l != 0 else None
+		t = self.teOTrk.GetValue().strip()
+		otrk = t if t != "" else None
+
+		l = self.chTLoc.GetSelection()
+		tloc = locs[l] if l != wx.NOT_FOUND and l != 0 else None
+		t = self.teTTrk.GetValue().strip()
+		ttrk = t if t != "" else None
+
 		self.roster[trainID] = {
 			'dir': "East" if self.cbEast.IsChecked() else "West",
 			'desc': self.teDesc.GetValue(),
 			'loco': None,
+			'normalloco': loco,
+			'origin': {
+				'loc': oloc,
+				'track': otrk
+			},
+			'terminus': {
+				'loc': tloc,
+				'track': ttrk
+			},
 			'steps': steps,
 			'block': None
 			}
@@ -425,6 +573,19 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		self.selectedTrainInfo["desc"] = self.teDesc.GetValue()
 		self.stDescription.SetLabel(self.selectedTrainInfo["desc"])
+
+		loc = self.chOLoc.GetSelection()
+		self.selectedTrainInfo["origin"]["loc"] = locs[loc] if loc != wx.NOT_FOUND and loc != 0 else None
+		trk = self.teOTrk.GetValue().strip()
+		self.selectedTrainInfo["origin"]["track"] = trk if trk != "" else None
+
+		loc = self.chTLoc.GetSelection()
+		self.selectedTrainInfo["terminus"]["loc"] = locs[loc] if loc != wx.NOT_FOUND and loc != 0 else None
+		trk = self.teTTrk.GetValue().strip()
+		self.selectedTrainInfo["terminus"]["track"] = trk if trk != "" else None
+
+		loco = self.chLoco.GetSelection()
+		self.selectedTrainInfo["normalloco"] = self.locoOnlyList[loco] if loco != wx.NOT_FOUND and loco != 0 else None
 
 		self.setSelectedTrain(self.selectedTid)
 		self.setModified()
@@ -603,9 +764,51 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		self.teDesc.SetValue(self.selectedTrainInfo["desc"])
 		self.stDescription.SetLabel(self.selectedTrainInfo["desc"])
+
+		loco = self.selectedTrainInfo["normalloco"]
+		if loco is None:
+			loco = ""
+			self.chLoco.SetSelection(wx.NOT_FOUND)
+		else:
+			try:
+				ix = self.locoOnlyList.index(loco)
+				loco = self.locoList[ix]
+			except ValueError:
+				ix = wx.NOT_FOUND
+				loco = ""
+			self.chLoco.SetSelection(ix)
+
+		self.stStdLoco.SetLabel(loco)
+		self.stOrigin.SetLabel(formatLocation(self.selectedTrainInfo, "origin"))
+		self.stTerminus.SetLabel(formatLocation(self.selectedTrainInfo, "terminus"))
+
+		loc = self.selectedTrainInfo["origin"]["loc"]
+		if loc is None:
+			self.chOLoc.SetSelection(wx.NOT_FOUND)
+		else:
+			ix = self.chOLoc.FindString(loc)
+			self.chOLoc.SetSelection(ix)
+
+		trk = self.selectedTrainInfo["origin"]["track"]
+		if trk is None:
+			self.teOTrk.SetValue("")
+		else:
+			self.teOTrk.SetValue(trk)
+
+		loc = self.selectedTrainInfo["terminus"]["loc"]
+		if loc is None:
+			self.chTLoc.SetSelection(wx.NOT_FOUND)
+		else:
+			ix = self.chTLoc.FindString(loc)
+			self.chTLoc.SetSelection(ix)
+
+		trk = self.selectedTrainInfo["terminus"]["track"]
+		if trk is None:
+			self.teTTrk.SetValue("")
+		else:
+			self.teTTrk.SetValue(trk)
 		
 		self.lcSteps.setData(self.selectedTrainInfo["steps"])
-		
 		
 	def setTitle(self):
 		title = self.titleString

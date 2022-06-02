@@ -10,20 +10,7 @@ class TrainRoster:
 		for tid in self.trains:
 			trn = self.trains[tid]
 			trn["block"] = None
-			trn["loco"] = None
-			if len(trn["steps"]) > 0:
-				if trn["steps"][0][0] == "":
-					trn["origin"] = trn["steps"][0][1]
-				else:
-					trn["origin"] = trn["steps"][0][0]
-					
-				if trn["steps"][-1][0] == "":
-					trn["terminus"] = trn["steps"][-1][1]
-				else:
-					trn["terminus"] = trn["steps"][-1][0]
-			else:
-				trn["origin"] = ""
-				trn["terminus"] = ""
+			trn["loco"] = trn["normalloco"]
 
 	def __iter__(self):
 		self.order = sorted(self.trains.keys())
@@ -58,8 +45,8 @@ class TrainRoster:
 		newJson = copy.deepcopy(self.trains)
 		for tid in newJson:
 			trn = newJson[tid]
-			del(trn["origin"])
-			del(trn["terminus"])
+			trn["loco"] = None
+			trn["block"] = None
 
 		with open(self.filename, "w") as fp:
 			json.dump(newJson, fp, indent=4, sort_keys=True)

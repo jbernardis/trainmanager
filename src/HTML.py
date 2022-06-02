@@ -149,7 +149,7 @@ def tr (*vals, **opts):
 def td (*vals, **opts):
 	return element('td', vals, opts, ('abbr', 'align', 'axis', 'background', 'bgcolor', 'bordercolor',
 									  'bordercolordark', 'bordercolorlight', 'char', 'charoff', 'colspan',
-									  'headers', 'height', 'nowrap', 'rowspan', 'scope', 'valign',
+									  'color', 'headers', 'height', 'nowrap', 'rowspan', 'scope', 'valign',
 									  'width')+coreopts)
 
 def thead (*vals, **opts):

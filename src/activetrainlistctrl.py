@@ -219,15 +219,21 @@ class ActiveTrainListCtrl(wx.ListCtrl):
 		at = self.atl.getTrainByPosition(item)
 		if at is None:
 			return "??"
-		
+
 		if col == 0:
 			return at.tid
 		elif col == 1:
-			return at.origin
+			if at.origin is None:
+				return ""
+			else:
+				return at.origin
 		elif col == 2:
 			return at.dir
 		elif col == 3:
-			return at.terminus
+			if at.terminus is None:
+				return ""
+			else:
+				return at.terminus
 		elif col == 4:
 			return at.engineer
 		elif col == 5:

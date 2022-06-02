@@ -31,10 +31,9 @@ from dccsniffer import DCCSniffer
 from serial import SerialException
 from optionsdlg import OptionsDlg
 from engqueuedlg import EngQueueDlg
-from updateschedule import updateSchedule
 
-DEVELOPMODE = True
-VERSIONDATE = "28-May-2022"
+DEVELOPMODE = False
+VERSIONDATE = "02-June-2022"
 
 BTNSZ = (120, 46)
 
@@ -57,10 +56,9 @@ MENU_MANAGE_ORDER = 205
 MENU_MANAGE_OPTIONS = 206
 MENU_MANAGE_RESET = 299
 MENU_REPORT_OP_WORKSHEET = 301
-MENU_REPORT_UPDATE_SCHEDULE = 302
-MENU_REPORT_TRAIN_CARDS = 303
-MENU_REPORT_LOCOS = 304
-MENU_REPORT_STATUS = 305
+MENU_REPORT_TRAIN_CARDS = 302
+MENU_REPORT_LOCOS = 303
+MENU_REPORT_STATUS = 304
 MENU_DISPATCH_CONNECT = 401
 MENU_DISPATCH_DISCONNECT = 402
 MENU_DISPATCH_SETUPIP = 403
@@ -232,9 +230,6 @@ class MainFrame(wx.Frame):
 		i = wx.MenuItem(self.menuReports, MENU_REPORT_OP_WORKSHEET, "Operating Worksheet", helpString="Print an Operating Worksheet")
 		self.menuReports.Append(i)
 		
-		i = wx.MenuItem(self.menuReports, MENU_REPORT_UPDATE_SCHEDULE, "Update Schedule", helpString="Update the schedule spreadsheet with loco information")
-		self.menuReports.Append(i)
-		
 		i = wx.MenuItem(self.menuReports, MENU_REPORT_TRAIN_CARDS, "Train Cards", helpString="Print Train Cards")
 		self.menuReports.Append(i)
 		
@@ -325,7 +320,6 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.panel.onResetSession, id=MENU_MANAGE_RESET)
 		
 		self.Bind(wx.EVT_MENU, self.panel.onReportOpWorksheet, id=MENU_REPORT_OP_WORKSHEET)
-		self.Bind(wx.EVT_MENU, self.panel.onUpdateSchedule, id=MENU_REPORT_UPDATE_SCHEDULE)
 		self.Bind(wx.EVT_MENU, self.panel.onReportTrainCards, id=MENU_REPORT_TRAIN_CARDS)
 		self.Bind(wx.EVT_MENU, self.panel.onReportLocos, id=MENU_REPORT_LOCOS)
 		self.Bind(wx.EVT_MENU, self.panel.onReportStatus, id=MENU_REPORT_STATUS)
@@ -344,7 +338,7 @@ class MainFrame(wx.Frame):
 		sizer.AddSpacer(100)
 		self.SetSizer(sizer)
 		self.Layout()
-		self.Fit();
+		self.Fit()
 		
 	def setTitle(self, train=None, order=None, engineer=None, loco=None, connection=None, dcc=None):
 		if train is not None:
@@ -1956,28 +1950,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.showInfo(self.selectedTrain)
 		self.updateActiveListLocos()
 		self.roster.save()
-		
-	def onUpdateSchedule(self, _):
-		try:
-			nfn = updateSchedule(self.roster, self.locos, self.settings)
-			if nfn is None:
-				dlg = wx.MessageDialog(self, 'No update to schedule - nothing changed',
-                    'No Schedule Updates',
-                    wx.OK | wx.ICON_INFORMATION)
-			else:
-				dlg = wx.MessageDialog(self, 'Updated Train Schedule saved to: ' + nfn,
-                    'Schedule Update Failed',
-                    wx.OK | wx.ICON_INFORMATION)
-			dlg.ShowModal()
-			dlg.Destroy()
-
-		except FileNotFoundError:
-			dlg = wx.MessageDialog(self, 'Unable to open base Train Schedule: ' + self.settings.schedulebase,
-                    'Schedule Update Failed',
-                    wx.OK | wx.ICON_ERROR)
-			dlg.ShowModal()
-			dlg.Destroy()
-		
+				
 	def onReportOpWorksheet(self, _):
 		self.report.OpWorksheetReport(self.roster, self.trainOrder, self.locos, self.extraTrains)
 		

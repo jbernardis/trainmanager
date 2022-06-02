@@ -132,7 +132,8 @@ class AssignLocosDlg(wx.Dialog):
 		self.currentLocoList.setData(self.trains, self.currentLoco, self.order, self.locos)
 		
 	def useOrigin(self, tid):
-		return (self.trains.getTrain(tid)['origin']+tid).lower()
+		tr = self.trains.getTrain(tid)
+		return (tr['origin']['loc']+tr['origin']['track']+tid).lower()
 
 	def determineAvailability(self):
 		self.locosInUse = [self.currentLoco[x] for x in self.currentLoco.keys() if self.currentLoco[x] is not None]
@@ -298,19 +299,24 @@ class CurrentLocoList(wx.ListCtrl):
 		tid = self.order[item]
 		lId = self.currentLocos[tid]
 		if col == 0:
-			return tid
+			return tid 
+
 		elif col == 1:
 			tinfo = self.trains.getTrain(tid)
-			rv = tinfo["origin"]
-			if rv is None:
-				return ""
+			if tinfo["origin"]["loc"] is None:
+				rv = ""
+			elif tinfo["origin"]["track"] is None:
+				rv = tinfo["origin"]["track"]
 			else:
-				return rv
+				rv = "%s / %s" % (tinfo["origin"]["loc"], tinfo["origin"]["track"])
+			return rv
+
 		elif col == 2:
 			if lId is None:
 				return "<none>"
 			else:
 				return self.currentLocos[tid]
+
 		elif col == 3:
 			if lId is None:
 				return ""
