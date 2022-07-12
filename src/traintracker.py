@@ -1,4 +1,3 @@
-from multiprocessing import dummy
 import os
 import wx
 import wx.lib.gizmos as gizmos
@@ -33,14 +32,14 @@ from serial import SerialException
 from optionsdlg import OptionsDlg
 from engqueuedlg import EngQueueDlg
 
-class dummyDCCEvt:
-	def __init__(self, loco, spd):
-		self.dcc = {"instr": "F", "param": spd, "loco": loco}
+# class dummyDCCEvt:
+# 	def __init__(self, loco, spd):
+# 		self.dcc = {"instr": "F", "param": spd, "loco": loco}
 # self.onDCCMessage(dummyDCCEvt("2216", "10"))
 # self.onDCCMessage(dummyDCCEvt("2216", "0"))
 
-DEVELOPMODE = True
-VERSIONDATE = "02-June-2022"
+DEVELOPMODE = False
+VERSIONDATE = "11-July-2022"
 
 BTNSZ = (120, 46)
 
@@ -835,7 +834,6 @@ class TrainTrackerPanel(wx.Panel):
 		self.socketDisconnect()
 		
 	def setupIP(self, _):
-		self.onDCCMessage(dummyDCCEvt("2216", "10"))
 		dlg = wx.TextEntryDialog(self, 'Enter/Modify IP Address', 'IP Address', self.settings.dispatchip)
 		rc = dlg.ShowModal()
 		if rc == wx.ID_OK:
@@ -851,7 +849,6 @@ class TrainTrackerPanel(wx.Panel):
 		self.settings.setModified()
 		
 	def setupPort(self, _):
-		self.onDCCMessage(dummyDCCEvt("2216", "0"))
 		dlg = wx.TextEntryDialog(self, 'Enter/Modify IP Port Number', 'Port Number', self.settings.dispatchport)
 		rc = dlg.ShowModal()
 		if rc == wx.ID_OK:
@@ -970,7 +967,7 @@ class TrainTrackerPanel(wx.Panel):
 	def setClockValue(self, tm):
 		if not self.connected:
 			self.clock.SetValue("")
-			self.clock.SetBackgroundColour(wx.Colour(255, 115, 47))
+			self.clock.SetBackgroundColour(wx.Colour(255, 10, 10))
 			return
 		self.clock.SetBackgroundColour(wx.Colour(0, 0, 0))
 		self.clock.SetValue(tm)
@@ -993,7 +990,7 @@ class TrainTrackerPanel(wx.Panel):
 	def setBreakerValue(self, txt):
 		if not self.connected:
 			self.teBreaker.SetValue("not connected")
-			self.teBreaker.SetBackgroundColour(wx.Colour(255, 115, 47))
+			self.teBreaker.SetBackgroundColour(wx.Colour(255, 10, 10))
 			return
 			
 		self.teBreaker.SetValue(txt)
@@ -1005,8 +1002,7 @@ class TrainTrackerPanel(wx.Panel):
 	def onOpenTrain(self, _):
 		if self.atl.count() > 0:
 			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
-	                               'Data will be lost',
-	                               wx.YES_NO | wx.ICON_WARNING)
+									'Data will be lost', wx.YES_NO | wx.ICON_WARNING)
 			rc = dlg.ShowModal()
 			dlg.Destroy()
 			if rc != wx.ID_YES:

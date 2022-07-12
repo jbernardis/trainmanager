@@ -150,7 +150,7 @@ class ActiveTrainList:
 		if stopped is not None:
 			self.stoppedthreshold = stopped
 		if unstarted is not None:
-			self.unstartedThreshold = unstarted
+			self.unstartedthreshold = unstarted
 
 		for lc in self.displays.values():
 			lc.setTimingThresholds(unstarted=unstarted, stopped=stopped)		
