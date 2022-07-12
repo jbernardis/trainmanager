@@ -9,11 +9,14 @@ class ActiveTrainList:
 		self.trains = {}
 		self.order = []
 		self.displays = {}
+		self.unstartedthreshold = 600
+		self.stoppedthreshold = 120
 		
 	def addDisplay(self, tag, lc):
 		self.displays[tag] = lc
 		lc.setAtl(self)
 		lc.setSortHeaders(self.sortKey, self.sortGroupDir, self.sortAscending)
+		lc.setTimingThresholds(unstarted = self.unstartedthreshold, stopped=self.stoppedthreshold)		
 		
 	def removeDisplay(self, tag):
 		try:
@@ -30,6 +33,7 @@ class ActiveTrainList:
 		self.refreshDisplays()
 		
 	def addTrain(self, at):
+
 		self.trains[at.tid] = at
 		self.order.append(at.tid)
 		self.sortTrains()
@@ -98,6 +102,14 @@ class ActiveTrainList:
 			if at.loco == loco:
 				at.throttle = self.formatThrottle(throttle, speedType)
 				at.speed = throttle
+				if at.speed != 0:
+					at.hasStarted = True
+					at.stopTime = None
+				else:
+					if at.hasStarted:
+						if at.stopTime is None:
+							at.stopTime = 0
+
 				try:
 					tx = self.order.index(at.tid)
 				except:
@@ -133,6 +145,15 @@ class ActiveTrainList:
 				if tx is not None:
 					self.refreshDisplays(tx)
 				return
+
+	def setTimingThresholds(self, unstarted=None, stopped=None):
+		if stopped is not None:
+			self.stoppedthreshold = stopped
+		if unstarted is not None:
+			self.unstartedThreshold = unstarted
+
+		for lc in self.displays.values():
+			lc.setTimingThresholds(unstarted=unstarted, stopped=stopped)		
 		
 	def hasTrain(self, tid):
 		return tid in self.order
@@ -179,6 +200,7 @@ class ActiveTrainList:
 		
 	def refreshDisplays(self, tx=None):
 		for lc in self.displays.values():
+			lc.ticker()
 			if tx is None:
 				lc.refreshAll()
 			else:
@@ -195,5 +217,8 @@ class ActiveTrainList:
 			at.time += 1
 			if at.highlight > 0:
 				at.highlight -= 1
+
+			if at.stopTime is not None:
+				at.stopTime += 1
 				
 		self.refreshDisplays()

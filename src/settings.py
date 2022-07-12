@@ -38,14 +38,16 @@ class Settings:
 		self.browser = "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"
 		self.savelogonexit = True
 		self.allowextrarerun = False
+		self.unstartedthreshold = 600
+		self.stoppedthreshold = 120
 
 		
 		self.cfg = configparser.ConfigParser()
 		self.cfg.optionxform = str
 		if not self.cfg.read(self.inifile):
 			dlg = wx.MessageDialog(self.parent, "Settings file %s does not exist.  Using default values" % INIFILE,
-	                               'File Not Found',
-	                               wx.OK | wx.ICON_WARNING)
+									'File Not Found',
+									wx.OK | wx.ICON_WARNING)
 			dlg.ShowModal()
 			dlg.Destroy()
 			self.modified = True
@@ -87,6 +89,10 @@ class Settings:
 					self.savelogonexit = parseBoolean(value, True)
 				elif opt == "allowextrarerun":
 					self.allowextrarerun = parseBoolean(value, True)
+				elif opt == "unstartedthreshold":
+					self.unstartedthreshold = int(value)
+				elif opt == "stoppedthreshold":
+					self.stoppedthreshold = int(value)
 				else:
 					msgs.append("INI file: Unknown %s option: %s - ignoring" % (self.section, opt))
 		else:
@@ -95,8 +101,8 @@ class Settings:
 			
 		if len(msgs) > 0:				
 			dlg = wx.MessageDialog(self.parent, "\n".join(msgs),
-	                               'Errors reading settings',
-	                               wx.OK | wx.ICON_WARNING)
+									'Errors reading settings',
+									wx.OK | wx.ICON_WARNING)
 			dlg.ShowModal()
 			dlg.Destroy()
 			return
@@ -129,13 +135,15 @@ class Settings:
 		self.cfg.set(self.section, "browser", str(self.browser))
 		self.cfg.set(self.section, "savelogonexit", "True" if self.savelogonexit else "False")
 		self.cfg.set(self.section, "allowextrarerun", "True" if self.allowextrarerun else "False")
+		self.cfg.set(self.section, "unstartedthreshold", str(self.unstartedthreshold))
+		self.cfg.set(self.section, "stoppedthreshold", str(self.stoppedthreshold))
 
 		try:		
 			cfp = open(self.inifile, 'w')
 		except:
 			dlg = wx.MessageDialog(self.parent, "Unable to open settings file %s for writing" % self.inifile,
-	                               'Errors writing settings',
-	                               wx.OK | wx.ICON_WARNING)
+									'Errors writing settings',
+									wx.OK | wx.ICON_WARNING)
 			dlg.ShowModal()
 			dlg.Destroy()
 			return

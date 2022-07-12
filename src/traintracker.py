@@ -1,3 +1,4 @@
+from multiprocessing import dummy
 import os
 import wx
 import wx.lib.gizmos as gizmos
@@ -32,7 +33,13 @@ from serial import SerialException
 from optionsdlg import OptionsDlg
 from engqueuedlg import EngQueueDlg
 
-DEVELOPMODE = False
+class dummyDCCEvt:
+	def __init__(self, loco, spd):
+		self.dcc = {"instr": "F", "param": spd, "loco": loco}
+# self.onDCCMessage(dummyDCCEvt("2216", "10"))
+# self.onDCCMessage(dummyDCCEvt("2216", "0"))
+
+DEVELOPMODE = True
 VERSIONDATE = "02-June-2022"
 
 BTNSZ = (120, 46)
@@ -687,6 +694,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.splash()
 		
 		self.settings = Settings(self, os.getcwd())
+		self.atl.setTimingThresholds(unstarted=self.settings.unstartedthreshold, stopped=self.settings.stoppedthreshold)
 		
 		self.trainFile = self.settings.trainfile
 		self.orderFile = self.settings.orderfile
@@ -730,8 +738,8 @@ class TrainTrackerPanel(wx.Panel):
 			self.deadmanTimer -= 1
 			if self.deadmanTimer == 0:
 				dlg = wx.MessageDialog(self, 'The connection to the dispatcher appears to be closed.',
-                               'Dispatcher Session Error',
-                               wx.OK | wx.ICON_WARNING)
+								'Dispatcher Session Error',
+								wx.OK | wx.ICON_WARNING)
 				dlg.ShowModal()
 				dlg.Destroy()
 				
@@ -739,8 +747,7 @@ class TrainTrackerPanel(wx.Panel):
 		
 	def onResetSession(self, _):
 		dlg = wx.MessageDialog(self, 'This will reload all data files and will delete all active trains\nAre you sure you want to proceed?\n\nPress "Yes" to proceed, or "No" to cancel.',
-                               'Reset Session',
-                               wx.YES_NO | wx.ICON_WARNING)
+							'Reset Session', wx.YES_NO | wx.ICON_WARNING)
 		rc = dlg.ShowModal()
 		dlg.Destroy()
 		if rc != wx.ID_YES:
@@ -800,8 +807,7 @@ class TrainTrackerPanel(wx.Panel):
 
 	def socketFailureEvent(self, _):
 		dlg = wx.MessageDialog(self, 'Connection to Dispatcher failed.\nNo locomotive or block information is available',
-                               'Connection Failed',
-                               wx.OK | wx.ICON_ERROR)
+								'Connection Failed', wx.OK | wx.ICON_ERROR)
 		dlg.ShowModal()
 		dlg.Destroy()
 		
@@ -816,8 +822,7 @@ class TrainTrackerPanel(wx.Panel):
 		
 	def resetConnection(self, _):
 		dlg = wx.MessageDialog(self, 'This will sever the connection to the dispatcher program\nand should only be used to recover from error situations.\n\nPress "Yes" to proceed, or "No" to cancel.',
-                               'Reset Dispatcher Connection',
-                               wx.YES_NO | wx.ICON_WARNING)
+								'Reset Dispatcher Connection', wx.YES_NO | wx.ICON_WARNING)
 		rc = dlg.ShowModal()
 		dlg.Destroy()
 		if rc != wx.ID_YES:
@@ -830,6 +835,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.socketDisconnect()
 		
 	def setupIP(self, _):
+		self.onDCCMessage(dummyDCCEvt("2216", "10"))
 		dlg = wx.TextEntryDialog(self, 'Enter/Modify IP Address', 'IP Address', self.settings.dispatchip)
 		rc = dlg.ShowModal()
 		if rc == wx.ID_OK:
@@ -845,6 +851,7 @@ class TrainTrackerPanel(wx.Panel):
 		self.settings.setModified()
 		
 	def setupPort(self, _):
+		self.onDCCMessage(dummyDCCEvt("2216", "0"))
 		dlg = wx.TextEntryDialog(self, 'Enter/Modify IP Port Number', 'Port Number', self.settings.dispatchport)
 		rc = dlg.ShowModal()
 		if rc == wx.ID_OK:

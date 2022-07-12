@@ -20,6 +20,10 @@ class ActiveTrainListCtrl(wx.ListCtrl):
 			)
 		
 		self.atl = None
+		self.altFlag = False
+		self.unstartedthreshold = 600
+		self.stoppedthreshold = 120
+
 		
 		self.InsertColumn(0, "Train")
 		self.InsertColumn(1, "Origin")
@@ -53,12 +57,20 @@ class ActiveTrainListCtrl(wx.ListCtrl):
 		
 		self.atcA = wx.ItemAttr()
 		self.atcB = wx.ItemAttr()
-		self.atcA.SetBackgroundColour(wx.Colour(252, 169, 186)) # light red
-		self.atcB.SetBackgroundColour(wx.Colour(251, 145, 166)) # red
+		self.atcA.SetBackgroundColour(wx.Colour(255, 175, 159))
+		self.atcB.SetBackgroundColour(wx.Colour(255, 135, 88)) # red
 		
 		self.hilite = wx.ItemAttr()
 		self.hilite.SetBackgroundColour(wx.Colour(0, 116, 232))
 		self.hilite.SetTextColour(wx.Colour(255, 255, 255))
+		
+		self.attentionA = wx.ItemAttr()
+		self.attentionA.SetBackgroundColour(wx.Colour(0, 0, 0))
+		self.attentionA.SetTextColour(wx.Colour(255, 255, 255))
+
+		self.attentionB = wx.ItemAttr()
+		self.attentionB.SetTextColour(wx.Colour(255, 255, 255))
+		self.attentionB.SetBackgroundColour(wx.Colour(255, 10, 10))
 
 		self.loadImages()		
 		self.il = wx.ImageList(16, 16)
@@ -67,6 +79,8 @@ class ActiveTrainListCtrl(wx.ListCtrl):
 		self.idxRed = self.il.Add(self.imageRed)
 		self.idxGreen = self.il.Add(self.imageGreen)
 		self.idxYellow = self.il.Add(self.imageYellow)
+		self.idxStopped = self.il.Add(self.imageStopped)
+		self.idxNotStarted = self.il.Add(self.imageNotStarted)
 		self.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
 		
 		self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnItemSelected)
@@ -79,9 +93,18 @@ class ActiveTrainListCtrl(wx.ListCtrl):
 	def setAtl(self, atl):
 		self.atl = atl
 		self.refreshItemCount()
+
+	def setTimingThresholds(self, unstarted=None, stopped=None):
+		if unstarted is not None:
+			self.unstartedthreshold = unstarted
+		if stopped is not None:
+			self.stoppedthreshold = stopped
 		
 	def refreshItemCount(self):
 		self.SetItemCount(self.atl.count())	
+
+	def ticker(self):
+		self.altFlag = not self.altFlag
 		
 	def refreshAll(self):
 		self.refreshItemCount()
@@ -110,6 +133,14 @@ class ActiveTrainListCtrl(wx.ListCtrl):
 		mask = wx.Mask(png, wx.BLUE)
 		png.SetMask(mask)
 		self.imageYellow = png
+		png = wx.Image("trainStopped.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+		mask = wx.Mask(png, wx.BLUE)
+		png.SetMask(mask)
+		self.imageStopped = png
+		png = wx.Image("trainNotStarted.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+		mask = wx.Mask(png, wx.BLUE)
+		png.SetMask(mask)
+		self.imageNotStarted = png
 		
 	def onRightClick(self, evt):
 		self.itemSelected = self.GetFirstSelected()
@@ -203,9 +234,15 @@ class ActiveTrainListCtrl(wx.ListCtrl):
 		at = self.atl.getTrainByPosition(item)
 		if at is None:
 			return self.idxEmpty
+
+		if not at.hasStarted:
+			return self.idxNotStarted
 		
 		if at.throttle is None:
 			return self.idxEmpty
+
+		if at.speed == 0:
+			return self.idxStopped
 		
 		if at.limit is None:
 			return self.idxYellow
@@ -266,7 +303,7 @@ class ActiveTrainListCtrl(wx.ListCtrl):
 			secs = at.time % 60
 			return "%2d:%02d" % (mins, secs)
 
-	def OnGetItemAttr(self, item):		
+	def OnGetItemAttr(self, item):	
 		at = self.atl.getTrainByPosition(item)
 		if at is None:
 			return "??"
@@ -274,6 +311,18 @@ class ActiveTrainListCtrl(wx.ListCtrl):
 		hilite = at.highlight > 0
 		if hilite:
 			return self.hilite
+
+		if not at.hasStarted and at.time > self.unstartedthreshold:
+			if self.altFlag:
+				return self.attentionA
+			else:
+				return self.attentionB
+
+		if at.stopTime is not None and at.stopTime > self.stoppedthreshold:
+			if self.altFlag:
+				return self.attentionA
+			else:
+				return self.attentionB
 
 		if at.engineer == "ATC":
 			if item % 2 == 1:

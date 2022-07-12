@@ -27,6 +27,8 @@ class ActiveTrain:
 		self.limit = None
 		self.highlight = 0
 		self.time = 0
+		self.hasStarted = False
+		self.stopTime = None
 
 		self.sortAscending = False
 		self.sortGroupDir = False
