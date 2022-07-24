@@ -39,7 +39,7 @@ from engqueuedlg import EngQueueDlg
 # self.onDCCMessage(dummyDCCEvt("2216", "0"))
 
 DEVELOPMODE = False
-VERSIONDATE = "11-July-2022"
+VERSIONDATE = "24-July-2022"
 
 BTNSZ = (120, 46)
 
@@ -88,11 +88,11 @@ MAX_STEPS = 9
 
 
 wildcard = "JSON file (*.json)|*.json|"	 \
-		   "All files (*.*)|*.*"
+				"All files (*.*)|*.*"
 wildcardTxt = "TXT file (*.txt)|*.txt|"	 \
-		   "All files (*.*)|*.*"
+				"All files (*.*)|*.*"
 wildcardLog = "Log file (*.log)|*.log|"	 \
-		   "All files (*.*)|*.*"
+				"All files (*.*)|*.*"
 
 (TrainLocationEvent, EVT_TRAINLOC) = newevent.NewEvent()  
 (TrainSignalEvent, EVT_TRAINSIG) = newevent.NewEvent()  
