@@ -2,7 +2,7 @@ import wx
 
 class EngQueueDlg(wx.Dialog):
 	def __init__(self, parent, eng, cbClose):
-		wx.Dialog.__init__(self, parent, wx.ID_ANY, "Engineer Queue", style=wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT)
+		wx.Dialog.__init__(self, parent, wx.ID_ANY, "Engineer Queue", style=wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT |wx.STAY_ON_TOP)
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 		
 		self.modified = False

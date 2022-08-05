@@ -39,7 +39,7 @@ from engqueuedlg import EngQueueDlg
 # self.onDCCMessage(dummyDCCEvt("2216", "0"))
 
 DEVELOPMODE = False
-VERSIONDATE = "24-July-2022"
+VERSIONDATE = "5-August-2022"
 
 BTNSZ = (120, 46)
 

@@ -16,9 +16,9 @@ class Report:
 		try:
 			self.browser = webbrowser.get(browserCmd)
 		except webbrowser.Error:
-			dlg = wx.MessageDialog(self.parent, "Unable to find an available browser at\n%s" % self.settings.browser, 
-		                                "Report Initialization failed",
-		                                wx.OK | wx.ICON_ERROR)
+			dlg = wx.MessageDialog(self.parent, "Unable to find an available browser at\n%s" % self.settings.browser,
+					"Report Initialization failed",
+					wx.OK | wx.ICON_ERROR)
 			dlg.ShowModal()
 			dlg.Destroy()
 			return
@@ -41,12 +41,13 @@ class Report:
 
 
 	def OpWorksheetReport(self, roster, order, locos, extras):
+		schedule = [t for t in order]
 		if len(extras) > 0:	
 			dlg = ChooseExtrasDlg(self.parent, order, extras)
 			rc = dlg.ShowModal()
 			
 			if rc == wx.ID_OK:
-				extraResults = dlg.getValues()
+				schedule = dlg.getValues()
 				
 			dlg.Destroy()
 
@@ -92,29 +93,12 @@ class Report:
 			HTML.th({}, "Track"))
 		
 		rows = []
-
-		lastTrain = None
 	
-		for tid in order:
-			if lastTrain in extraResults.keys():
-				extraList = extraResults[lastTrain]
-				for extid in extraList:
-					tInfo = roster.getTrain(extid)
-					if tInfo is not None:
-						rows.append(self.generateOpWorksheetRow(extid, tInfo, locos, cardNumbers, True))
-
+		for tid in schedule:
 			tInfo = roster.getTrain(tid)
 
 			if tInfo is not None:
 				rows.append(self.generateOpWorksheetRow(tid, tInfo, locos, cardNumbers))
-				lastTrain = tid
-
-		if lastTrain in extraResults.keys():
-			extraList = extraResults[lastTrain]
-			for extid in extraList:
-				tInfo = roster.getTrain(extid)
-				if tInfo is not None:
-					rows.append(self.generateOpWorksheetRow(extid, tInfo, locos, cardNumbers, True))
 
 		html += HTML.div({"class": "page"}, 
 			HTML.h2({'align': 'center'}, "Train Sequence"),
@@ -379,12 +363,12 @@ class ChooseExtrasDlg(wx.Dialog):
 		self.order = order
 		self.extra = extra
 
+		self.schedule = [x for x in self.order]
+		self.selectedTrain = None
+
 		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
 		textFontBold = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
-
-		self.firstLabel = "<first>"
-		schedule = [self.firstLabel] + [t for t in order]
 
 		vsizer = wx.BoxSizer(wx.VERTICAL)
 		vsizer.AddSpacer(20)
@@ -403,23 +387,38 @@ class ChooseExtrasDlg(wx.Dialog):
 		vsizer.Add(hsz)
 		vsizer.AddSpacer(10)
 
-		for t in self.extra:
-			cb = wx.CheckBox(self, wx.ID_ANY, t, size=(100, -1), name=t)
-			self.cbList[t] = cb
-			cb.SetFont(textFontBold)
-			self.Bind(wx.EVT_CHECKBOX, self.onCheckExtra, cb)
-			ch = wx.Choice(self, wx.ID_ANY, choices=schedule, name=t)
-			ch.SetFont(textFontBold)
-			ch.SetSelection(0)
-			ch.Enable(False)
-			self.chList[t] = ch
-			hsz = wx.BoxSizer(wx.HORIZONTAL)
-			hsz.AddSpacer(50)
-			hsz.Add(cb)
-			hsz.AddSpacer(80)
-			hsz.Add(ch)
+		self.clb = wx.CheckListBox(self, wx.ID_ANY, choices=self.extra, size=(100, 300))
+		self.clb.SetFont(textFontBold)
+		self.Bind(wx.EVT_CHECKLISTBOX, self.onCheckExtra, self.clb)
 
-			vsizer.Add(hsz)
+		self.sch = wx.ListBox(self, wx.ID_ANY, choices = self.schedule, size=(100, 300), style=wx.LB_SINGLE)
+		self.sch.SetFont(textFontBold)
+		self.Bind(wx.EVT_LISTBOX, self.onClickSchedule, self.sch)
+
+		self.bUp = wx.Button(self, wx.ID_ANY, "Up", size=(80, 30))
+		self.bUp.SetFont(btnFont)
+		self.Bind(wx.EVT_BUTTON, self.bUpPressed, self.bUp);
+		self.bUp.Enable(False)
+
+		self.bDown = wx.Button(self, wx.ID_ANY, "Down", size=(80, 30))
+		self.bDown.SetFont(btnFont)
+		self.Bind(wx.EVT_BUTTON, self.bDownPressed, self.bDown);
+		self.bDown.Enable(False)
+
+		bsz = wx.BoxSizer(wx.VERTICAL)
+		bsz.Add(self.bUp)
+		bsz.AddSpacer(20)
+		bsz.Add(self.bDown)
+
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		hsz.AddSpacer(50)
+		hsz.Add(self.clb)
+		hsz.AddSpacer(80)
+		hsz.Add(self.sch)
+		hsz.AddSpacer(10)
+		hsz.Add(bsz, 0, wx.ALIGN_CENTER_VERTICAL)
+
+		vsizer.Add(hsz)
 
 		vsizer.AddSpacer(20)
 		
@@ -450,9 +449,84 @@ class ChooseExtrasDlg(wx.Dialog):
 		self.Fit()
 
 	def onCheckExtra(self, evt):
-		cb = evt.GetEventObject()
-		name = cb.GetName()
-		self.chList[name].Enable(cb.IsChecked())
+		tx = evt.GetSelection()
+		train = self.extra[tx]
+		if self.clb.IsChecked(tx):
+			self.schedule.append(train)
+		else:
+			self.schedule.remove(train)
+		
+		self.sch.SetItems(self.schedule)
+
+	def onClickSchedule(self, evt):
+		self.selectedTrain = evt.GetString()
+		if self.selectedTrain in self.order:
+			self.bUp.Enable(False)
+			self.bDown.Enable(False)
+		else:
+			try:
+				ix = self.schedule.index(self.selectedTrain)
+			except:
+				ix = None
+			if ix is None:
+				self.bUp.Enable(False)
+				self.bDown.Enable(False)
+			elif ix <= 0:
+				self.bUp.Enable(False)
+				self.bDown.Enable(True)
+			elif ix >= (len(self.schedule)-1):
+				self.bUp.Enable(True)
+				self.bDown.Enable(False)
+			else:
+				self.bUp.Enable(True)
+				self.bDown.Enable(True)
+
+	def bUpPressed(self, evt):
+		try:
+			ix = self.schedule.index(self.selectedTrain)
+		except:
+			return
+
+		e1 = self.schedule[ix-1]
+		e2 = self.schedule[ix]
+
+		if ix == 1:
+			nl = [e2, e1] + self.schedule[2:]
+		elif ix == len(self.schedule)-1:
+			nl = self.schedule[:-2] + [e2, e1]
+		else:
+			nl = self.schedule[:ix-1] + [e2, e1] +  self.schedule[ix+1:]
+
+		self.schedule = [x for x in nl]
+		self.sch.SetItems(self.schedule)
+		self.sch.SetSelection(ix-1)
+
+		if ix-1 == 0:
+			self.bUp.Enable(False)
+		self.bDown.Enable(True)
+
+	def bDownPressed(self, evt):
+		try:
+			ix = self.schedule.index(self.selectedTrain)
+		except:
+			return
+
+		e1 = self.schedule[ix]
+		e2 = self.schedule[ix+1]
+		
+		if ix == 0:
+			nl = [e2, e1] + self.schedule[2:]
+		elif ix == len(self.schedule)-2:
+			nl = self.schedule[:-2] + [e2, e1]
+		else:
+			nl = self.schedule[:ix] + [e2, e1] +  self.schedule[ix+2:]
+			
+		self.schedule = [x for x in nl]
+		self.sch.SetItems(self.schedule)
+		self.sch.SetSelection(ix+1)
+		if ix+1 >= len(self.schedule)-1:
+			self.bDown.Enable(False)
+		self.bUp.Enable(True)
 
 	def bOKPressed(self, _):
 		self.EndModal(wx.ID_OK)
@@ -467,21 +541,7 @@ class ChooseExtrasDlg(wx.Dialog):
 		self.EndModal(wx.ID_CANCEL)
 
 	def getValues(self):
-		results = {}
-		for cb in self.cbList:
-			if self.cbList[cb].IsChecked():
-				tid = self.cbList[cb].GetName()
-				ax = self.chList[tid].GetSelection()
-				after = self.chList[tid].GetString(ax)
-				if after == self.firstLabel:
-					after = None
-
-				if after in results.keys():
-					results[after].append(tid)
-				else:
-					results[after] = [tid]
-
-		return results
+		return self.schedule
 		
 
 class ChooseCardsDlg(wx.Dialog):
