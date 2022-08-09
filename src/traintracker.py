@@ -39,7 +39,7 @@ from engqueuedlg import EngQueueDlg
 # self.onDCCMessage(dummyDCCEvt("2216", "0"))
 
 DEVELOPMODE = False
-VERSIONDATE = "5-August-2022"
+VERSIONDATE = "8-August-2022"
 
 BTNSZ = (120, 46)
 
@@ -76,6 +76,7 @@ MENU_DCC_SETUPPORT = 503
 MENU_DCC_SETUPBAUD = 504
 MENU_VIEW_ENG_QUEUE = 601
 MENU_VIEW_ACTIVE_TRAINS = 602
+MENU_VIEW_LEGEND = 603
 MENU_VIEW_SORT = 610
 MENU_SORT_TID = 650
 MENU_SORT_TIME = 651
@@ -202,6 +203,9 @@ class MainFrame(wx.Frame):
 		i = wx.MenuItem(self.menuView, MENU_VIEW_ACTIVE_TRAINS, "Active Train List", helpString="Display Active Train List")
 		self.menuView.Append(i)
 		
+		i = wx.MenuItem(self.menuView, MENU_VIEW_LEGEND, "Legend", helpString="Display a legend for icons")
+		self.menuView.Append(i)
+		
 		self.menuManage = wx.Menu()
 		
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_TRAINS, "Trains", helpString="Manage the train roster")
@@ -312,6 +316,7 @@ class MainFrame(wx.Frame):
 		
 		self.Bind(wx.EVT_MENU, self.panel.onViewEngQueue, id=MENU_VIEW_ENG_QUEUE)
 		self.Bind(wx.EVT_MENU, self.panel.onViewActiveTrains, id=MENU_VIEW_ACTIVE_TRAINS)
+		self.Bind(wx.EVT_MENU, self.panel.onViewLegend, id=MENU_VIEW_LEGEND)
 		self.Bind(wx.EVT_MENU, self.panel.onChangeSort, id=MENU_SORT_TID)	
 		self.Bind(wx.EVT_MENU, self.panel.onChangeSort, id=MENU_SORT_TIME)		
 		self.Bind(wx.EVT_MENU, self.panel.onChangeSort, id=MENU_SORT_GROUP)		
@@ -433,6 +438,8 @@ class TrainTrackerPanel(wx.Panel):
 		
 		self.dlgSplash = None
 		self.splashTimer = 0;
+
+		self.dlgLegend = None
 
 		self.atl = ActiveTrainList()
 		self.atl.setSortKey("time")
@@ -1103,6 +1110,16 @@ class TrainTrackerPanel(wx.Panel):
 		
 		self.dlgActiveTrains.Destroy()
 		self.dlgActiveTrains = None
+
+	def onViewLegend(self, _):
+		if self.dlgLegend is None:
+			self.dlgLegend = LegendDlg(self, self.onLegendDlgClose)
+			self.dlgLegend.Show();
+		else:
+			self.dlgLegend.Raise()
+
+	def onLegendDlgClose(self):
+		self.dlgLegend = None
 	
 	def setExtraTrains(self):
 		if self.trainOrder is None:
@@ -2105,6 +2122,95 @@ class TrainTrackerPanel(wx.Panel):
 				print("Unable to save to log file: %s" % path)
 				
 		self.Destroy()
+
+class LegendDlg(wx.Dialog):
+	def __init__(self, parent, cbClose):
+		wx.Dialog.__init__(self, parent, wx.ID_ANY, "Legend", style=wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT |wx.STAY_ON_TOP)
+
+		self.cbClose = cbClose
+		self.Bind(wx.EVT_CLOSE, self.onClose)
+
+		self.loadImages()		
+		self.il = wx.ImageList(16, 16)
+		empty = self.makeBlank()
+		self.idxEmpty = self.il.Add(empty)
+		self.idxRed = self.il.Add(self.imageRed)
+		self.idxGreen = self.il.Add(self.imageGreen)
+		self.idxYellow = self.il.Add(self.imageYellow)
+		self.idxStopped = self.il.Add(self.imageStopped)
+		self.idxNotStarted = self.il.Add(self.imageNotStarted)
+		text = [
+			[ self.idxGreen,      "Train is operating at correct speed or lower" ],
+			[ self.idxYellow,     "Signal speed limit is unknown, but train is moving" ],
+			[ self.idxRed,        "Train is traveling too fast for its current signal" ],
+			[ self.idxStopped,    "Train is stopped" ],
+			[ self.idxNotStarted, "Train has not started since being assigned" ]
+		]
+
+		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
+		self.lcLegend = wx.ListCtrl(self, wx.ID_ANY, style=wx.LC_REPORT | wx.LC_NO_HEADER | wx.BORDER_NONE)
+		self.lcLegend.SetFont(textFont)
+		self.lcLegend.InsertColumn(0, "")
+
+		self.lcLegend.SetImageList(self.il, wx.IMAGE_LIST_SMALL)
+		for i in range(5):
+			self.lcLegend.InsertItem(i*2, text[i][1], text[i][0])
+
+		self.lcLegend.SetColumnWidth(0, wx.LIST_AUTOSIZE)
+		
+		vsz = wx.BoxSizer(wx.VERTICAL)	
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		hsz.AddSpacer(400)
+		vsz.Add(hsz)	
+		vsz.AddSpacer(20)
+
+		vsz.Add(self.lcLegend, 0, wx.EXPAND)
+		
+		vsz.AddSpacer(20)		
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		hsz.AddSpacer(20)
+		hsz.Add(vsz)
+		hsz.AddSpacer(20)
+		
+		self.SetSizer(hsz)
+		self.Layout()
+		self.Fit();
+
+	def onClose(self, _):
+		if callable(self.cbClose):
+			self.cbClose()	
+		self.Destroy()	
+
+	def loadImages(self):
+		png = wx.Image("trainRed.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+		mask = wx.Mask(png, wx.BLUE)
+		png.SetMask(mask)
+		self.imageRed = png
+		png = wx.Image("trainGreen.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+		mask = wx.Mask(png, wx.BLUE)
+		png.SetMask(mask)
+		self.imageGreen = png
+		png = wx.Image("trainYellow.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+		mask = wx.Mask(png, wx.BLUE)
+		png.SetMask(mask)
+		self.imageYellow = png
+		png = wx.Image("trainStopped.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+		mask = wx.Mask(png, wx.BLUE)
+		png.SetMask(mask)
+		self.imageStopped = png
+		png = wx.Image("trainNotStarted.png", wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+		mask = wx.Mask(png, wx.BLUE)
+		png.SetMask(mask)
+		self.imageNotStarted = png
+
+	def makeBlank(self):
+		empty = wx.Bitmap(16,16,32)
+		dc = wx.MemoryDC(empty)
+		dc.SetBackground(wx.Brush((0,0,0,0)))
+		dc.Clear()
+		del dc
+		empty.SetMaskColour((0,0,0))
+		return empty
 
 
 class App(wx.App):

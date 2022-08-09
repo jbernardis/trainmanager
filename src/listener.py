@@ -72,8 +72,12 @@ class Listener():
 				self.isRunning = False
 				
 			else:
+				print("\n\n\n%d dispatcher messages in packet" % len(bl))
 				if self.isRunning:
+					i = 0
 					for b in bl:
+						i += 1
+						print("Message %d: (%s) len = %d" % (i, b, len(b)))
 						if b == "":
 							continue
 						

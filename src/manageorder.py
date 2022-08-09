@@ -254,14 +254,21 @@ class ManageOrderDlg(wx.Dialog):
 		self.setModified()
 		
 	def bRightSchPressed(self, _):
-		ix = self.lbAll.GetSelection()
-		if ix == wx.NOT_FOUND:
+		avx = self.lbAll.GetSelection()
+		if avx == wx.NOT_FOUND:
 			return
 		
-		tid = self.availableTrains[ix]
+		tid = self.availableTrains[avx]
 		self.scheduledTrains.append(tid)
 		self.lbSchedule.SetItems(self.scheduledTrains)
 		self.setAvailableTrains()
+		if avx >= len(self.availableTrains):
+			avx = len(self.availableTrains)-1
+		if avx < 0:
+			self.lbAll.SetSelection(wx.NOT_FOUND)
+		else:
+			self.lbAll.SetSelection(avx)
+
 		self.bRightSch.Enable(False)
 		self.setModified()
 		ix = len(self.scheduledTrains)-1
@@ -278,6 +285,12 @@ class ManageOrderDlg(wx.Dialog):
 		tid = self.scheduledTrains[ix]		
 		del(self.scheduledTrains[ix])
 		self.lbSchedule.SetItems(self.scheduledTrains)
+		if ix >= len(self.scheduledTrains):
+			ix = len(self.scheduledTrains)-1
+		if ix < 0:
+			self.lbSchedule.SetSelection(wx.NOT_FOUND)
+		else:
+			self.lbSchedule.SetSelection(ix)
 		self.setAvailableTrains()
 		try:
 			ix = self.availableTrains.index(tid)
@@ -292,15 +305,21 @@ class ManageOrderDlg(wx.Dialog):
 		self.setButtons()
 	
 	def bRightExtPressed(self, _):
-		ix = self.lbAll.GetSelection()
-		if ix == wx.NOT_FOUND:
+		avx = self.lbAll.GetSelection()
+		if avx == wx.NOT_FOUND:
 			return
 		
-		tid = self.availableTrains[ix]
+		tid = self.availableTrains[avx]
 		self.extraTrains = sorted(self.extraTrains + [tid])
 		ix = self.extraTrains.index(tid)
 		self.lbExtra.SetItems(self.extraTrains)
 		self.setAvailableTrains()
+		if avx >= len(self.availableTrains):
+			avx = len(self.availableTrains)-1
+		if avx < 0:
+			self.lbAll.SetSelection(wx.NOT_FOUND)
+		else:
+			self.lbAll.SetSelection(avx)
 		self.bRightExt.Enable(False)
 		self.setModified()
 		if ix is not None:
@@ -316,6 +335,12 @@ class ManageOrderDlg(wx.Dialog):
 		tid = self.extraTrains[ix]		
 		del(self.extraTrains[ix])
 		self.lbExtra.SetItems(self.extraTrains)
+		if ix >= len(self.extraTrains):
+			ix = len(self.extraTrains)-1
+		if ix < 0:
+			self.lbExtra.SetSelection(wx.NOT_FOUND)
+		else:
+			self.lbExtra.SetSelection(ix)
 		self.setAvailableTrains()
 		ix = self.availableTrains.index(tid)
 		self.bLeftExt.Enable(False)
