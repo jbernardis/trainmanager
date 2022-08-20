@@ -40,16 +40,20 @@ class Report:
 		self.browser.open_new(fileURL)
 
 
-	def OpWorksheetReport(self, roster, order, locos, extras):
-		schedule = [t for t in order]
-		if len(extras) > 0:	
-			dlg = ChooseExtrasDlg(self.parent, order, extras)
+	def OpWorksheetReport(self, roster, order, schedule, locos):
+		orderTrains = order.getOrder()
+		extraTrains = order.getExtras()
+		extras = [t for t in extraTrains if t not in schedule]
+		if len(extraTrains) > 0:	
+			dlg = ChooseExtrasDlg(self.parent, schedule, extras)
 			rc = dlg.ShowModal()
 			
 			if rc == wx.ID_OK:
 				schedule = dlg.getValues()
 				
 			dlg.Destroy()
+			if rc != wx.ID_OK:
+				return
 
 		css = HTML.StyleSheet()
 		css.addElement("div.page", {"page-break-inside": "avoid"})
@@ -72,12 +76,12 @@ class Report:
 
 		cardNumbers = {}
 		seq = 1
-		for tid in order:
+		for tid in orderTrains:
 			cardNumbers[tid] = "%2d" % seq
 			seq += 1
 
 		seq = 0
-		for tid in extras:
+		for tid in extraTrains:
 			cardNumbers[tid] = chr(ord('A') + seq)
 			seq += 1
 		
@@ -178,8 +182,8 @@ class Report:
 				
 		if ct+ctx == 0:
 			dlg = wx.MessageDialog(self.parent, "No Train Cards chosen - skipping report", 
-		                               "Nothing to print",
-		                               wx.OK | wx.ICON_INFORMATION)
+						"Nothing to print",
+						wx.OK | wx.ICON_INFORMATION)
 			dlg.ShowModal()
 			dlg.Destroy()
 			return

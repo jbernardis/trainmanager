@@ -31,6 +31,7 @@ from dccsniffer import DCCSniffer
 from serial import SerialException
 from optionsdlg import OptionsDlg
 from engqueuedlg import EngQueueDlg
+from sessionscheduledlg import SessionScheduleDlg
 
 # class dummyDCCEvt:
 # 	def __init__(self, loco, spd):
@@ -39,7 +40,7 @@ from engqueuedlg import EngQueueDlg
 # self.onDCCMessage(dummyDCCEvt("2216", "0"))
 
 DEVELOPMODE = False
-VERSIONDATE = "8-August-2022"
+VERSIONDATE = "20-August-2022"
 
 BTNSZ = (120, 46)
 
@@ -59,6 +60,7 @@ MENU_MANAGE_ENGINEERS = 201
 MENU_MANAGE_ASSIGN_LOCOS = 203
 MENU_MANAGE_LOCOS = 204
 MENU_MANAGE_ORDER = 205
+MENU_MANAGE_SESSION_SCHEDULE = 207
 MENU_MANAGE_OPTIONS = 206
 MENU_MANAGE_RESET = 299
 MENU_REPORT_OP_WORKSHEET = 301
@@ -126,6 +128,7 @@ class MainFrame(wx.Frame):
 		self.locofile = None
 		self.connection = None
 		self.dcc = None
+		self.sessionsched = None
 
 		self.menuFile = wx.Menu()	
 		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_TRAIN, "Load Train Roster", helpString ="Load a Train Roster file")
@@ -218,6 +221,11 @@ class MainFrame(wx.Frame):
 		self.menuManage.Append(i)
 		
 		i = wx.MenuItem(self.menuManage, MENU_MANAGE_LOCOS, "Locomotives", helpString="Define, modify, delete locomotives")
+		self.menuManage.Append(i)
+		
+		self.menuManage.AppendSeparator()
+		
+		i = wx.MenuItem(self.menuManage, MENU_MANAGE_SESSION_SCHEDULE, "Session Schedules", helpString="Create/manage session schedules based on the loaded train order")
 		self.menuManage.Append(i)
 		
 		self.menuManage.AppendSeparator()
@@ -329,6 +337,7 @@ class MainFrame(wx.Frame):
 		self.Bind(wx.EVT_MENU, self.panel.onManageLocos, id=MENU_MANAGE_LOCOS)
 		self.Bind(wx.EVT_MENU, self.panel.onManageOptions, id=MENU_MANAGE_OPTIONS)
 		self.Bind(wx.EVT_MENU, self.panel.onResetSession, id=MENU_MANAGE_RESET)
+		self.Bind(wx.EVT_MENU, self.panel.onManageSessionSchedule, id=MENU_MANAGE_SESSION_SCHEDULE)
 		
 		self.Bind(wx.EVT_MENU, self.panel.onReportOpWorksheet, id=MENU_REPORT_OP_WORKSHEET)
 		self.Bind(wx.EVT_MENU, self.panel.onReportTrainCards, id=MENU_REPORT_TRAIN_CARDS)
@@ -435,6 +444,8 @@ class TrainTrackerPanel(wx.Panel):
 		self.idleEngineers = []
 		self.trainOrder = None
 		self.speeds = {}
+		self.sessionSchedule = []
+		self.sessionFile = None
 		
 		self.dlgSplash = None
 		self.splashTimer = 0;
@@ -472,8 +483,16 @@ class TrainTrackerPanel(wx.Panel):
 		sz.AddSpacer(5)
 		sz.Add(self.bSkip)
 		bsizer.Add(sz)
+
+		bsizer.AddSpacer(1)
 		
-		bsizer.AddSpacer(10)
+		sz = wx.BoxSizer(wx.HORIZONTAL)
+		sz.AddSpacer(120)
+		self.stSessionSchedule = wx.StaticText(boxTrain, wx.ID_ANY, "(Base)")
+		sz.Add(self.stSessionSchedule)
+		bsizer.Add(sz)
+
+		bsizer.AddSpacer(20)
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		self.cbExtra = wx.CheckBox(boxTrain, wx.ID_ANY, "Run Extra")
@@ -726,6 +745,8 @@ class TrainTrackerPanel(wx.Panel):
 		self.parent.setTitle(connection="Not Connected", dcc="DCC Not Connected")
 		
 		self.atl.addDisplay("main", self.lcActiveTrains)
+
+		self.setSessionSchedule(None)
 		
 		self.Bind(wx.EVT_TIMER, self.onTicker)
 		self.ticker = wx.Timer(self)
@@ -768,6 +789,9 @@ class TrainTrackerPanel(wx.Panel):
 		self.loadEngineerFile(os.path.join(self.settings.engineerdir, self.settings.engineerfile), preserveActive = True)
 		self.loadTrainFile(os.path.join(self.settings.traindir, self.settings.trainfile))		
 		self.loadOrderFile(os.path.join(self.settings.orderdir, self.settings.orderfile))
+		self.sessionSchedule = []
+		self.sessionFile = None
+		self.setSessionSchedule(self.sessionFile)
 		self.setExtraTrains()
 		self.log.append("Session Reset")
 		
@@ -1042,8 +1066,8 @@ class TrainTrackerPanel(wx.Panel):
 			self.roster = TrainRoster(fn)
 		except FileNotFoundError:
 			dlg = wx.MessageDialog(self, 'Unable to open Train roster file %s' % fn,
-                   'File Not Found',
-                   wx.OK | wx.ICON_ERROR)
+				'File Not Found',
+				wx.OK | wx.ICON_ERROR)
 			dlg.ShowModal()
 			dlg.Destroy()
 
@@ -1122,12 +1146,13 @@ class TrainTrackerPanel(wx.Panel):
 		self.dlgLegend = None
 	
 	def setExtraTrains(self):
+		extraPool = [ t for t in self.trainOrder.getExtras() if t not in self.sessionSchedule ]
 		if self.trainOrder is None:
 			self.extraTrains = []
 		elif self.settings.allowextrarerun:		
-			self.extraTrains = [t for t in self.trainOrder.getExtras() if not self.atl.hasTrain(t)]
+			self.extraTrains = [t for t in extraPool if not self.atl.hasTrain(t)]
 		else:
-			self.extraTrains = [t for t in self.trainOrder.getExtras() if not self.atl.hasTrain(t) and t not in self.completedTrains]
+			self.extraTrains = [t for t in extraPool if not self.atl.hasTrain(t) and t not in self.completedTrains]
 			
 		self.log.append("Setting extra train list to %s" % str(self.extraTrains))
 
@@ -1252,8 +1277,8 @@ class TrainTrackerPanel(wx.Panel):
 			self.engineers = Engineers(fn)
 		except FileNotFoundError:
 			dlg = wx.MessageDialog(self, 'Unable to open Engineer file %s' % fn,
-                   'File Not Found',
-                   wx.OK | wx.ICON_ERROR)
+					'File Not Found',
+					wx.OK | wx.ICON_ERROR)
 			dlg.ShowModal()
 			dlg.Destroy()
 
@@ -1283,8 +1308,8 @@ class TrainTrackerPanel(wx.Panel):
 	def onOpenOrder(self, _):
 		if self.atl.count() > 0:
 			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
-	                               'Data will be lost',
-	                               wx.YES_NO | wx.ICON_WARNING)
+					'Data will be lost',
+					wx.YES_NO | wx.ICON_WARNING)
 			rc = dlg.ShowModal()
 			dlg.Destroy()
 			if rc != wx.ID_YES:
@@ -1317,8 +1342,8 @@ class TrainTrackerPanel(wx.Panel):
 			self.pendingTrains = [x for x in self.trainOrder]
 		except FileNotFoundError:
 			dlg = wx.MessageDialog(self, 'Unable to open Order file %s' % fn,
-	               'File Not Found',
-	               wx.OK | wx.ICON_ERROR)
+					'File Not Found',
+					wx.OK | wx.ICON_ERROR)
 			dlg.ShowModal()
 			dlg.Destroy()
 			
@@ -1504,7 +1529,7 @@ class TrainTrackerPanel(wx.Panel):
 		at = self.atl.getTrainByPosition(tx)
 		if at is None:
 			return
-		###XXX
+
 		engActive = self.atl.getEngineers()	
 		if at.engineer != "ATC":
 			eng = ["ATC"]
@@ -1629,8 +1654,8 @@ class TrainTrackerPanel(wx.Panel):
 		at = self.atl.getTrainByPosition(tx)
 		if at is None:
 			return
-
-		if self.trainOrder.isExtraTrain(at.tid):		
+		isExtra = self.trainOrder.isExtraTrain(at.tid) and at.tid not in self.sessionSchedule
+		if isExtra:		
 			phrase  = "list of extra trains."	
 		else:
 			phrase = "top of the schedule."
@@ -1644,7 +1669,7 @@ class TrainTrackerPanel(wx.Panel):
 
 		self.atl.delTrain(tx)
 
-		if self.trainOrder.isExtraTrain(at.tid):
+		if isExtra:
 			self.log.append("Returned train %s from active list to extra train list" % at.tid)
 			self.setExtraTrains()
 		else:
@@ -1692,7 +1717,8 @@ class TrainTrackerPanel(wx.Panel):
 		self.log.append("Train %s added to Completed trains list" % at.tid)
 		self.atl.delTrain(tx)
 		
-		if self.settings.allowextrarerun and self.trainOrder.isExtraTrain(at.tid):
+		isExtra = self.trainOrder.isExtraTrain(at.tid) and at.tid not in self.sessionSchedule
+		if self.settings.allowextrarerun and isExtra:
 			self.setExtraTrains()
 			
 		if at.engineer in self.selectedEngineers:
@@ -1839,7 +1865,7 @@ class TrainTrackerPanel(wx.Panel):
 						
 				
 	def onManageOrder(self, _):
-		dlg = ManageOrderDlg(self, self.trainOrder, self.roster.getTrainList(), self.pendingTrains, self.extraTrains, self.settings)
+		dlg = ManageOrderDlg(self, self.trainOrder, self.roster.getTrainList(), self.settings)
 		rc = dlg.ShowModal()
 		
 		if rc == wx.ID_OK:
@@ -1854,6 +1880,9 @@ class TrainTrackerPanel(wx.Panel):
 		self.log.append("Modified extra trains to %s" % str(nextra))
 		
 		self.pendingTrains = [t for t in norder if not self.atl.hasTrain(t) and t not in self.completedTrains]
+		self.sessionSchedule = []
+		self.sessionFile = None
+		self.setSessionSchedule(self.sessionFile)
 		self.log.append("Pending trains = %s" % str(self.pendingTrains))
 		self.extraTrains = sorted([t for t in nextra])
 		self.setTrainOrder(preserveActive=True)
@@ -1970,9 +1999,44 @@ class TrainTrackerPanel(wx.Panel):
 		self.showInfo(self.selectedTrain)
 		self.updateActiveListLocos()
 		self.roster.save()
-				
+
+	def setSessionSchedule(self, fn):
+		if fn is None:
+			txt = "(base)"
+		else:
+			txt = "(%s)" % fn
+		self.stSessionSchedule.SetLabel(txt)
+
+	def onManageSessionSchedule(self, _):
+		dlg = SessionScheduleDlg(self, self.trainOrder, self.sessionFile, self.sessionSchedule)
+		rc = dlg.ShowModal()
+		if rc == wx.ID_OK:
+			fn, sch = dlg.getResults()
+
+		dlg.Destroy()
+		if rc != wx.ID_OK:
+			return
+
+		self.sessionSchedule = sch
+		self.sessionFile = fn
+		self.setSessionSchedule(self.sessionFile)
+		self.pendingTrains = [t for t in self.sessionSchedule]
+		self.chTrain.SetItems(self.pendingTrains)
+		self.setExtraTrains()
+		if len(self.pendingTrains) == 0:
+			self.chTrain.Enable(False)
+			self.bAssign.Enable(False)
+			self.bSkip.Enable(False)
+			self.showInfo(None)
+		else:
+			self.chTrain.SetSelection(0)
+			self.setSelectedTrain(self.chTrain.GetString(0))
+			self.chTrain.Enable(True)
+			self.bAssign.Enable(True)
+			self.bSkip.Enable(True)
+
 	def onReportOpWorksheet(self, _):
-		self.report.OpWorksheetReport(self.roster, self.trainOrder, self.locos, self.extraTrains)
+		self.report.OpWorksheetReport(self.roster, self.trainOrder, self.sessionSchedule, self.locos)
 		
 	def onReportLocos(self, _):
 		self.report.LocosReport(self.locos)
@@ -2000,8 +2064,8 @@ class TrainTrackerPanel(wx.Panel):
 			self.sniffer.connect(self.settings.dccsnifferport, self.settings.dccsnifferbaud, 1)
 		except SerialException:
 			dlg = wx.MessageDialog(self, 'Connection to DCC Sniffer on port ' + self.settings.dccsnifferport + ' failed',
-                               'Connection Failed',
-                               wx.OK | wx.ICON_ERROR)
+					'Connection Failed',
+					wx.OK | wx.ICON_ERROR)
 			dlg.ShowModal()
 			dlg.Destroy()
 			self.sniffer = None
@@ -2093,8 +2157,8 @@ class TrainTrackerPanel(wx.Panel):
 	def onClose(self, _):
 		if self.atl.count() > 0:
 			dlg = wx.MessageDialog(self, 'Trains are still active.\nPress "Yes" to exit program, or "No" to cancel.',
-	                               'Active Trains',
-	                               wx.YES_NO | wx.ICON_QUESTION)
+						'Active Trains',
+						wx.YES_NO | wx.ICON_QUESTION)
 			rc = dlg.ShowModal()
 			dlg.Destroy()
 			if rc != wx.ID_YES:
@@ -2141,13 +2205,13 @@ class LegendDlg(wx.Dialog):
 		self.idxNotStarted = self.il.Add(self.imageNotStarted)
 		text = [
 			[ self.idxGreen,      "Train is operating at correct speed or lower" ],
-			[ self.idxYellow,     "Signal speed limit is unknown, but train is moving" ],
-			[ self.idxRed,        "Train is traveling too fast for its current signal" ],
+			[ self.idxYellow,     "Train is moving, Signal speed limit is unknown" ],
+			[ self.idxRed,        "Train is traveling too fast for current signal" ],
 			[ self.idxStopped,    "Train is stopped" ],
 			[ self.idxNotStarted, "Train has not started since being assigned" ]
 		]
 
-		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
+		textFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
 		self.lcLegend = wx.ListCtrl(self, wx.ID_ANY, style=wx.LC_REPORT | wx.LC_NO_HEADER | wx.BORDER_NONE)
 		self.lcLegend.SetFont(textFont)
 		self.lcLegend.InsertColumn(0, "")
@@ -2160,7 +2224,7 @@ class LegendDlg(wx.Dialog):
 		
 		vsz = wx.BoxSizer(wx.VERTICAL)	
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
-		hsz.AddSpacer(400)
+		hsz.AddSpacer(300)
 		vsz.Add(hsz)	
 		vsz.AddSpacer(20)
 

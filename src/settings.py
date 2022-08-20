@@ -30,6 +30,7 @@ class Settings:
 		self.engineerfile = "engineers.txt"
 		self.orderdir = os.path.join(os.getcwd(), "orders")
 		self.orderfile = "order.json"
+		self.scheduledir = os.path.join(os.getcwd(), "schedules")
 		self.logdir = os.path.join(os.getcwd(), "logs")
 		self.dispatchip = "192.168.1.157"
 		self.dispatchport = "5204"
@@ -73,6 +74,8 @@ class Settings:
 					self.orderdir = value
 				elif opt == "orderfile":
 					self.orderfile = value
+				elif opt == "scheduledir":
+					self.scheduledir = value
 				elif opt == "logdir":
 					self.logdir = value
 				elif opt == "dispatchip":
@@ -127,6 +130,7 @@ class Settings:
 		self.cfg.set(self.section, "engineerfile", str(self.engineerfile))
 		self.cfg.set(self.section, "orderdir", str(self.orderdir))
 		self.cfg.set(self.section, "orderfile", str(self.orderfile))
+		self.cfg.set(self.section, "scheduledir", str(self.scheduledir))
 		self.cfg.set(self.section, "logdir", str(self.logdir))
 		self.cfg.set(self.section, "dispatchip", str(self.dispatchip))
 		self.cfg.set(self.section, "dispatchport", str(self.dispatchport))

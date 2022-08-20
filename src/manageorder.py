@@ -5,18 +5,18 @@ wildcardJson = "JSON file (*.json)|*.json|"	 \
 		   "All files (*.*)|*.*"
 
 class ManageOrderDlg(wx.Dialog):
-	def __init__(self, parent, order, alltrains, scheduled, extra, settings):
+	def __init__(self, parent, order, alltrains, settings):
 		wx.Dialog.__init__(self, parent, wx.ID_ANY, "")
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 		
 		self.titleString = "Manage Train Order"
-		self.settings = settings
 		self.order = order
+		self.settings = settings
 		
-		self.scheduledTrains = [t for t in scheduled]
-		self.extraTrains = sorted([t for t in extra])
+		self.orderTrains = order.getOrder()
+		self.extraTrains = order.getExtras()
 		self.allTrains = sorted([t for t in alltrains])
-		self.availableTrains = [t for t in self.allTrains if t not in self.scheduledTrains and t not in self.extraTrains]
+		self.availableTrains = [t for t in self.allTrains if t not in self.orderTrains and t not in self.extraTrains]
 		
 		self.modified = None
 		self.everModified = False
@@ -29,7 +29,7 @@ class ManageOrderDlg(wx.Dialog):
 		self.lbAll.SetFont(textFont)
 		self.Bind(wx.EVT_LISTBOX, self.onLbAllSelect, self.lbAll)
 		
-		self.lbSchedule = wx.ListBox(self, wx.ID_ANY, choices=self.scheduledTrains, size=(120, 150))
+		self.lbSchedule = wx.ListBox(self, wx.ID_ANY, choices=self.orderTrains, size=(120, 150))
 		self.lbSchedule.SetFont(textFont)
 		self.Bind(wx.EVT_LISTBOX, self.onLbScheduleSelect, self.lbSchedule)
 			
@@ -208,7 +208,7 @@ class ManageOrderDlg(wx.Dialog):
 			self.bLeftSch.Enable(False)
 		else:
 			self.bUp.Enable(ix != 0)
-			self.bDown.Enable(ix != len(self.scheduledTrains)-1)
+			self.bDown.Enable(ix != len(self.orderTrains)-1)
 			self.bLeftSch.Enable(True)
 		
 		ix = self.lbExtra.GetSelection()
@@ -228,11 +228,11 @@ class ManageOrderDlg(wx.Dialog):
 		if ix == wx.NOT_FOUND or ix == 0:
 			return
 		
-		s = self.scheduledTrains[ix]
-		self.scheduledTrains[ix] = self.scheduledTrains[ix-1]
-		self.scheduledTrains[ix-1] = s
+		s = self.orderTrains[ix]
+		self.orderTrains[ix] = self.orderTrains[ix-1]
+		self.orderTrains[ix-1] = s
 		
-		self.lbSchedule.SetItems(self.scheduledTrains)
+		self.lbSchedule.SetItems(self.orderTrains)
 		self.lbSchedule.SetSelection(ix-1)
 		
 		self.setButtons()
@@ -240,14 +240,14 @@ class ManageOrderDlg(wx.Dialog):
 		
 	def bDownPressed(self, _):
 		ix = self.lbSchedule.GetSelection()
-		if ix == wx.NOT_FOUND or ix >= len(self.scheduledTrains)-1:
+		if ix == wx.NOT_FOUND or ix >= len(self.orderTrains)-1:
 			return
 		
-		s = self.scheduledTrains[ix]
-		self.scheduledTrains[ix] = self.scheduledTrains[ix+1]
-		self.scheduledTrains[ix+1] = s
+		s = self.orderTrains[ix]
+		self.orderTrains[ix] = self.orderTrains[ix+1]
+		self.orderTrains[ix+1] = s
 		
-		self.lbSchedule.SetItems(self.scheduledTrains)
+		self.lbSchedule.SetItems(self.orderTrains)
 		self.lbSchedule.SetSelection(ix+1)
 		
 		self.setButtons()
@@ -259,8 +259,8 @@ class ManageOrderDlg(wx.Dialog):
 			return
 		
 		tid = self.availableTrains[avx]
-		self.scheduledTrains.append(tid)
-		self.lbSchedule.SetItems(self.scheduledTrains)
+		self.orderTrains.append(tid)
+		self.lbSchedule.SetItems(self.orderTrains)
 		self.setAvailableTrains()
 		if avx >= len(self.availableTrains):
 			avx = len(self.availableTrains)-1
@@ -271,7 +271,7 @@ class ManageOrderDlg(wx.Dialog):
 
 		self.bRightSch.Enable(False)
 		self.setModified()
-		ix = len(self.scheduledTrains)-1
+		ix = len(self.orderTrains)-1
 		self.lbSchedule.EnsureVisible(ix)
 		self.lbSchedule.SetSelection(ix)
 		self.setButtons()
@@ -282,11 +282,11 @@ class ManageOrderDlg(wx.Dialog):
 		if ix == wx.NOT_FOUND:
 			return
 
-		tid = self.scheduledTrains[ix]		
-		del(self.scheduledTrains[ix])
-		self.lbSchedule.SetItems(self.scheduledTrains)
-		if ix >= len(self.scheduledTrains):
-			ix = len(self.scheduledTrains)-1
+		tid = self.orderTrains[ix]		
+		del(self.orderTrains[ix])
+		self.lbSchedule.SetItems(self.orderTrains)
+		if ix >= len(self.orderTrains):
+			ix = len(self.orderTrains)-1
 		if ix < 0:
 			self.lbSchedule.SetSelection(wx.NOT_FOUND)
 		else:
@@ -351,7 +351,7 @@ class ManageOrderDlg(wx.Dialog):
 		self.setButtons()
 		
 	def setAvailableTrains(self):
-		self.availableTrains = [t for t in self.allTrains if t not in self.scheduledTrains and t not in self.extraTrains]
+		self.availableTrains = [t for t in self.allTrains if t not in self.orderTrains and t not in self.extraTrains]
 		self.lbAll.SetItems(self.availableTrains)
 
 	def bSavePressed(self, _):
@@ -367,7 +367,7 @@ class ManageOrderDlg(wx.Dialog):
 		path = dlg.GetPath()
 		dlg.Destroy()
 
-		self.order.saveas(path, self.scheduledTrains, self.extraTrains)
+		self.order.saveas(path, self.orderTrains, self.extraTrains)
 		self.setModified(False)
 
 	def bOKPressed(self, _):
@@ -380,7 +380,7 @@ class ManageOrderDlg(wx.Dialog):
 			self.EndModal(wx.ID_EXIT)
 		
 	def doSave(self):
-		self.order.setNewOrder(self.scheduledTrains)
+		self.order.setNewOrder(self.orderTrains)
 		self.order.setNewExtras(self.extraTrains)
 		self.order.save()
 		self.setModified(False)
@@ -403,5 +403,5 @@ class ManageOrderDlg(wx.Dialog):
 		self.EndModal(wx.ID_CANCEL)
 		
 	def getValues(self):
-		return self.scheduledTrains, self.extraTrains
+		return self.orderTrains, self.extraTrains
 

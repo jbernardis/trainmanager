@@ -273,18 +273,21 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		self.bAddStep = wx.Button(self, wx.ID_ANY, "Add\nStep", size=BTNSZ)
 		self.bAddStep.SetFont(btnFont)
+		self.bAddStep.SetToolTip("Add the entered step information to the current train")
 		self.Bind(wx.EVT_BUTTON, self.bAddStepPressed, self.bAddStep)
 		stepBtnSz.Add(self.bAddStep)
 		stepBtnSz.AddSpacer(20)
 		
 		self.bModStep = wx.Button(self, wx.ID_ANY, "Modify\nStep", size=BTNSZ)
 		self.bModStep.SetFont(btnFont)
+		self.bModStep.SetToolTip("Modify the selected step information with the fields")
 		self.bModStep.Enable(False)
 		self.Bind(wx.EVT_BUTTON, self.bModStepPressed, self.bModStep)
 		stepBtnSz.Add(self.bModStep)
 		stepBtnSz.AddSpacer(20)
 		
 		self.bDelStep = wx.Button(self, wx.ID_ANY, "Delete\nStep", size=BTNSZ)
+		self.bDelStep.SetToolTip("Delete the current step from the train description")
 		self.bDelStep.SetFont(btnFont)
 		self.bDelStep.Enable(False)
 		self.Bind(wx.EVT_BUTTON, self.bDelStepPressed, self.bDelStep)
@@ -302,6 +305,7 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		self.bUp = wx.Button(self, wx.ID_ANY, "Up", size=BTNSZSMALL)
 		self.bUp.SetFont(btnFont)
+		self.bUp.SetToolTip("Move the current step towards the top of the step list")
 		self.bUp.Enable(False)
 		self.Bind(wx.EVT_BUTTON, self.bUpPressed, self.bUp)
 		
@@ -311,6 +315,7 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		self.bDown = wx.Button(self, wx.ID_ANY, "Down", size=BTNSZSMALL)
 		self.bDown.SetFont(btnFont)
+		self.bDown.SetToolTip("Move the current step towards the bottom of the step list")
 		self.bDown.Enable(False)
 		self.Bind(wx.EVT_BUTTON, self.bDownPressed, self.bDown)
 		
