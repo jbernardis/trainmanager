@@ -406,5 +406,3 @@ class ChooseOverwriteFiles(wx.Dialog):
 
 	def getValues(self):
 		return [self.clbFiles.IsChecked(i) for i in range(len(self.files))]
-		
-		

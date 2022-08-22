@@ -58,6 +58,3 @@ class ActiveTrainListDlg(wx.Dialog):
 		self.atl.removeDisplay("dlg")
 		if callable(self.cbClose):
 			self.cbClose()
-			
-		
-		

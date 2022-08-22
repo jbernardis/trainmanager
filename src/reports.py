@@ -329,7 +329,6 @@ class Report:
 		css.addElement("table", {'width': '650px', 'border-spacing': '15px',  'margin-left': 'auto', 'margin-right': 'auto'})
 		css.addElement("table, th, td", { 'border': "1px solid black", 'border-collapse': 'collapse'})
 		css.addElement("th", {'text-align': 'center',  'overflow': 'hidden'})
-		#css.addElement("th", {'text-align': 'center', 'width': '80px', 'overflow': 'hidden'})
 		css.addElement("td.loco", {"text-align": "right", "width": "90px", "padding-right": "40px"})
 		css.addElement("td.desc", {"text-align": "left", "width": "500px", "padding-left": "20px"})
 		

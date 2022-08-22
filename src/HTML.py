@@ -131,26 +131,26 @@ def HTTPHeader():
 	
 def table (*vals, **opts):
 	return element('table', vals, opts, ('align', 'background', 'bgcolor', 'border', 'bordercolor',
-										 'bordercolordark', 'bordercolorlight', 'cellpadding', 
-										 'cellspacing', 'cols', 'frame', 'height', 'hspace', 'nowrap',
-										 'rules', 'summary', 'valign', 'vspace', 'width')+coreopts)   
+					'bordercolordark', 'bordercolorlight', 'cellpadding', 
+					'cellspacing', 'cols', 'frame', 'height', 'hspace', 'nowrap',
+					'rules', 'summary', 'valign', 'vspace', 'width')+coreopts)   
 
 def th (*vals, **opts):
 	return element('th', vals, opts, ('abbr', 'align', 'axis', 'background', 'bgcolor', 'bordercolor',
-									  'bordercolordark', 'bordercolorlight', 'char', 'charoff', 'colspan',
-									  'headers', 'height', 'nowrap', 'rowspan', 'scope', 'valign',
-									  'width')+coreopts)
+					'bordercolordark', 'bordercolorlight', 'char', 'charoff', 'colspan',
+					'headers', 'height', 'nowrap', 'rowspan', 'scope', 'valign',
+					'width')+coreopts)
 
 def tr (*vals, **opts):
 	return element('tr', vals, opts, ('align', 'background', 'bgcolor', 'bordercolor', 
-									  'bordercolordark', 'bordercolorlight', 'char', 'charoff',
-									  'nowrap', 'valign')+coreopts)
+					'bordercolordark', 'bordercolorlight', 'char', 'charoff',
+					'nowrap', 'valign')+coreopts)
 
 def td (*vals, **opts):
 	return element('td', vals, opts, ('abbr', 'align', 'axis', 'background', 'bgcolor', 'bordercolor',
-									  'bordercolordark', 'bordercolorlight', 'char', 'charoff', 'colspan',
-									  'color', 'headers', 'height', 'nowrap', 'rowspan', 'scope', 'valign',
-									  'width')+coreopts)
+					'bordercolordark', 'bordercolorlight', 'char', 'charoff', 'colspan',
+					'color', 'headers', 'height', 'nowrap', 'rowspan', 'scope', 'valign',
+					'width')+coreopts)
 
 def thead (*vals, **opts):
 	return element('thead', vals, opts, ('align', 'char', 'charoff', 'valign')+coreopts)
@@ -175,7 +175,7 @@ def comment (*vals, **opts):
 
 def frameset (*vals, **opts):
 	return element('frameset', vals, opts,
-				   ('border', 'bordercolor', 'cols', 'frameborder', 'framespacing',
+					('border', 'bordercolor', 'cols', 'frameborder', 'framespacing',
 					'onblur', 'onfocus', 'onload', 'onunload', 'rows'))
 
 def frame (*vals, **opts):
@@ -188,7 +188,7 @@ def noframes (*vals, **opts):
 
 def startbody(*vals, **opts):
 	return element('-body', vals, opts,
-				   ('alink', 'background', 'bgcolor', 'bgproperties', 'leftmargin', 'link',
+					('alink', 'background', 'bgcolor', 'bgproperties', 'leftmargin', 'link',
 					'onblur', 'onfocus', 'onload', 'onunload', 'text', 'topmargin', 'vlink') + coreopts)
 
 def endbody():
@@ -242,7 +242,7 @@ def h6(*vals, **opts):
 
 def a(*vals, **opts):
 	return element('a', vals, opts, ('accesskey', 'charset', 'coords', 'href', 'hreflang',
-									 'rel', 'rev', 'shape', 'tabindex', 'target', 'type')+coreopts)
+							'rel', 'rev', 'shape', 'tabindex', 'target', 'type')+coreopts)
 
 def dir(*vals, **opts):
 	return element('dir', vals, opts, ('type', )+coreopts)
@@ -360,18 +360,18 @@ def map(*vals, **opts):
 
 def area(*vals, **opts):
 	return element('-area', vals, opts, ('accesskey', 'alt', 'coords', 'href', 'nohref', 'notab',
-										 'inblur', 'onfocus', 'shape', 'tabindex', 'taborder', 'target'))
+							'inblur', 'onfocus', 'shape', 'tabindex', 'taborder', 'target'))
 
 def marquee(*vals, **opts):
 	return element('marquee', vals, opts, ('align', 'behavior', 'bgcolor', 'direction', 'height' 'hspace',
-										   'loop', 'scrollamount', 'scrolldelay', 'vspace', 'width')+coreopts)
+							'loop', 'scrollamount', 'scrolldelay', 'vspace', 'width')+coreopts)
 
 def hr(*vals, **opts):
 	return element('-hr', vals, opts, ('align', 'color', 'noshade', 'size', 'width'))
 
 def iframe(*vals, **opts):
 	return element('iframe', vals, opts, ('align', 'frameborder', 'height', 'longdesc', 'marginheight',
-										  'marginwidth', 'scrolling', 'src', 'width'))
+							'marginwidth', 'scrolling', 'src', 'width'))
 
 def listing(*vals, **opts):
 	return element('listing', vals, opts, ()+coreopts)
@@ -420,9 +420,3 @@ def option(*vals, **opts):
 
 def input(*vals, **opts):
 	return element('input', vals, opts, ('value', 'type', 'name', 'size')+coreopts)
-
-
-
-
-
-	

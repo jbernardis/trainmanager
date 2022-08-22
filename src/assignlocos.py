@@ -221,8 +221,7 @@ class AssignLocosDlg(wx.Dialog):
 	def doCancel(self):
 		if self.modified:
 			dlg = wx.MessageDialog(self, 'Locomotive assignments have changed\nPress "Yes" to exit and lose changes,\nor "No" to return and save them.',
-		                               'Changes will be lost',
-		                               wx.YES_NO | wx.ICON_WARNING)
+					'Changes will be lost', wx.YES_NO | wx.ICON_WARNING)
 			rc = dlg.ShowModal()
 			dlg.Destroy()
 			if rc != wx.ID_YES:

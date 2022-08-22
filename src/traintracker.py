@@ -39,15 +39,12 @@ from sessionscheduledlg import SessionScheduleDlg
 # self.onDCCMessage(dummyDCCEvt("2216", "10"))
 # self.onDCCMessage(dummyDCCEvt("2216", "0"))
 
-DEVELOPMODE = False
+DEVELOPMODE = True
 VERSIONDATE = "20-August-2022"
 
 BTNSZ = (120, 46)
 
-MENU_FILE_LOAD_TRAIN = 100 
-MENU_FILE_LOAD_ENG  = 101
 MENU_FILE_LOAD_ORDER = 102
-MENU_FILE_LOAD_LOCOS = 103
 MENU_FILE_VIEW_LOG = 110
 MENU_FILE_CLEAR_LOG = 111
 MENU_FILE_SAVE_LOG = 112
@@ -130,17 +127,9 @@ class MainFrame(wx.Frame):
 		self.dcc = None
 		self.sessionsched = None
 
-		self.menuFile = wx.Menu()	
-		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_TRAIN, "Load Train Roster", helpString ="Load a Train Roster file")
-		self.menuFile.Append(i)
-		
+		self.menuFile = wx.Menu()
+
 		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_ORDER, "Load Train Order", helpString="Load Train Order/Sequence file")
-		self.menuFile.Append(i)
-		
-		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_LOCOS, "Load Loco List", helpString="Load locomotive descriptions")
-		self.menuFile.Append(i)
-		
-		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_ENG, "Load Engineer list", helpString="Load Engineer List")
 		self.menuFile.Append(i)
 		
 		self.menuFile.AppendSeparator()
@@ -310,10 +299,7 @@ class MainFrame(wx.Frame):
 		self.panel = TrainTrackerPanel(self)
 		sizer.Add(self.panel)
 		
-		self.Bind(wx.EVT_MENU, self.panel.onOpenTrain, id=MENU_FILE_LOAD_TRAIN)
-		self.Bind(wx.EVT_MENU, self.panel.onOpenEngineer, id=MENU_FILE_LOAD_ENG)
 		self.Bind(wx.EVT_MENU, self.panel.onOpenOrder, id=MENU_FILE_LOAD_ORDER)
-		self.Bind(wx.EVT_MENU, self.panel.onOpenLocos, id=MENU_FILE_LOAD_LOCOS)
 		self.Bind(wx.EVT_MENU, self.panel.onViewLog, id=MENU_FILE_VIEW_LOG)
 		self.Bind(wx.EVT_MENU, self.panel.onClearLog, id=MENU_FILE_CLEAR_LOG)
 		self.Bind(wx.EVT_MENU, self.panel.onSaveLog, id=MENU_FILE_SAVE_LOG)
@@ -1030,40 +1016,11 @@ class TrainTrackerPanel(wx.Panel):
 		else:
 			self.teBreaker.SetBackgroundColour(wx.Colour(241, 41, 47))
 
-	def onOpenTrain(self, _):
-		if self.atl.count() > 0:
-			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
-									'Data will be lost', wx.YES_NO | wx.ICON_WARNING)
-			rc = dlg.ShowModal()
-			dlg.Destroy()
-			if rc != wx.ID_YES:
-				return
-
-		dlg = wx.FileDialog(
-			self, message="Choose a Train roster file",
-			defaultDir=self.settings.traindir,
-			defaultFile="",
-			wildcard=wildcard,
-			style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_PREVIEW)
-		if dlg.ShowModal() != wx.ID_OK:
-			dlg.Destroy()
-			return 
-
-		path = dlg.GetPath()
-		dlg.Destroy()
-		
-		self.settings.traindir, self.settings.trainfile = os.path.split(path)
-		self.settings.setModified()
-		
-		self.loadTrainFile(path)
-		self.setExtraTrains()
-		
-	def loadTrainFile(self, fn):
+	def loadTrainRoster(self, fn):
 		self.log.append("loading train file (%s)" % fn)
-		self.parent.setTitle(train=os.path.basename(fn))
 
 		try:
-			self.roster = TrainRoster(fn)
+			roster = TrainRoster(fn)
 		except FileNotFoundError:
 			dlg = wx.MessageDialog(self, 'Unable to open Train roster file %s' % fn,
 				'File Not Found',
@@ -1071,8 +1028,12 @@ class TrainTrackerPanel(wx.Panel):
 			dlg.ShowModal()
 			dlg.Destroy()
 
-			self.roster = None
+			roster = None
+		return roster
 
+	def loadTrainFile(self, fn):
+		self.roster = self.loadTrainRoster(fn)
+		self.parent.setTitle(train=os.path.basename(fn))
 		engRunning = self.atl.getEngineers()
 		self.idleEngineers += engRunning
 		self.chEngineer.SetItems(self.idleEngineers)
@@ -1188,26 +1149,6 @@ class TrainTrackerPanel(wx.Panel):
 				self.bAssign.Enable(True)
 			else:
 				self.bAssign.Enable(False)
-	
-	def onOpenLocos(self, _):
-		dlg = wx.FileDialog(
-			self, message="Choose a locomotive file",
-			defaultDir=self.settings.locodir,
-			defaultFile="",
-			wildcard=wildcard,
-			style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_PREVIEW)
-		if dlg.ShowModal() != wx.ID_OK:
-			dlg.Destroy()
-			return 
-
-		path = dlg.GetPath()
-		dlg.Destroy()
-		
-		self.settings.locodir, self.settings.locofile = os.path.split(path)
-		self.settings.setModified()
-		
-		self.loadLocoFile(path)
-		self.showInfo(self.selectedTrain)
 					
 	def loadLocoFile(self, fn):
 		self.log.append("Loading locomotive file (%s)" % fn)
@@ -1216,8 +1157,7 @@ class TrainTrackerPanel(wx.Panel):
 			self.locos = Locomotives(fn)
 		except FileNotFoundError:
 			dlg = wx.MessageDialog(self, 'Unable to open Locomotives file %s' % fn,
-                   'File Not Found',
-                   wx.OK | wx.ICON_ERROR)
+					'File Not Found', wx.OK | wx.ICON_ERROR)
 			dlg.ShowModal()
 			dlg.Destroy()
 
@@ -1241,34 +1181,6 @@ class TrainTrackerPanel(wx.Panel):
 					ndesc = self.locos.getLoco(rloco)
 
 				self.atl.updateTrain(tid, rloco, ndesc, tInfo["block"])
-					
-	def onOpenEngineer(self, _):
-		if self.atl.count() > 0:
-			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
-	                               'Data will be lost',
-	                               wx.YES_NO | wx.ICON_WARNING)
-			rc = dlg.ShowModal()
-			dlg.Destroy()
-			if rc != wx.ID_YES:
-				return
-
-		dlg = wx.FileDialog(
-			self, message="Choose an engineer file",
-			defaultDir=self.settings.engineerdir,
-			defaultFile="",
-			wildcard=wildcardTxt,
-			style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_PREVIEW)
-		if dlg.ShowModal() != wx.ID_OK:
-			dlg.Destroy()
-			return 
-
-		path = dlg.GetPath()
-		dlg.Destroy()
-		
-		self.settings.engineerdir, self.settings.engineerfile = os.path.split(path)
-		self.settings.setModified()
-		
-		self.loadEngineerFile(path)
 
 	def loadEngineerFile(self, fn, preserveActive=False):
 		self.log.append("loading engineer file (%s)" % fn)
@@ -1720,7 +1632,7 @@ class TrainTrackerPanel(wx.Panel):
 		isExtra = self.trainOrder.isExtraTrain(at.tid) and at.tid not in self.sessionSchedule
 		if self.settings.allowextrarerun and isExtra:
 			self.setExtraTrains()
-			
+		
 		if at.engineer in self.selectedEngineers:
 			self.log.append("Returned engineer %s to pool" % at.engineer)
 			if at.engineer not in self.idleEngineers:
@@ -1897,6 +1809,7 @@ class TrainTrackerPanel(wx.Panel):
 		
 		# no need to retrieve dialog values because the data is saved automatically when OK is pressed
 		# just re-read the file
+		self.parent.setTitle(train=self.settings.trainfile)
 		self.loadTrainFile(os.path.join(self.settings.traindir, self.settings.trainfile))
 		self.setExtraTrains()
 		
@@ -1911,6 +1824,21 @@ class TrainTrackerPanel(wx.Panel):
 		dlg.Destroy()
 		if rc != wx.ID_OK:
 			return
+
+		fn = os.path.join(self.settings.engineerdir, self.settings.engineerfile)
+
+		self.log.append("loading engineer file (%s)" % fn)
+		try:
+			self.engineers = Engineers(fn)
+		except FileNotFoundError:
+			dlg = wx.MessageDialog(self, 'Unable to open Engineer file %s' % fn,
+					'File Not Found',
+					wx.OK | wx.ICON_ERROR)
+			dlg.ShowModal()
+			dlg.Destroy()
+
+			self.engineers = None
+			return
 		
 		for eng in self.engineers:
 			if not eng in allEngs:
@@ -1922,6 +1850,7 @@ class TrainTrackerPanel(wx.Panel):
 
 		self.log.append("New Engineer list: %s" % str(newSelEngs))
 		self.log.append("Currently assigned engineers = %s" % str(busyEngineers))
+		self.parent.setTitle(engineer=self.settings.engineerfile)
 		self.idleEngineers = newSelEngs	
 		self.updateEngQueue()	
 		self.chEngineer.SetItems(self.idleEngineers)
@@ -1932,25 +1861,20 @@ class TrainTrackerPanel(wx.Panel):
 		self.chEngineer.SetSelection(0)
 		self.selectedEngineer = self.chEngineer.GetString(0)
 		
-		self.selectedEngineers = [x for x in self.idleEngineers] + busyEngineers
+		self.selectedEngineers = [x for x in self.idleEngineers] + [x for x in busyEngineers if x in allEngs]
 		
 	def onManageLocos(self, _):
 		dlg = ManageLocosDlg(self, self.locos, self.settings)
 		rc = dlg.ShowModal()
-		
-		if rc == wx.ID_OK:
-			modlocos, delLocos = dlg.getValues()
 			
 		dlg.Destroy()
 				
 		if rc != wx.ID_OK:
 			return
 		
-		for lId in modlocos.keys():
-			self.locos.setDescription(lId, modlocos[lId])
-			
-		for lId in delLocos:
-			self.locos.delete(lId)
+		self.parent.setTitle(loco=self.settings.locofile)
+		path = os.path.join(self.settings.locodir, self.settings.locofile)
+		self.locos = Locomotives(path)
 			
 		self.showInfo(self.selectedTrain)
 		self.updateActiveListLocos()

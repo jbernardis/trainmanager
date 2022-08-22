@@ -2,10 +2,12 @@ import wx
 import json
 import os
 
+from locomotives import Locomotives
+
 wildcard = "JSON file (*.json)|*.json|"	 \
-		   "All files (*.*)|*.*"
+		"All files (*.*)|*.*"
 wildcardTxt = "TXT file (*.txt)|*.txt|"	 \
-		   "All files (*.*)|*.*"
+		"All files (*.*)|*.*"
 
 BTNSZ = (120, 46)
 
@@ -22,16 +24,10 @@ class ManageLocosDlg(wx.Dialog):
 		self.selectedLx = None
 		self.selectedLoco = None
 		self.selectesDesc = None
-		self.modifiedLocos = []
-		self.deletedLocos = []
 
 		self.setModified(False)
 	
-		self.locoObj = locos
-		self.locoOrder = self.locoObj.getLocoList()
-		self.locos = {}
-		for lId in self.locoOrder:
-			self.locos[lId] = self.locoObj.getLoco(lId)
+		self.extractLocoData(locos)
 			
 		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
@@ -101,6 +97,14 @@ class ManageLocosDlg(wx.Dialog):
 		btnSizer = wx.BoxSizer(wx.HORIZONTAL)
 		btnSizer.AddSpacer(10)
 		
+		self.bLoad = wx.Button(self, wx.ID_ANY, "Load", size=BTNSZ)
+		self.bLoad.SetFont(btnFont)
+		self.bLoad.SetToolTip("Load a locomotive list from a file")
+		self.Bind(wx.EVT_BUTTON, self.bLoadPressed, self.bLoad)
+		btnSizer.Add(self.bLoad)
+
+		btnSizer.AddSpacer(10)
+		
 		self.bSave = wx.Button(self, wx.ID_ANY, "Save", size=BTNSZ)
 		self.bSave.SetFont(btnFont)
 		self.bSave.SetToolTip("Save the locomotive list to the currently loaded file")
@@ -146,9 +150,16 @@ class ManageLocosDlg(wx.Dialog):
 		self.SetSizer(hsizer)
 		self.Layout()
 		self.Fit();
+
+	def extractLocoData(self, locoobj):
+		self.locoObj = locoobj
+		self.locoOrder = self.locoObj.getLocoList()
+		self.locos = {}
+		for lId in self.locoOrder:
+			self.locos[lId] = self.locoObj.getLoco(lId)
 		
 	def setTitle(self):
-		title = self.titleString
+		title = self.titleString + " (" + os.path.join(self.settings.locodir, self.settings.locofile) + ")"
 		
 		if self.modified:
 			title += ' *'
@@ -168,16 +179,10 @@ class ManageLocosDlg(wx.Dialog):
 		
 		if locoID in self.locoOrder:
 			dlg = wx.MessageDialog(self, "Loco ID \"%s\" is already in use" % locoID, 
-		                               "Duplicate Name",
-		                               wx.OK | wx.ICON_WARNING)
+					"Duplicate Name", wx.OK | wx.ICON_WARNING)
 			dlg.ShowModal()
 			dlg.Destroy()
 			return
-		
-		if locoID not in self.modifiedLocos:
-			self.modifiedLocos.append(locoID)
-		if locoID in self.deletedLocos:
-			self.deletedLocos.remove(locoID)			
 		
 		self.locoList.add(locoID, self.teDesc.GetValue())
 		self.locoOrder = self.locoList.getLocoOrder()
@@ -189,9 +194,6 @@ class ManageLocosDlg(wx.Dialog):
 		if self.selectedLoco is None:
 			return
 		
-		if self.selectedLoco not in self.modifiedLocos:
-			self.modifiedLocos.append(self.selectedLoco)
-				
 		self.locoList.modify(self.selectedLx, self.teDesc.GetValue())
 		self.locoOrder = self.locoList.getLocoOrder()
 		self.setModified()
@@ -201,11 +203,6 @@ class ManageLocosDlg(wx.Dialog):
 			return
 		if self.selectedLoco is None:
 			return
-		
-		if self.selectedLoco not in self.deletedLocos:
-			self.deletedLocos.append(self.selectedLoco)	
-		if self.selectedLoco in self.modifiedLocos:
-			self.modifiedLocos.remove(self.selectedLoco)			
 		
 		self.locoList.delete(self.selectedLx)
 		self.locoOrder = self.locoList.getLocoOrder()
@@ -228,11 +225,42 @@ class ManageLocosDlg(wx.Dialog):
 	def setModified(self, flag=True):
 		if flag:
 			self.everModified = True
-		if self.modified == flag:
-			return
 		
 		self.modified = flag
 		self.setTitle()
+
+	def bLoadPressed(self, _):
+		if self.modified:
+			dlg = wx.MessageDialog(self, 'Locomotive list has been changed\nPress "Yes" to load a new file and lose these changes,\nor "No" to return and save them.',
+					'Changes will be lost', wx.YES_NO | wx.ICON_WARNING)
+			rc = dlg.ShowModal()
+			dlg.Destroy()
+			if rc != wx.ID_YES:
+				return
+			
+		dlg = wx.FileDialog(
+			self, message="Choose a locomotive file",
+			defaultDir=self.settings.locodir,
+			defaultFile="",
+			wildcard=wildcard,
+			style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_PREVIEW)
+		if dlg.ShowModal() != wx.ID_OK:
+			dlg.Destroy()
+			return 
+
+		path = dlg.GetPath()
+		dlg.Destroy()
+		
+		self.settings.locodir, self.settings.locofile = os.path.split(path)
+		self.settings.setModified()
+		
+		locos = Locomotives(path)
+		self.extractLocoData(locos)
+
+		self.locoList.setData(self.locos, self.locoOrder)
+		self.locoOrder = self.locoList.getLocoOrder()
+
+		self.setModified(False)
 		
 	def bSaveAsPressed(self, _):
 		dlg = wx.FileDialog(self, message="Save Locomotive list to file", defaultDir=self.settings.locodir,
@@ -246,8 +274,10 @@ class ManageLocosDlg(wx.Dialog):
 		
 		self.saveLocos(path)
 		
-		if os.path.basename(path) == self.settings.locofile: # same as "Save"
-			self.setModified(False)
+		self.setModified(False)
+		
+		self.settings.locodir, self.settings.locofile = os.path.split(path)
+		self.settings.setModified()
 		
 	def bSavePressed(self, _):
 		path = os.path.join(self.settings.locodir, self.settings.locofile)
@@ -264,18 +294,7 @@ class ManageLocosDlg(wx.Dialog):
 			self.saveLocos(path)
 			self.setModified(False)
 			
-		if self.everModified:
-			self.EndModal(wx.ID_OK)
-		else:
-			self.EndModal(wx.ID_EXIT)
-			
-		
-	def getValues(self):
-		retval = {}
-		for lid in self.modifiedLocos:
-			retval[lid] = self.locos[lid]
-			
-		return retval, self.deletedLocos
+		self.EndModal(wx.ID_OK)
 		
 	def bCancelPressed(self, _):
 		self.doCancel()
@@ -286,8 +305,7 @@ class ManageLocosDlg(wx.Dialog):
 	def doCancel(self):
 		if self.modified:
 			dlg = wx.MessageDialog(self, 'Locomotive list has been changed\nPress "Yes" to exit and lose changes,\nor "No" to return and save them.',
-		                               'Changes will be lost',
-		                               wx.YES_NO | wx.ICON_WARNING)
+					'Changes will be lost', wx.YES_NO | wx.ICON_WARNING)
 			rc = dlg.ShowModal()
 			dlg.Destroy()
 			if rc != wx.ID_YES:
@@ -326,7 +344,10 @@ class LocoList(wx.ListCtrl):
 	def setData(self, locos, locoOrder):
 		self.locos = locos
 		self.locoOrder = [l for l in locoOrder]
-		self.SetItemCount(len(self.locoOrder))
+		lx = len(self.locoOrder)
+		self.SetItemCount(lx)
+		if lx != 0:
+			self.RefreshItems(0, lx)
 			
 	def getSelection(self):
 		if self.selected is None:

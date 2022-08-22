@@ -1,13 +1,15 @@
+import os
 import wx
 
 wildcardTxt = "TXT file (*.txt)|*.txt|"	 \
-		   "All files (*.*)|*.*"
+				"All files (*.*)|*.*"
 
 BTNSZ = (120, 46)
 
 class ManageEngineersDlg(wx.Dialog):
 	def __init__(self, parent, allEngs, actEngs, busyEngs, settings):
 		wx.Dialog.__init__(self, parent, wx.ID_ANY, "Manage Engineers")
+		self.titleString = "Manage Engineers"
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 	
 		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
@@ -113,7 +115,6 @@ class ManageEngineersDlg(wx.Dialog):
 		
 		vsizer.Add(sz, 0, wx.ALIGN_CENTER_HORIZONTAL)
 		vsizer.AddSpacer(20)
-		vsizer.AddSpacer(20)
 		
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		sz.AddSpacer(20)
@@ -130,24 +131,40 @@ class ManageEngineersDlg(wx.Dialog):
 		sz.Add(self.bDelEng)
 		self.Bind(wx.EVT_BUTTON, self.bDelEngPressed, self.bDelEng)
 		self.bDelEng.Enable(False)
-		
-		sz.AddSpacer(20)
-		self.bSaveAll = wx.Button(self, wx.ID_ANY, "Save\nAll As", size=BTNSZ)
-		self.bSaveAll.SetFont(btnFont)
-		self.bSaveAll.SetToolTip("Save the full list of ALL engineers, including active engineers, to a named file")
-		sz.Add(self.bSaveAll)
-		self.Bind(wx.EVT_BUTTON, self.bSaveAllPressed, self.bSaveAll)
-		
-		sz.AddSpacer(20)
-		self.bSaveAct = wx.Button(self, wx.ID_ANY, "Save\nActive As", size=BTNSZ)
-		self.bSaveAct.SetFont(btnFont)
-		self.bSaveAct.SetToolTip("Save the list of active engineers to a named file")
-		sz.Add(self.bSaveAct)
-		self.Bind(wx.EVT_BUTTON, self.bSaveActPressed, self.bSaveAct)
 
 		sz.AddSpacer(20)
 		
-		vsizer.Add(sz)
+		vsizer.Add(sz, 1, wx.ALIGN_CENTER_HORIZONTAL)		
+		vsizer.AddSpacer(20)
+		
+		sz = wx.BoxSizer(wx.HORIZONTAL)
+		
+		sz.AddSpacer(20)
+		self.bLoad = wx.Button(self, wx.ID_ANY, "Load", size=BTNSZ)
+		self.bLoad.SetFont(btnFont)
+		self.bLoad.SetToolTip("Load an engineer file")
+		sz.Add(self.bLoad)
+		self.Bind(wx.EVT_BUTTON, self.bLoadPressed, self.bLoad)
+
+		sz.AddSpacer(20)
+		
+		self.bSave = wx.Button(self, wx.ID_ANY, "Save", size=BTNSZ)
+		self.bSave.SetFont(btnFont)
+		self.bSave.SetToolTip("Save the full list of ALL engineers, including active engineers, to the current file")
+		sz.Add(self.bSave)
+		self.Bind(wx.EVT_BUTTON, self.bSavePressed, self.bSave)
+		
+		sz.AddSpacer(20)
+		self.bSaveAs = wx.Button(self, wx.ID_ANY, "Save As", size=BTNSZ)
+		self.bSaveAs.SetFont(btnFont)
+		self.bSaveAs.SetToolTip("Save the full list of ALL engineers, including active engineers, to a named file")
+		sz.Add(self.bSaveAs)
+		self.Bind(wx.EVT_BUTTON, self.bSaveAsPressed, self.bSaveAs)
+
+		sz.AddSpacer(20)
+		
+		vsizer.Add(sz, 1, wx.ALIGN_CENTER_HORIZONTAL)		
+		vsizer.AddSpacer(20)
 
 		sz = wx.BoxSizer(wx.HORIZONTAL)
 		
@@ -167,8 +184,7 @@ class ManageEngineersDlg(wx.Dialog):
 
 		sz.AddSpacer(20)
 		
-		vsizer.AddSpacer(20)
-		vsizer.Add(sz, 1, wx.ALIGN_RIGHT)		
+		vsizer.Add(sz, 1, wx.ALIGN_CENTER_HORIZONTAL)		
 		vsizer.AddSpacer(20)
 		
 		hsizer.AddSpacer(20)
@@ -181,15 +197,27 @@ class ManageEngineersDlg(wx.Dialog):
 		self.bDown.Enable(False)
 		
 		self.setModified(False)
-		
+		self.activeModified = False
+
 		self.setCounts()
 		
 		self.SetSizer(hsizer)
 		self.Layout()
 		self.Fit();
+
+		self.setTitle()
+
+	def setTitle(self):
+		fn = os.path.join(self.settings.engineerdir, self.settings.engineerfile)
+		title = self.titleString + " (" + fn + ")"
+		if self.modified:
+			title += " *"
+
+		self.SetTitle(title)
 		
 	def setModified(self, flag=True):
 		self.modified = flag
+		self.setTitle()
 
 	def updateArrays(self):
 		self.availableEngs = sorted([x for x in self.allEngs if x not in self.activeEngs])
@@ -199,6 +227,7 @@ class ManageEngineersDlg(wx.Dialog):
 		self.setAllSelection(sx)
 		
 	def setAllSelection(self, sx):
+		self.lbAll.SetSelection(sx)
 		self.bRight.Enable(sx != wx.NOT_FOUND)
 		self.bDelEng.Enable(sx != wx.NOT_FOUND)
 		
@@ -207,6 +236,7 @@ class ManageEngineersDlg(wx.Dialog):
 		self.setActiveSelection(sx)
 		
 	def setActiveSelection(self, sx):
+		self.lbActive.SetSelection(sx)
 		if sx == wx.NOT_FOUND:
 			self.bLeft.Enable(False)
 			self.bUp.Enable(False)
@@ -232,8 +262,6 @@ class ManageEngineersDlg(wx.Dialog):
 		if sx == wx.NOT_FOUND:
 			return
 		
-		self.setModified()
-		
 		eng = self.lbAll.GetString(sx)
 		self.availableEngs.remove(eng)
 		self.activeEngs.append(eng)
@@ -242,15 +270,18 @@ class ManageEngineersDlg(wx.Dialog):
 		self.lbActive.SetItems(self.activeEngs)
 		self.setCounts()
 		
-		self.setActiveSelection(wx.NOT_FOUND)
-		self.setAllSelection(wx.NOT_FOUND)
+		self.setActiveSelection(len(self.activeEngs)-1)
+		if sx >= len(self.availableEngs):
+			sx = len(self.availableEngs)-1
+			if sx < 0:
+				sx = wx.NOT_FOUND
+		self.setAllSelection(sx)
+		self.activeModified = True
 		
 	def bLeftPressed(self, _):
 		sx = self.lbActive.GetSelection()
 		if sx == wx.NOT_FOUND:
 			return
-		
-		self.setModified()
 		
 		eng = self.lbActive.GetString(sx)
 		self.activeEngs.remove(eng)
@@ -261,8 +292,13 @@ class ManageEngineersDlg(wx.Dialog):
 		self.lbActive.SetItems(self.activeEngs)
 		self.setCounts()
 		
-		self.setActiveSelection(wx.NOT_FOUND)
-		self.setAllSelection(wx.NOT_FOUND)
+		self.setAllSelection(len(self.availableEngs)-1)
+		if sx >= len(self.activeEngs):
+			sx = len(self.activeEngs)-1
+			if sx < 0:
+				sx = wx.NOT_FOUND
+		self.setActiveSelection(sx)
+		self.activeModified = True
 		
 	def bUpPressed(self, _):
 		sx = self.lbActive.GetSelection()
@@ -284,7 +320,7 @@ class ManageEngineersDlg(wx.Dialog):
 		self.lbActive.SetSelection(sx-1)
 		
 		self.setActiveSelection(sx-1)
-		self.setModified()
+		self.activeModified = True
 		
 	def bDownPressed(self, _):
 		sx = self.lbActive.GetSelection()
@@ -306,7 +342,7 @@ class ManageEngineersDlg(wx.Dialog):
 		self.lbActive.SetSelection(sx+1)
 		
 		self.setActiveSelection(sx+1)
-		self.setModified()
+		self.activeModified = True
 		
 	def bAddEngPressed(self, _):
 		dlg = wx.TextEntryDialog(
@@ -325,8 +361,7 @@ class ManageEngineersDlg(wx.Dialog):
 		
 		if eng in self.allEngs or eng in self.busyEngs:
 			dlg = wx.MessageDialog(self, "Engineer \"%s\" is already in the list" % eng, 
-		                               "Duplicate Name",
-		                               wx.OK | wx.ICON_WARNING)
+					"Duplicate Name", wx.OK | wx.ICON_WARNING)
 			dlg.ShowModal()
 			dlg.Destroy()
 			return
@@ -341,6 +376,7 @@ class ManageEngineersDlg(wx.Dialog):
 
 		self.lbAll.SetSelection(ix)		
 		self.setAllSelection(ix)
+		self.setModified()
 		
 	def bDelEngPressed(self, _):
 		sx = self.lbAll.GetSelection()
@@ -362,15 +398,65 @@ class ManageEngineersDlg(wx.Dialog):
 		cActive = len(self.activeEngs)
 		self.stCountAll.SetLabel("( %d Available/%d total)" % (cAvail, cAll))
 		self.stCountActive.SetLabel("(%d Active)" % cActive)
+
+	def bLoadPressed(self, _):
+		if self.modified:
+			dlg = wx.MessageDialog(self, 'Engineer list has been changed\nPress "Yes" to load new file and lose changes,\nor "No" to return and save them.',
+					'Changes will be lost', wx.YES_NO | wx.ICON_WARNING)
+			rc = dlg.ShowModal()
+			dlg.Destroy()
+			if rc != wx.ID_YES:
+				return
+
+		dlg = wx.FileDialog(
+			self, message="Choose an engineer file",
+			defaultDir=self.settings.engineerdir,
+			defaultFile="",
+			wildcard=wildcardTxt,
+			style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_PREVIEW)
+		if dlg.ShowModal() != wx.ID_OK:
+			dlg.Destroy()
+			return 
+
+		path = dlg.GetPath()
+		dlg.Destroy()
 		
-	def bSaveAllPressed(self, _):
-		self.saveEngineers(sorted(self.allEngs), "ALL engineers")
+		self.settings.engineerdir, self.settings.engineerfile = os.path.split(path)
+		self.settings.setModified()
+
+		with open(path, "r") as x:
+			self.engineers = [e.strip() for e in x.readlines()]
+
+		self.allEngs = [x for x in self.engineers]
+		removed = [x for x in self.activeEngs if x not in self.allEngs]
+		if len(removed) > 0:
+			dlg = wx.MessageDialog(self, "Engineer(s) [%s] in active list\nare not in the available list.\n\nThey have been removed from the active list." % ",".join(removed),
+					'Engineers Removed', wx.OK | wx.ICON_INFORMATION)
+			rc = dlg.ShowModal()
+			dlg.Destroy()
+			self.activeModified = True
+		removed = [x for x in self.busyEngs if x not in self.allEngs]
+		if len(removed) > 0:
+			dlg = wx.MessageDialog(self, "Engineer(s) [%s] are busy with trains but\nare not in the available list.\n\nThey have been retained." % ",".join(removed),
+					'Engineers Retained', wx.OK | wx.ICON_INFORMATION)
+			rc = dlg.ShowModal()
+			dlg.Destroy()
+
+		self.activeEngs = [x for x in self.activeEngs if x in self.allEngs]
+		self.updateArrays()
+
+		self.lbAll.SetItems(self.availableEngs)
+		self.lbActive.SetItems(self.activeEngs)
+		self.setCounts()
+
+		self.setModified(False)
 		
-	def bSaveActPressed(self, _):
-		self.saveEngineers(self.activeEngs, "Active engineers")
+	def bSavePressed(self, _):
+		fn = os.path.join(self.settings.engineerdir, self.settings.engineerfile)
+		self.saveToFile(fn)
 		
-	def saveEngineers(self, engList, label):
-		dlg = wx.FileDialog(self, message="Save %s list to file" % label, defaultDir=self.settings.engineerdir,
+	def bSaveAsPressed(self, _):
+		dlg = wx.FileDialog(self, message="Save engineer list to file", defaultDir=self.settings.engineerdir,
 			defaultFile="", wildcard=wildcardTxt, style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
 		if dlg.ShowModal() != wx.ID_OK:
 			dlg.Destroy()
@@ -378,10 +464,18 @@ class ManageEngineersDlg(wx.Dialog):
 		
 		path = dlg.GetPath()
 		dlg.Destroy()
-	
-		with open(path, "w") as ofp:
-			for ln in engList:
+
+		self.settings.engineerdir, self.settings.engineerfile = os.path.split(path)
+		self.settings.setModified()
+
+		self.saveToFile(path)
+		
+	def saveToFile(self, fn):
+		with open(fn, "w") as ofp:
+			for ln in self.allEngs:
 				ofp.write("%s\n" % ln)
+		
+		self.setModified(False)
 		
 	def bOKPressed(self, _):
 		self.EndModal(wx.ID_OK)
@@ -398,8 +492,7 @@ class ManageEngineersDlg(wx.Dialog):
 	def doCancel(self):
 		if self.modified:
 			dlg = wx.MessageDialog(self, 'Engineer list has been changed\nPress "Yes" to exit and lose changes,\nor "No" to return and save them.',
-		                               'Changes will be lost',
-		                               wx.YES_NO | wx.ICON_WARNING)
+					'Changes will be lost', wx.YES_NO | wx.ICON_WARNING)
 			rc = dlg.ShowModal()
 			dlg.Destroy()
 			if rc != wx.ID_YES:

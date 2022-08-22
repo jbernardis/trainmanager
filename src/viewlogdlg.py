@@ -65,8 +65,7 @@ class ViewLogDlg(wx.Dialog):
 		self.textToFind = self.teTextToFind.GetValue()
 		if not self.findText(self.textToFind, 0):
 			dlg = wx.MessageDialog(self, 'Search string not found.',
-	                               'Not Found',
-	                               wx.OK | wx.ICON_INFORMATION)
+					'Not Found', wx.OK | wx.ICON_INFORMATION)
 			dlg.ShowModal()
 			dlg.Destroy()
 
@@ -77,8 +76,7 @@ class ViewLogDlg(wx.Dialog):
 		
 		if not self.findText(self.textToFind, self.index+1):
 			dlg = wx.MessageDialog(self, 'Search string not found.\nPress "Next" again to wrap to the start of the log',
-	                               'Not Found',
-	                               wx.OK | wx.ICON_INFORMATION)
+					'Not Found', wx.OK | wx.ICON_INFORMATION)
 			dlg.ShowModal()
 			dlg.Destroy()
 		

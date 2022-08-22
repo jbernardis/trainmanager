@@ -1,11 +1,12 @@
 import wx
 import os
 import json
+from trainroster import TrainRoster
 
 wildcardTxt = "TXT file (*.txt)|*.txt|"	 \
-		   "All files (*.*)|*.*"
+			"All files (*.*)|*.*"
 wildcard = "JSON file (*.json)|*.json|"	 \
-		   "All files (*.*)|*.*"
+			"All files (*.*)|*.*"
 
 BTNSZ = (120, 46)
 BTNSZSMALL = (80, 30)
@@ -27,9 +28,13 @@ class ManageTrainsDlg(wx.Dialog):
 	def __init__(self, parent, roster, locos, settings):
 		wx.Dialog.__init__(self, parent, wx.ID_ANY, "")
 		self.Bind(wx.EVT_CLOSE, self.onClose)
+
+		self.parent = parent
+		self.log = self.parent.log
 		
 		self.titleString = "Manage Trains"
 		self.settings = settings
+		self.filename = os.path.join(self.settings.traindir, self.settings.trainfile)
 		
 		self.modified = None
 		self.everModified = False
@@ -37,35 +42,12 @@ class ManageTrainsDlg(wx.Dialog):
 		self.selectedTid = None
 		self.selectedStep = None
 	
-		self.trains = roster
 		self.locos = locos
 		self.locoList = ["<none>"] + locos.getLocoListFull()
 		self.locoOnlyList = ["<none>"] + locos.getLocoList()
+
+		self.setRoster(roster)
 		
-		self.trainList = [t for t in self.trains]
-		
-		self.roster = {}
-		for t in self.trainList:
-			ti = self.trains.getTrain(t)
-			info = {"dir": ti["dir"],
-				"loco": ti["loco"],
-				"desc": ti["desc"],
-				"block": ti["block"],
-				"normalloco": ti["normalloco"],
-				"origin": {
-					"loc": ti["origin"]["loc"],
-					"track": ti["origin"]["track"]
-				},
-				"terminus": {
-					"loc": ti["terminus"]["loc"],
-					"track": ti["terminus"]["track"]
-				}
-			}
-			
-			steps = [[s[0], s[1], s[2]] for s in ti["steps"]]
-			info["steps"] = steps
-			
-			self.roster[t] = info
 		
 		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
 		textFont = wx.Font(wx.Font(12, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
@@ -327,6 +309,13 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		btnSizer = wx.BoxSizer(wx.HORIZONTAL)
 		
+		self.bLoad = wx.Button(self, wx.ID_ANY, "Load", size=BTNSZ)
+		self.bLoad.SetFont(btnFont)
+		self.bLoad.SetToolTip("Load a train roster file")
+		self.Bind(wx.EVT_BUTTON, self.bLoadPressed, self.bLoad)
+		btnSizer.Add(self.bLoad)
+		
+		btnSizer.AddSpacer(10)
 		self.bAdd = wx.Button(self, wx.ID_ANY, "Add\nTrain", size=BTNSZ)
 		self.bAdd.SetFont(btnFont)
 		self.bAdd.SetToolTip("Add a new train to the list")
@@ -408,6 +397,35 @@ class ManageTrainsDlg(wx.Dialog):
 		if len(self.trainList) > 0:
 			self.cbTrains.SetSelection(0)
 			self.setSelectedTrain(self.trainList[0])
+
+	def setRoster(self, roster):
+		self.trainList = []
+		self.roster = {}
+		if roster is None:
+			return
+
+		self.trainList = [t for t in roster]
+		for t in roster:
+			ti = roster.getTrain(t)
+			info = {"dir": ti["dir"],
+				"loco": ti["loco"],
+				"desc": ti["desc"],
+				"block": ti["block"],
+				"normalloco": ti["normalloco"],
+				"origin": {
+					"loc": ti["origin"]["loc"],
+					"track": ti["origin"]["track"]
+				},
+				"terminus": {
+					"loc": ti["terminus"]["loc"],
+					"track": ti["terminus"]["track"]
+				}
+			}
+			
+			steps = [[s[0], s[1], s[2]] for s in ti["steps"]]
+			info["steps"] = steps
+			
+			self.roster[t] = info
 		
 	def onChTrains(self, _):
 		tx = self.cbTrains.GetSelection()
@@ -441,6 +459,50 @@ class ManageTrainsDlg(wx.Dialog):
 			loc = "%d" % vloc
 		self.teLoc.SetValue(loc)
 		self.teStop.SetValue(self.selectedTrainInfo["steps"][tx][1])
+
+	def bLoadPressed(self, _):
+		if self.modified:
+			dlg = wx.MessageDialog(self, "The current train roster has been modified but not saved.\nPress \"Yes\" to continue, or\n\Press \"No\" to cancel and save changes", 
+					"Confirm loss of changes", wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING)
+			rc = dlg.ShowModal()
+		
+			dlg.Destroy()
+			if rc != wx.ID_YES:
+				return
+
+		dlg = wx.FileDialog(
+			self, message="Choose a Train roster file",
+			defaultDir=self.settings.traindir,
+			defaultFile="",
+			wildcard=wildcard,
+			style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_PREVIEW)
+		if dlg.ShowModal() != wx.ID_OK:
+			dlg.Destroy()
+			return 
+
+		self.filename = dlg.GetPath()
+		dlg.Destroy()
+		
+		self.settings.traindir, self.settings.trainfile = os.path.split(self.filename)
+		self.settings.setModified()
+		
+		self.log.append("loading train file (%s)" % self.filename)
+
+		try:
+			roster = TrainRoster(self.filename)
+		except FileNotFoundError:
+			dlg = wx.MessageDialog(self, 'Unable to open Train roster file %s' % self.filename,
+				'File Not Found',
+				wx.OK | wx.ICON_ERROR)
+			dlg.ShowModal()
+			dlg.Destroy()
+
+			return
+
+		self.setRoster(roster)
+		self.setTitle()
+		self.everModified = True
+		self.setModified(False)
 		
 	def bAddPressed(self, _):
 		dlg = wx.TextEntryDialog(self, 'Enter New Train Number/Name', 'Train ID', '')
@@ -455,8 +517,8 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		if trainID in self.trainList:
 			dlg = wx.MessageDialog(self, "A train with the ID/Name \"%s\" already exists" % trainID, 
-		                               "Duplicate Name",
-		                               wx.OK | wx.ICON_WARNING)
+					"Duplicate Name",
+					wx.OK | wx.ICON_WARNING)
 			dlg.ShowModal()
 			dlg.Destroy()
 			return
@@ -519,8 +581,8 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		if trainID in self.trainList:
 			dlg = wx.MessageDialog(self, "A train with the ID/Name \"%s\" already exists" % trainID, 
-		                               "Duplicate Name",
-		                               wx.OK | wx.ICON_WARNING)
+						"Duplicate Name",
+						wx.OK | wx.ICON_WARNING)
 			dlg.ShowModal()
 			dlg.Destroy()
 			return
@@ -616,8 +678,8 @@ class ManageTrainsDlg(wx.Dialog):
 			
 			if newID in self.trainList:
 				dlg = wx.MessageDialog(self, "A train with the ID/Name \"%s\" already exists" % newID, 
-			                               "Duplicate Name",
-			                               wx.OK | wx.ICON_WARNING)
+						"Duplicate Name",
+						wx.OK | wx.ICON_WARNING)
 				dlg.ShowModal()
 				dlg.Destroy()
 				newID = None
@@ -642,8 +704,7 @@ class ManageTrainsDlg(wx.Dialog):
 			return
 		
 		dlg = wx.MessageDialog(self, "This will delete train %s from the roster.\n\nAre you sure?\n\nYes to Delete, No to Cancel" % self.selectedTid, 
-	                               "Confirm Delete",
-	                               wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING)
+					"Confirm Delete", wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING)
 		rc = dlg.ShowModal()
 		
 		dlg.Destroy()
@@ -816,7 +877,7 @@ class ManageTrainsDlg(wx.Dialog):
 		self.lcSteps.setData(self.selectedTrainInfo["steps"])
 		
 	def setTitle(self):
-		title = self.titleString
+		title = self.titleString + "(" + self.filename + ")"
 		
 		if self.modified:
 			title += ' *'
@@ -843,6 +904,8 @@ class ManageTrainsDlg(wx.Dialog):
 		dlg.Destroy()
 		
 		self.saveTrains(path)
+		self.settings.traindir, self.settings.trainfile = os.path.split(path)
+		self.settings.setModified()
 		
 		if os.path.basename(path) == self.settings.trainfile: # same as "Save"
 			self.setModified(False)
@@ -868,7 +931,7 @@ class ManageTrainsDlg(wx.Dialog):
 			self.EndModal(wx.ID_EXIT)
 		
 	def getValues(self):
-		return self.roster
+		return os.path.basename(self.filename), self.roster
 	
 	def bCancelPressed(self, _):
 		self.doCancel()
