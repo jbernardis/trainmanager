@@ -20,7 +20,6 @@ class ManageLocosDlg(wx.Dialog):
 		self.settings = settings
 		
 		self.modified = None
-		self.everModified = False
 		self.selectedLx = None
 		self.selectedLoco = None
 		self.selectesDesc = None
@@ -223,9 +222,6 @@ class ManageLocosDlg(wx.Dialog):
 		self.teDesc.SetValue(self.selectedDesc)
 		
 	def setModified(self, flag=True):
-		if flag:
-			self.everModified = True
-		
 		self.modified = flag
 		self.setTitle()
 

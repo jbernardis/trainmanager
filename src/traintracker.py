@@ -44,7 +44,6 @@ VERSIONDATE = "20-August-2022"
 
 BTNSZ = (120, 46)
 
-MENU_FILE_LOAD_ORDER = 102
 MENU_FILE_VIEW_LOG = 110
 MENU_FILE_CLEAR_LOG = 111
 MENU_FILE_SAVE_LOG = 112
@@ -129,11 +128,6 @@ class MainFrame(wx.Frame):
 
 		self.menuFile = wx.Menu()
 
-		i = wx.MenuItem(self.menuFile, MENU_FILE_LOAD_ORDER, "Load Train Order", helpString="Load Train Order/Sequence file")
-		self.menuFile.Append(i)
-		
-		self.menuFile.AppendSeparator()
-		
 		i = wx.MenuItem(self.menuFile, MENU_FILE_VIEW_LOG, "View Log", helpString="View Log")
 		self.menuFile.Append(i)
 		
@@ -299,7 +293,6 @@ class MainFrame(wx.Frame):
 		self.panel = TrainTrackerPanel(self)
 		sizer.Add(self.panel)
 		
-		self.Bind(wx.EVT_MENU, self.panel.onOpenOrder, id=MENU_FILE_LOAD_ORDER)
 		self.Bind(wx.EVT_MENU, self.panel.onViewLog, id=MENU_FILE_VIEW_LOG)
 		self.Bind(wx.EVT_MENU, self.panel.onClearLog, id=MENU_FILE_CLEAR_LOG)
 		self.Bind(wx.EVT_MENU, self.panel.onSaveLog, id=MENU_FILE_SAVE_LOG)
@@ -1217,35 +1210,6 @@ class TrainTrackerPanel(wx.Panel):
 			self.chEngineer.SetSelection(wx.NOT_FOUND)
 			self.selectedEngineer = None
 			
-	def onOpenOrder(self, _):
-		if self.atl.count() > 0:
-			dlg = wx.MessageDialog(self, 'This will clear out any active trains.\nPress "Yes" to proceed, or "No" to cancel.',
-					'Data will be lost',
-					wx.YES_NO | wx.ICON_WARNING)
-			rc = dlg.ShowModal()
-			dlg.Destroy()
-			if rc != wx.ID_YES:
-				return
-			
-		dlg = wx.FileDialog(
-			self, message="Choose an order file",
-			defaultDir=self.settings.orderdir,
-			defaultFile="",
-			wildcard=wildcard,
-			style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_PREVIEW)
-		if dlg.ShowModal() != wx.ID_OK:
-			dlg.Destroy()
-			return 
-
-		path = dlg.GetPath()
-		dlg.Destroy()
-		
-		self.settings.orderdir, self.settings.orderfile = os.path.split(path)
-		self.settings.setModified()
-		
-		self.loadOrderFile(path)
-		self.setExtraTrains()
-		
 	def loadOrderFile(self, fn):
 		self.log.append("loading train order file (%s)" % fn)
 		self.parent.setTitle(order=os.path.basename(fn))
@@ -1779,14 +1743,18 @@ class TrainTrackerPanel(wx.Panel):
 	def onManageOrder(self, _):
 		dlg = ManageOrderDlg(self, self.trainOrder, self.roster.getTrainList(), self.settings)
 		rc = dlg.ShowModal()
-		
-		if rc == wx.ID_OK:
-			norder, nextra = dlg.getValues()
 			
 		dlg.Destroy()
 		
 		if rc != wx.ID_OK:
 			return
+
+		self.parent.setTitle(order=self.settings.orderfile)
+		fn = os.path.join(self.settings.orderdir, self.settings.orderfile)
+		self.trainOrder = Order(fn)
+
+		norder = self.trainOrder.getOrder()
+		nextra = self.trainOrder.getExtras()
 		
 		self.log.append("Modified full train order to %s" % str(norder))
 		self.log.append("Modified extra trains to %s" % str(nextra))

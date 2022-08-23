@@ -1,8 +1,11 @@
+from itertools import filterfalse
 import wx
+import os
+from order import Order
 
 BTNSZ = (120, 46)
 wildcardJson = "JSON file (*.json)|*.json|"	 \
-		   "All files (*.*)|*.*"
+				"All files (*.*)|*.*"
 
 class ManageOrderDlg(wx.Dialog):
 	def __init__(self, parent, order, alltrains, settings):
@@ -10,16 +13,12 @@ class ManageOrderDlg(wx.Dialog):
 		self.Bind(wx.EVT_CLOSE, self.onClose)
 		
 		self.titleString = "Manage Train Order"
-		self.order = order
 		self.settings = settings
 		
-		self.orderTrains = order.getOrder()
-		self.extraTrains = order.getExtras()
-		self.allTrains = sorted([t for t in alltrains])
-		self.availableTrains = [t for t in self.allTrains if t not in self.orderTrains and t not in self.extraTrains]
+		self.allTrains = sorted([t for t in alltrains])		
+		self.setArrays(order)
 		
 		self.modified = None
-		self.everModified = False
 		self.setModified(False)
 
 		btnFont = wx.Font(wx.Font(10, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
@@ -122,6 +121,13 @@ class ManageOrderDlg(wx.Dialog):
 		hsizer.AddSpacer(20)
 		
 		btnSizer = wx.BoxSizer(wx.HORIZONTAL)
+		
+		self.bLoad = wx.Button(self, wx.ID_ANY, "Load", size=BTNSZ)
+		self.bLoad.SetFont(btnFont)
+		self.bLoad.SetToolTip("LOad a new train order from a file")
+		self.Bind(wx.EVT_BUTTON, self.bLoadPressed, self.bLoad)
+		btnSizer.Add(self.bLoad)
+
 		btnSizer.AddSpacer(10)
 		
 		self.bSave = wx.Button(self, wx.ID_ANY, "Save", size=BTNSZ)
@@ -138,29 +144,29 @@ class ManageOrderDlg(wx.Dialog):
 		self.Bind(wx.EVT_BUTTON, self.bSaveAsPressed, self.bSaveAs)
 		btnSizer.Add(self.bSaveAs)
 		
-		btnSizer.AddSpacer(20)
+		btnSizer2 = wx.BoxSizer(wx.HORIZONTAL)
 		
 		self.bOK = wx.Button(self, wx.ID_ANY, "OK", size=BTNSZ)
 		self.bOK.SetFont(btnFont)
 		self.bOK.SetToolTip("Exit the dialog box saving any pending changes to the currently loaded file")
 		self.Bind(wx.EVT_BUTTON, self.bOKPressed, self.bOK)
-		btnSizer.Add(self.bOK)
+		btnSizer2.Add(self.bOK)
 		
-		btnSizer.AddSpacer(10)
+		btnSizer2.AddSpacer(10)
 		
 		self.bCancel = wx.Button(self, wx.ID_ANY, "Cancel", size=BTNSZ)
 		self.bCancel.SetFont(btnFont)
 		self.bCancel.SetToolTip("Exit the dialog box discarding any pending changes (since last save)")
 		self.Bind(wx.EVT_BUTTON, self.bCancelPressed, self.bCancel)
-		btnSizer.Add(self.bCancel)
+		btnSizer2.Add(self.bCancel)
 
-		btnSizer.AddSpacer(10)
-		
 		vsizer = wx.BoxSizer(wx.VERTICAL)		
 		vsizer.AddSpacer(20)
 		vsizer.Add(hsizer, 0, wx.ALIGN_CENTER_HORIZONTAL)
 		vsizer.AddSpacer(20)
 		vsizer.Add(btnSizer, 0, wx.ALIGN_CENTER_HORIZONTAL)
+		vsizer.AddSpacer(20)
+		vsizer.Add(btnSizer2, 0, wx.ALIGN_CENTER_HORIZONTAL)
 		vsizer.AddSpacer(20)
 		
 		self.SetSizer(vsizer)
@@ -168,10 +174,10 @@ class ManageOrderDlg(wx.Dialog):
 		self.Fit();
 		
 		self.setButtons()
-
 		
 	def setTitle(self):
-		title = self.titleString
+		fn = os.path.join(self.settings.orderdir, self.settings.orderfile)
+		title = self.titleString + " (" + fn + ")"
 		
 		if self.modified:
 			title += ' *'
@@ -179,15 +185,8 @@ class ManageOrderDlg(wx.Dialog):
 		self.SetTitle(title)
 		
 	def setModified(self, flag=True):
-		if flag:
-			self.everModified = True
-			
-		if self.modified == flag:
-			return
-		
 		self.modified = flag
-		self.setTitle()
-		
+		self.setTitle()	
 		
 	def onLbAllSelect(self, _):
 		self.setButtons()
@@ -349,10 +348,89 @@ class ManageOrderDlg(wx.Dialog):
 			self.lbAll.EnsureVisible(ix)
 			self.lbAll.SetSelection(ix)
 		self.setButtons()
-		
+
+	def setArrays(self, order):
+		self.order = order
+		self.orderTrains = order.getOrder()
+		try:
+			self.lbSchedule.SetItems(self.orderTrains)
+		except:
+			pass
+		self.extraTrains = order.getExtras()
+		try:
+			self.lbExtra.SetItems(self.extraTrains)
+		except:
+			pass
+		self.setAvailableTrains()
+
 	def setAvailableTrains(self):
 		self.availableTrains = [t for t in self.allTrains if t not in self.orderTrains and t not in self.extraTrains]
-		self.lbAll.SetItems(self.availableTrains)
+		try:
+			self.lbAll.SetItems(self.availableTrains)
+		except:
+			pass
+
+	def bLoadPressed(self, _):
+		if self.modified:
+			dlg = wx.MessageDialog(self, 'The current train order has changed.\nPress "Yes" to proceed and lose changes, or\n"No" to cancel.',
+					'Changes will be lost',
+					wx.YES_NO | wx.ICON_WARNING)
+			rc = dlg.ShowModal()
+			dlg.Destroy()
+			if rc != wx.ID_YES:
+				return
+			
+		dlg = wx.FileDialog(
+			self, message="Choose an order file",
+			defaultDir=self.settings.orderdir,
+			defaultFile="",
+			wildcard=wildcardJson,
+			style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_PREVIEW)
+		if dlg.ShowModal() != wx.ID_OK:
+			dlg.Destroy()
+			return 
+
+		path = dlg.GetPath()
+		dlg.Destroy()
+		
+		
+		order = Order(path)
+
+		modFlag = False
+
+		#determine if order references trains than are not in alltrains
+		oTrains = order.getOrder()
+		oMissing = [t for t in oTrains if t not in self.allTrains]
+		eTrains = order.getExtras()
+		eMissing = [t for t in eTrains if t not in self.allTrains]
+
+		if len(oMissing) > 0 or len(eMissing) > 0:
+			txt = "This order file references the following\ntrains that are not in the current roster:\n"
+			if len(oMissing) > 0:
+				txt += ("Scheduled: %s\n" % ",".join(oMissing))
+			if len(eMissing) > 0:
+				txt += ("Extra: %s\n" % ",".join(eMissing))
+			txt += "\nPress\"Yes\" remove these trains from the order, or\n\"No\" to cancel."
+
+			dlg = wx.MessageDialog(self, txt, "Referencing unknown trains",	wx.YES_NO | wx.ICON_WARNING)
+			rc = dlg.ShowModal()
+			dlg.Destroy()
+			if rc != wx.ID_YES:
+				return
+
+			oNew = [t for t in oTrains if t in self.allTrains]
+			eNew = [t for t in eTrains if t in self.allTrains]
+
+			order.setNewOrder(oNew)
+			order.setNewExtras(eNew)
+			modFlag = True
+
+		self.settings.orderdir, self.settings.orderfile = os.path.split(path)
+		self.settings.setModified()
+		self.setModified(modFlag)
+
+		self.setArrays(order)
+
 
 	def bSavePressed(self, _):
 		self.doSave()
@@ -373,11 +451,7 @@ class ManageOrderDlg(wx.Dialog):
 	def bOKPressed(self, _):
 		if self.modified:
 			self.doSave()
-			self.EndModal(wx.ID_OK)
-		elif self.everModified:
-			self.EndModal(wx.ID_OK)
-		else:
-			self.EndModal(wx.ID_EXIT)
+		self.EndModal(wx.ID_OK)
 		
 	def doSave(self):
 		self.order.setNewOrder(self.orderTrains)
@@ -401,7 +475,3 @@ class ManageOrderDlg(wx.Dialog):
 				return
 
 		self.EndModal(wx.ID_CANCEL)
-		
-	def getValues(self):
-		return self.orderTrains, self.extraTrains
-

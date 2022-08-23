@@ -37,7 +37,6 @@ class ManageTrainsDlg(wx.Dialog):
 		self.filename = os.path.join(self.settings.traindir, self.settings.trainfile)
 		
 		self.modified = None
-		self.everModified = False
 		
 		self.selectedTid = None
 		self.selectedStep = None
@@ -501,7 +500,6 @@ class ManageTrainsDlg(wx.Dialog):
 
 		self.setRoster(roster)
 		self.setTitle()
-		self.everModified = True
 		self.setModified(False)
 		
 	def bAddPressed(self, _):
@@ -885,8 +883,6 @@ class ManageTrainsDlg(wx.Dialog):
 		self.SetTitle(title)
 				
 	def setModified(self, flag=True):
-		if flag:
-			self.everModified = True
 		if self.modified == flag:
 			return
 		
@@ -925,10 +921,7 @@ class ManageTrainsDlg(wx.Dialog):
 			self.saveTrains(path)
 			self.setModified(False)
 			
-		if self.everModified:
-			self.EndModal(wx.ID_OK)
-		else:
-			self.EndModal(wx.ID_EXIT)
+		self.EndModal(wx.ID_OK)
 		
 	def getValues(self):
 		return os.path.basename(self.filename), self.roster
