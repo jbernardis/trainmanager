@@ -39,8 +39,8 @@ from sessionscheduledlg import SessionScheduleDlg
 # self.onDCCMessage(dummyDCCEvt("2216", "10"))
 # self.onDCCMessage(dummyDCCEvt("2216", "0"))
 
-DEVELOPMODE = True
-VERSIONDATE = "20-August-2022"
+DEVELOPMODE = False
+VERSIONDATE = "8-September-2022"
 
 BTNSZ = (120, 46)
 

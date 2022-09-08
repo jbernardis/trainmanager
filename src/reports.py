@@ -44,6 +44,9 @@ class Report:
 		orderTrains = order.getOrder()
 		extraTrains = order.getExtras()
 		extras = [t for t in extraTrains if t not in schedule]
+		if len(schedule) == 0:
+			schedule = orderTrains
+
 		if len(extraTrains) > 0:	
 			dlg = ChooseExtrasDlg(self.parent, schedule, extras)
 			rc = dlg.ShowModal()
