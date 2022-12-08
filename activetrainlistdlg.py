@@ -18,6 +18,7 @@ class ActiveTrainListDlg(wx.Dialog):
 		vsz.AddSpacer(20)
 		
 		self.lcActive = ActiveTrainListCtrl(self)
+		self.lcActive.setShowAttention(False)
 		vsz.Add(self.lcActive)
 		
 		self.atl.addDisplay("dlg", self.lcActive)
@@ -31,8 +32,8 @@ class ActiveTrainListDlg(wx.Dialog):
 		
 		self.SetSizer(hsz)
 		self.Layout()
-		self.Fit();
-		
+		self.Fit()
+
 	def removeActiveTrain(self, tx):
 		self.parent.removeActiveTrain(tx)
 		

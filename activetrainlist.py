@@ -3,7 +3,8 @@ FWD_28 = 2
 REV_128 = 3
 REV_28 = 4
 STOP = 5
-		
+
+
 class ActiveTrainList:
 	def __init__(self):
 		self.trains = {}

@@ -10,6 +10,7 @@ TIMECOL = 10
 TIDCOL = 0
 DIRCOL = 2		
 
+
 class ActiveTrainListCtrl(wx.ListCtrl):
 	def __init__(self, parent):
 		self.parent = parent
@@ -23,7 +24,7 @@ class ActiveTrainListCtrl(wx.ListCtrl):
 		self.altFlag = False
 		self.unstartedthreshold = 600
 		self.stoppedthreshold = 120
-
+		self.showAttentionAtributes = True
 		
 		self.InsertColumn(0, "Train")
 		self.InsertColumn(1, "Origin")
@@ -105,6 +106,9 @@ class ActiveTrainListCtrl(wx.ListCtrl):
 
 	def ticker(self):
 		self.altFlag = not self.altFlag
+
+	def setShowAttention(self, flag=True):
+		self.showAttentionAtributes = flag
 		
 	def refreshAll(self):
 		self.refreshItemCount()
@@ -312,17 +316,18 @@ class ActiveTrainListCtrl(wx.ListCtrl):
 		if hilite:
 			return self.hilite
 
-		if not at.hasStarted and at.time > self.unstartedthreshold:
-			if self.altFlag:
-				return self.attentionA
-			else:
-				return self.attentionB
+		if self.showAttentionAtributes:
+			if not at.hasStarted and at.time > self.unstartedthreshold:
+				if self.altFlag:
+					return self.attentionA
+				else:
+					return self.attentionB
 
-		if at.stopTime is not None and at.stopTime > self.stoppedthreshold:
-			if self.altFlag:
-				return self.attentionA
-			else:
-				return self.attentionB
+			if at.stopTime is not None and at.stopTime > self.stoppedthreshold:
+				if self.altFlag:
+					return self.attentionA
+				else:
+					return self.attentionB
 
 		if at.engineer == "ATC":
 			if item % 2 == 1:

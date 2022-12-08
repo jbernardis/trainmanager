@@ -40,7 +40,7 @@ from sessionscheduledlg import SessionScheduleDlg
 # self.onDCCMessage(dummyDCCEvt("2216", "0"))
 
 DEVELOPMODE = False
-VERSIONDATE = "8-September-2022"
+VERSIONDATE = "7-December-2022"
 
 BTNSZ = (120, 46)
 
@@ -75,6 +75,7 @@ MENU_DCC_SETUPBAUD = 504
 MENU_VIEW_ENG_QUEUE = 601
 MENU_VIEW_ACTIVE_TRAINS = 602
 MENU_VIEW_LEGEND = 603
+MENU_VIEW_SHOWATTENTION = 604
 MENU_VIEW_SORT = 610
 MENU_SORT_TID = 650
 MENU_SORT_TIME = 651
@@ -175,7 +176,7 @@ class MainFrame(wx.Frame):
 		i = wx.MenuItem(self.menuSort, MENU_SORT_ASCENDING, "Ascending", helpString="Sort ascending", kind=wx.ITEM_CHECK)
 		self.menuSort.Append(i)
 		i.Check(False)
-		
+
 		self.menuView = wx.Menu()
 		
 		i = wx.MenuItem(self.menuView, MENU_VIEW_SORT, "Sort Active Trains", helpString="Change sorting parameters", subMenu=self.menuSort)
@@ -188,7 +189,11 @@ class MainFrame(wx.Frame):
 		
 		i = wx.MenuItem(self.menuView, MENU_VIEW_ACTIVE_TRAINS, "Active Train List", helpString="Display Active Train List")
 		self.menuView.Append(i)
-		
+
+		i = wx.MenuItem(self.menuView, MENU_VIEW_SHOWATTENTION, "High-light Trains", helpString="Show High-lighting on trains that need attention", kind=wx.ITEM_CHECK)
+		self.menuView.Append(i)
+		i.Check(True)
+
 		i = wx.MenuItem(self.menuView, MENU_VIEW_LEGEND, "Legend", helpString="Display a legend for icons")
 		self.menuView.Append(i)
 		
@@ -303,6 +308,7 @@ class MainFrame(wx.Frame):
 		
 		self.Bind(wx.EVT_MENU, self.panel.onViewEngQueue, id=MENU_VIEW_ENG_QUEUE)
 		self.Bind(wx.EVT_MENU, self.panel.onViewActiveTrains, id=MENU_VIEW_ACTIVE_TRAINS)
+		self.Bind(wx.EVT_MENU, self.panel.onViewHiLite, id=MENU_VIEW_SHOWATTENTION)
 		self.Bind(wx.EVT_MENU, self.panel.onViewLegend, id=MENU_VIEW_LEGEND)
 		self.Bind(wx.EVT_MENU, self.panel.onChangeSort, id=MENU_SORT_TID)	
 		self.Bind(wx.EVT_MENU, self.panel.onChangeSort, id=MENU_SORT_TIME)		
@@ -399,7 +405,8 @@ class MainFrame(wx.Frame):
 	def onClose(self, _):
 		self.panel.onClose(None)
 		self.Destroy()
-		
+
+
 class TrainTrackerPanel(wx.Panel):
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent, wx.ID_ANY, style=wx.TAB_TRAVERSAL)
@@ -433,7 +440,7 @@ class TrainTrackerPanel(wx.Panel):
 
 		self.atl = ActiveTrainList()
 		self.atl.setSortKey("time")
-		
+
 		labelFontBold = wx.Font(wx.Font(14, wx.FONTFAMILY_TELETYPE, wx.NORMAL, wx.BOLD, faceName="Monospace"))
 		textFont = wx.Font(wx.Font(9, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.NORMAL, faceName="Arial"))
 		textFontBold = wx.Font(wx.Font(9, wx.FONTFAMILY_ROMAN, wx.NORMAL, wx.BOLD, faceName="Arial"))
@@ -935,10 +942,15 @@ class TrainTrackerPanel(wx.Panel):
 		tInfo["block"] = block
 		self.log.append("Setting block for train %s to %s" % (tid, block))
 		desc = None
-		if tInfo["loco"] != loco and loco is not None:
-			tInfo["loco"] = loco
-			desc = self.locos.getLoco(loco)
-			self.log.append("Setting locomotive for train %s to %s" % (tid, loco))
+		if tInfo["loco"] is None:
+			if loco is not None:
+				tInfo["loco"] = loco
+				desc = self.locos.getLoco(loco)
+				self.log.append("Setting locomotive for train %s to %s" % (tid, loco))
+			else:
+				loco = ""
+		else:
+			loco = tInfo["loco"]
 
 		self.atl.updateTrain(tid, loco, desc, block)
 			
@@ -1088,6 +1100,12 @@ class TrainTrackerPanel(wx.Panel):
 		
 		self.dlgActiveTrains.Destroy()
 		self.dlgActiveTrains = None
+
+	def onViewHiLite(self, _):
+		if self.parent.menuView.FindItemById(MENU_VIEW_SHOWATTENTION).IsChecked():
+			self.lcActiveTrains.setShowAttention(True)
+		else:
+			self.lcActiveTrains.setShowAttention(False)
 
 	def onViewLegend(self, _):
 		if self.dlgLegend is None:
@@ -1511,7 +1529,7 @@ class TrainTrackerPanel(wx.Panel):
 		else:
 			self.chTrain.SetSelection(0)
 			self.setSelectedTrain(self.chTrain.GetString(0))
-			
+
 	def onChangeSort(self, evt):
 		self.assertSortOrder()
 		
@@ -1626,7 +1644,6 @@ class TrainTrackerPanel(wx.Panel):
 		if rc == wx.ID_OK:
 			loco = dlg.GetStringSelection()
 			lid = loco.split(" ")[0]
-
 
 		dlg.Destroy()
 		
