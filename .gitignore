@@ -10,3 +10,4 @@ traintracker.ini
 /schedules/
 /.idea/
 /__pycache__/
+/.pydevproject
