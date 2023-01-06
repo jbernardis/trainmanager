@@ -1,6 +1,0 @@
-22/12/28-21:24:33: Loading locomotive file (C:\Users\jeff\git\traintracker\src\locos\locos.json)
-22/12/28-21:24:33: loading engineer file (C:\Users\jeff\git\traintracker\src\engineers\engineers.txt)
-22/12/28-21:24:33: loading train file (C:\Users\jeff\git\traintracker\src\trains\trains.json)
-22/12/28-21:24:33: loading train order file (C:\Users\jeff\git\traintracker\src\orders\order2.json)
-22/12/28-21:24:33: Setting train order to ['21', '17', '18', '91', '96', 'HEX', '71', '64', 'HYYD', '43', '73', '44', '81', 'CFHY', '82', '12', '11', 'HYCF', '22', '95', '84', '72', '63', 'YDHY', 'HWX', '92', '62', 'PBCX']
-22/12/28-21:24:33: Setting extra train list to ['JYP2', 'RXE1', 'RXE2', 'RXW3', 'RXW4', 'WX1', 'WX2', 'X51', 'X52', 'X65', 'X66', 'X98', 'X99']
