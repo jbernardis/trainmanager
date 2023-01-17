@@ -13,8 +13,11 @@ class DetailsDlg(wx.Dialog):
 		
 		st1 = wx.StaticText(self, wx.ID_ANY, tid, size=(80, -1))
 		st1.SetFont(labelFontLargeBold)
-		
-		st2 = wx.StaticText(self, wx.ID_ANY, "%sbound %s" % (tinfo["dir"], tinfo["desc"]))
+
+		descText ="%sbound %s" % (tinfo["dir"], tinfo["desc"])
+		if tinfo["cutoff"]:
+			descText += "(via cutoff)"
+		st2 = wx.StaticText(self, wx.ID_ANY, descText)
 		st2.SetFont(labelFontBold)
 		
 		hsz = wx.BoxSizer(wx.HORIZONTAL)

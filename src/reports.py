@@ -248,7 +248,10 @@ class Report:
 	def formatTrainCard(self, tid, tinfo, tx):
 		trainIdRow = HTML.tr({}, HTML.td({"class": "trainid"}, tid), HTML.td())
 		emptyRow = HTML.tr({"class": "datarow"}, HTML.td({}, HTML.nbsp()))
-		descRow = HTML.tr({}, HTML.td({"class": "firstcol", "colspan": "3"}, "%sbound %s" % (tinfo["dir"], tinfo["desc"])))
+		descr = "%sbound %s" % (tinfo["dir"], tinfo["desc"])
+		if tinfo["cutoff"]:
+			descr += " (via cutoff)"
+		descRow = HTML.tr({}, HTML.td({"class": "firstcol", "colspan": "3"}, descr))
 		cardNumberRow = HTML.tr({}, HTML.td({}, ""), HTML.td({}, ""), HTML.td({"class": "cardnumber"}, tx))
 
 		stepRows = []

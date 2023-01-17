@@ -1,6 +1,7 @@
 {
     "11": {
         "block": null,
+        "cutoff": false,
         "desc": "Express Passenger",
         "dir": "West",
         "loco": null,
@@ -63,6 +64,7 @@
     },
     "12": {
         "block": null,
+        "cutoff": false,
         "desc": "Express Passenger",
         "dir": "East",
         "loco": null,
@@ -125,6 +127,7 @@
     },
     "17": {
         "block": null,
+        "cutoff": false,
         "desc": "Express Passenger",
         "dir": "West",
         "loco": null,
@@ -187,6 +190,7 @@
     },
     "18": {
         "block": null,
+        "cutoff": false,
         "desc": "Express Passenger",
         "dir": "East",
         "loco": null,
@@ -244,13 +248,14 @@
     },
     "21": {
         "block": null,
+        "cutoff": false,
         "desc": "Local Passenger",
         "dir": "West",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": "NA",
-            "track": null
+            "loc": "WC",
+            "track": "N31"
         },
         "steps": [
             [
@@ -306,12 +311,13 @@
     },
     "22": {
         "block": null,
+        "cutoff": false,
         "desc": "Local Passenger",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
+            "loc": "PT",
             "track": null
         },
         "steps": [
@@ -362,19 +368,20 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "WC",
+            "track": "N41"
         }
     },
     "43": {
         "block": null,
+        "cutoff": false,
         "desc": "Local Passenger",
         "dir": "West",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "GM",
+            "track": "C30"
         },
         "steps": [
             [
@@ -409,19 +416,20 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "WC",
+            "track": "N31"
         }
     },
     "44": {
         "block": null,
+        "cutoff": false,
         "desc": "Local Passenger",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "WC",
+            "track": "N41"
         },
         "steps": [
             [
@@ -456,127 +464,19 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
-        }
-    },
-    "51X": {
-        "block": null,
-        "desc": "Local Passenger",
-        "dir": "West",
-        "loco": null,
-        "normalloco": null,
-        "origin": {
-            "loc": null,
-            "track": null
-        },
-        "steps": [
-            [
-                "Branch",
-                "Beechview",
-                26
-            ],
-            [
-                "NASSAU",
-                "Wilson City (S)",
-                23
-            ],
-            [
-                "NASSAU",
-                "Krulish Jct",
-                19
-            ],
-            [
-                "",
-                "Richards (S)",
-                9
-            ],
-            [
-                "",
-                "Radstock (S)",
-                14
-            ],
-            [
-                "PORT",
-                "",
-                16
-            ],
-            [
-                "",
-                "Latham / L31 (X)",
-                10
-            ]
-        ],
-        "terminus": {
-            "loc": null,
-            "track": null
-        }
-    },
-    "52X": {
-        "block": null,
-        "desc": "Local Passenger",
-        "dir": "East",
-        "loco": null,
-        "normalloco": null,
-        "origin": {
-            "loc": null,
-            "track": null
-        },
-        "steps": [
-            [
-                "",
-                "Latham / L31",
-                10
-            ],
-            [
-                "PORT",
-                "Parsons Jct",
-                9
-            ],
-            [
-                "PORT",
-                "South Jct",
-                9
-            ],
-            [
-                "",
-                "Radstock (S)",
-                14
-            ],
-            [
-                "",
-                "Richards (S)",
-                9
-            ],
-            [
-                "KRULISH",
-                "Krulish Jct",
-                19
-            ],
-            [
-                "NASSAU",
-                "Wilson City (S)",
-                23
-            ],
-            [
-                "Branch",
-                "Beechview (X)",
-                26
-            ]
-        ],
-        "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "GM",
+            "track": "C31"
         }
     },
     "61": {
         "block": null,
+        "cutoff": false,
         "desc": "Local Passenger (RDC)",
         "dir": "West",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
+            "loc": "NA",
             "track": null
         },
         "steps": [
@@ -617,18 +517,19 @@
             ]
         ],
         "terminus": {
-            "loc": null,
+            "loc": "PT",
             "track": null
         }
     },
     "62": {
         "block": null,
+        "cutoff": false,
         "desc": "Local Passenger",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
+            "loc": "PT",
             "track": null
         },
         "steps": [
@@ -664,18 +565,19 @@
             ]
         ],
         "terminus": {
-            "loc": null,
+            "loc": "NA",
             "track": null
         }
     },
     "63": {
         "block": null,
+        "cutoff": false,
         "desc": "Local Passenger (RDC)",
         "dir": "West",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
+            "loc": "PT",
             "track": null
         },
         "steps": [
@@ -701,18 +603,19 @@
             ]
         ],
         "terminus": {
-            "loc": null,
+            "loc": "YD",
             "track": null
         }
     },
     "64": {
         "block": null,
+        "cutoff": false,
         "desc": "Express Passenger (RDC)",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
+            "loc": "YD",
             "track": null
         },
         "steps": [
@@ -738,138 +641,20 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
-        }
-    },
-    "65X": {
-        "block": null,
-        "desc": "Local Passenger",
-        "dir": "East",
-        "loco": null,
-        "normalloco": null,
-        "origin": {
-            "loc": null,
-            "track": null
-        },
-        "steps": [
-            [
-                "",
-                "From Coach Yd / C",
-                22
-            ],
-            [
-                "NASSAU",
-                "Wilson City / N31 or N32",
-                22
-            ],
-            [
-                "",
-                "Krulish Jcr",
-                19
-            ],
-            [
-                "",
-                "Richards (S)",
-                9
-            ],
-            [
-                "",
-                "Radstock (S)",
-                14
-            ],
-            [
-                "PORT",
-                "Parsons Jct",
-                9
-            ],
-            [
-                "",
-                "Cornell",
-                7
-            ],
-            [
-                "YARD",
-                "Koelstadt Station",
-                1
-            ]
-        ],
-        "terminus": {
-            "loc": null,
-            "track": null
-        }
-    },
-    "66X": {
-        "block": null,
-        "desc": "Local Passenger",
-        "dir": "West",
-        "loco": null,
-        "normalloco": null,
-        "origin": {
-            "loc": null,
-            "track": null
-        },
-        "steps": [
-            [
-                "YARD",
-                "Koehlstadt ",
-                1
-            ],
-            [
-                "LATHAM",
-                "Latham Depot",
-                10
-            ],
-            [
-                "",
-                "Carlton (S)",
-                15
-            ],
-            [
-                "DELL",
-                "La Porte",
-                19
-            ],
-            [
-                "",
-                "Loland (S)",
-                26
-            ],
-            [
-                "SHORE",
-                "",
-                4
-            ],
-            [
-                "",
-                "Krulish Jct",
-                19
-            ],
-            [
-                "NASSAU",
-                "Wilson City / N41 or N42",
-                23
-            ],
-            [
-                "",
-                "To Coach Track C or D (X)",
-                22
-            ]
-        ],
-        "terminus": {
-            "loc": null,
+            "loc": "PT",
             "track": null
         }
     },
     "71": {
         "block": null,
+        "cutoff": false,
         "desc": "Express Passenger",
         "dir": "West",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "HY",
+            "track": "H34"
         },
         "steps": [
             [
@@ -919,18 +704,19 @@
             ]
         ],
         "terminus": {
-            "loc": null,
+            "loc": "PT",
             "track": null
         }
     },
     "72": {
         "block": null,
+        "cutoff": false,
         "desc": "Express Passenger",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
+            "loc": "PT",
             "track": null
         },
         "steps": [
@@ -976,19 +762,20 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "HY",
+            "track": "H43"
         }
     },
     "73": {
         "block": null,
+        "cutoff": false,
         "desc": "Loop Passenger",
         "dir": "West",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "HY",
+            "track": "H12"
         },
         "steps": [
             [
@@ -1023,18 +810,19 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "HY",
+            "track": "H34"
         }
     },
     "81": {
         "block": null,
+        "cutoff": false,
         "desc": "Express Passenger",
         "dir": "West",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
+            "loc": "CF",
             "track": null
         },
         "steps": [
@@ -1085,19 +873,20 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "HY",
+            "track": "H12"
         }
     },
     "82": {
         "block": null,
+        "cutoff": false,
         "desc": "Express Passenger",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "HY",
+            "track": "H42"
         },
         "steps": [
             [
@@ -1142,19 +931,20 @@
             ]
         ],
         "terminus": {
-            "loc": null,
+            "loc": "CF",
             "track": null
         }
     },
     "84": {
         "block": null,
+        "cutoff": false,
         "desc": "Loop Passenger",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "HY",
+            "track": "H43"
         },
         "steps": [
             [
@@ -1189,80 +979,19 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
-        }
-    },
-    "88csu": {
-        "block": null,
-        "desc": "Express Passenger",
-        "dir": "West",
-        "loco": null,
-        "normalloco": null,
-        "origin": {
-            "loc": "CF",
-            "track": null
-        },
-        "steps": [
-            [
-                "CLIFF",
-                "Sheffield Yd ",
-                11
-            ],
-            [
-                "BANK",
-                "",
-                3
-            ],
-            [
-                "NASSAU",
-                "Wilson City / N31 or N32 (S)",
-                23
-            ],
-            [
-                "",
-                "Kurlish Jct",
-                19
-            ],
-            [
-                "SHORE",
-                "",
-                6
-            ],
-            [
-                "DELL",
-                "Laporte",
-                21
-            ],
-            [
-                "",
-                "Carlton",
-                15
-            ],
-            [
-                "KRULISH",
-                "Latham",
-                10
-            ],
-            [
-                "YARD",
-                "Koehlstadt / Y51 (X)",
-                1
-            ]
-        ],
-        "terminus": {
-            "loc": "YD",
-            "track": "Y51"
+            "loc": "HY",
+            "track": "H42"
         }
     },
     "91": {
         "block": null,
+        "cutoff": false,
         "desc": "Express Passenger",
         "dir": "West",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
+            "loc": "HF",
             "track": null
         },
         "steps": [
@@ -1308,18 +1037,19 @@
             ]
         ],
         "terminus": {
-            "loc": null,
+            "loc": "PT",
             "track": null
         }
     },
     "92": {
         "block": null,
+        "cutoff": false,
         "desc": "Express Passenger",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
+            "loc": "PT",
             "track": null
         },
         "steps": [
@@ -1360,18 +1090,19 @@
             ]
         ],
         "terminus": {
-            "loc": null,
+            "loc": "HF",
             "track": null
         }
     },
     "95": {
         "block": null,
+        "cutoff": false,
         "desc": "Local Passenger",
         "dir": "West",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
+            "loc": "HF",
             "track": null
         },
         "steps": [
@@ -1422,19 +1153,20 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "YD",
+            "track": "Y53"
         }
     },
     "96": {
         "block": null,
+        "cutoff": false,
         "desc": "Local Passenger",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "YD",
+            "track": "Y53"
         },
         "steps": [
             [
@@ -1484,82 +1216,19 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
-        }
-    },
-    "98X": {
-        "block": null,
-        "desc": "Local Passenger Old",
-        "dir": "East",
-        "loco": null,
-        "normalloco": null,
-        "origin": {
-            "loc": null,
-            "track": null
-        },
-        "steps": [
-            [
-                "NASSAU",
-                "Wilson City E / track E",
-                24
-            ],
-            [
-                "Branch",
-                "Rocky Hill (S)",
-                2
-            ],
-            [
-                "Branch",
-                "Harpers Ferry",
-                7
-            ]
-        ],
-        "terminus": {
-            "loc": null,
-            "track": null
-        }
-    },
-    "99X": {
-        "block": null,
-        "desc": "Local Passenger Old",
-        "dir": "East",
-        "loco": null,
-        "normalloco": null,
-        "origin": {
-            "loc": null,
-            "track": null
-        },
-        "steps": [
-            [
-                "Branch",
-                "Harpers Ferry",
-                7
-            ],
-            [
-                "Branch",
-                "Rocky Hill (S)",
-                2
-            ],
-            [
-                "NASSAU",
-                "Wilson City E / track E",
-                24
-            ]
-        ],
-        "terminus": {
-            "loc": null,
+            "loc": "HF",
             "track": null
         }
     },
     "CFHY": {
         "block": null,
+        "cutoff": false,
         "desc": "Unit Freight",
         "dir": "West",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
+            "loc": "CF",
             "track": null
         },
         "steps": [
@@ -1610,12 +1279,13 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "HY",
+            "track": "H33"
         }
     },
     "HEX": {
         "block": null,
+        "cutoff": false,
         "desc": "Empty Coal Hoppers",
         "dir": "East",
         "loco": "7600",
@@ -1663,13 +1333,14 @@
     },
     "HWX": {
         "block": null,
+        "cutoff": false,
         "desc": "Loaded Coal Hoppers",
         "dir": "West",
-        "loco": null,
-        "normalloco": null,
+        "loco": "3809",
+        "normalloco": "3809",
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "HY",
+            "track": "H32"
         },
         "steps": [
             [
@@ -1704,19 +1375,20 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "HY",
+            "track": "H32"
         }
     },
     "HYCF": {
         "block": null,
+        "cutoff": false,
         "desc": "Unit Freight",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "HY",
+            "track": "H22"
         },
         "steps": [
             [
@@ -1766,19 +1438,20 @@
             ]
         ],
         "terminus": {
-            "loc": null,
+            "loc": "CF",
             "track": null
         }
     },
     "HYYD": {
         "block": null,
+        "cutoff": false,
         "desc": "Unit Freight",
         "dir": "West",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "HY",
+            "track": "H33"
         },
         "steps": [
             [
@@ -1828,24 +1501,25 @@
             ]
         ],
         "terminus": {
-            "loc": null,
+            "loc": "YD",
             "track": null
         }
     },
     "JYL1": {
         "block": null,
+        "cutoff": false,
         "desc": "Island Freight 1",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "JY",
+            "track": "B"
         },
         "steps": [
             [
                 "JAMES YD",
-                "28 st Street / Track C",
+                "28 st Street / Track B",
                 26
             ],
             [
@@ -1880,19 +1554,20 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "LA",
+            "track": "L21"
         }
     },
     "JYL2": {
         "block": null,
+        "cutoff": false,
         "desc": "Island Freight 1",
         "dir": "West",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "LA",
+            "track": "L21"
         },
         "steps": [
             [
@@ -1942,19 +1617,20 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "JY",
+            "track": "C"
         }
     },
     "JYP1": {
         "block": null,
+        "cutoff": false,
         "desc": "Island Freight 2",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "JY",
+            "track": "B"
         },
         "steps": [
             [
@@ -1989,24 +1665,25 @@
             ],
             [
                 "PORT",
-                "Radstock / Track P31 (S)",
+                "Radstock / Track P31 (X)",
                 14
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "PT",
+            "track": "P31"
         }
     },
     "JYP2": {
         "block": null,
+        "cutoff": false,
         "desc": "Island Freight",
         "dir": "West",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "PT",
+            "track": "P31"
         },
         "steps": [
             [
@@ -2051,24 +1728,25 @@
             ],
             [
                 "JAMES YD",
-                "Beechview / Track B (X)",
+                "Beechview / Track C (X)",
                 26
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "JY",
+            "track": "C"
         }
     },
     "PBCX": {
         "block": null,
+        "cutoff": false,
         "desc": "Pate Brothers Circus",
         "dir": "West",
         "loco": "4023",
         "normalloco": "4023",
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "HY",
+            "track": "H30"
         },
         "steps": [
             [
@@ -2103,18 +1781,19 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "HY",
+            "track": "H30"
         }
     },
     "RXE1": {
         "block": null,
+        "cutoff": false,
         "desc": "Express Mail Passenger",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
+            "loc": "YD",
             "track": null
         },
         "steps": [
@@ -2160,19 +1839,20 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "WC",
+            "track": "W20"
         }
     },
     "RXE2": {
         "block": null,
+        "cutoff": false,
         "desc": "Express Mail Passenger",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "WC",
+            "track": "W20"
         },
         "steps": [
             [
@@ -2197,19 +1877,20 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "GM",
+            "track": "G21"
         }
     },
     "RXW3": {
         "block": null,
+        "cutoff": false,
         "desc": "Express Passenger",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "GM",
+            "track": "G21"
         },
         "steps": [
             [
@@ -2244,19 +1925,20 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "KR",
+            "track": "K11"
         }
     },
     "RXW4": {
         "block": null,
+        "cutoff": false,
         "desc": "Express Passenger",
         "dir": "West",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
-            "track": null
+            "loc": "KR",
+            "track": "K11"
         },
         "steps": [
             [
@@ -2296,50 +1978,383 @@
             ]
         ],
         "terminus": {
-            "loc": null,
+            "loc": "YD",
             "track": null
         }
     },
     "WX1": {
         "block": null,
-        "desc": "Work Train Out",
+        "cutoff": false,
+        "desc": "Work Train - Out",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
+            "loc": "LV",
             "track": null
         },
-        "steps": [],
+        "steps": [
+            [
+                "LAVIN YD",
+                "",
+                9
+            ],
+            [
+                "LATHAM",
+                "",
+                10
+            ],
+            [
+                "LATHAM",
+                "Carlton / Track L31",
+                15
+            ],
+            [
+                "",
+                "Siding Switch",
+                15
+            ],
+            [
+                "",
+                "Track L40",
+                15
+            ],
+            [
+                "CARLTON E",
+                "Track L42 (X to Load)",
+                15
+            ]
+        ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "CA",
+            "track": "L42"
         }
     },
     "WX2": {
         "block": null,
-        "desc": "Work Train Back",
+        "cutoff": false,
+        "desc": "Work Train - Back",
         "dir": "West",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
+            "loc": "CA",
+            "track": "L42"
+        },
+        "steps": [
+            [
+                "CARLTON E",
+                "Track L42 (with load)",
+                15
+            ],
+            [
+                "",
+                "Track L40",
+                15
+            ],
+            [
+                "",
+                "Switch to Main",
+                15
+            ],
+            [
+                "",
+                "Carlton / Track L31",
+                15
+            ],
+            [
+                "LATHAM",
+                "Latham Jct / Switch 9",
+                10
+            ],
+            [
+                "LATHAM",
+                "Latham Jct / Switch 1",
+                10
+            ],
+            [
+                "PORT",
+                "Parsons Jct",
+                9
+            ],
+            [
+                "LAVIN",
+                "Switch 31 to Track V11 >",
+                9
+            ]
+        ],
+        "terminus": {
+            "loc": "LV",
+            "track": "V11"
+        }
+    },
+    "X51": {
+        "block": null,
+        "cutoff": false,
+        "desc": "Local Passenger",
+        "dir": "West",
+        "loco": null,
+        "normalloco": null,
+        "origin": {
+            "loc": "JY",
+            "track": "A"
+        },
+        "steps": [
+            [
+                "Branch",
+                "Beechview / Track A",
+                26
+            ],
+            [
+                "NASSAU",
+                "Wilson City (S)",
+                23
+            ],
+            [
+                "",
+                "Wilson City W (B)",
+                22
+            ]
+        ],
+        "terminus": {
+            "loc": "NA",
+            "track": "B"
+        }
+    },
+    "X52": {
+        "block": null,
+        "cutoff": false,
+        "desc": "Local Passenger",
+        "dir": "East",
+        "loco": null,
+        "normalloco": null,
+        "origin": {
+            "loc": "NA",
+            "track": "B"
+        },
+        "steps": [
+            [
+                "",
+                "Wilson City (B)",
+                22
+            ],
+            [
+                "Nassau",
+                "Wilson City (S)",
+                23
+            ],
+            [
+                "Branch ",
+                "",
+                26
+            ],
+            [
+                "James Yards",
+                "Beechview / Track A (X)",
+                26
+            ]
+        ],
+        "terminus": {
+            "loc": "JY",
+            "track": "A"
+        }
+    },
+    "X65": {
+        "block": null,
+        "cutoff": false,
+        "desc": "Local Passenger",
+        "dir": "West",
+        "loco": null,
+        "normalloco": null,
+        "origin": {
+            "loc": "NA",
             "track": null
         },
-        "steps": [],
+        "steps": [
+            [
+                "",
+                "From Coach Yd / C or D",
+                22
+            ],
+            [
+                "NASSAU",
+                "Wilson City / N31 or N32",
+                22
+            ],
+            [
+                "",
+                "Krulish Jct",
+                19
+            ],
+            [
+                "",
+                "Richards (S)",
+                9
+            ],
+            [
+                "",
+                "Radstock (S)",
+                14
+            ],
+            [
+                "PORT",
+                "Parsons Jct",
+                9
+            ],
+            [
+                "",
+                "Cornell",
+                7
+            ],
+            [
+                "YARD",
+                "Koelstadt Station / (X)",
+                1
+            ]
+        ],
         "terminus": {
-            "loc": null,
+            "loc": "YD",
             "track": null
+        }
+    },
+    "X66": {
+        "block": null,
+        "cutoff": false,
+        "desc": "Local Passenger",
+        "dir": "East",
+        "loco": null,
+        "normalloco": null,
+        "origin": {
+            "loc": "YD",
+            "track": null
+        },
+        "steps": [
+            [
+                "YARD",
+                "Koehlstadt ",
+                1
+            ],
+            [
+                "LATHAM",
+                "Latham Depot",
+                10
+            ],
+            [
+                "",
+                "Carlton (S)",
+                15
+            ],
+            [
+                "DELL",
+                "La Porte",
+                19
+            ],
+            [
+                "",
+                "Loland (S)",
+                26
+            ],
+            [
+                "SHORE",
+                "",
+                4
+            ],
+            [
+                "",
+                "Krulish Jct",
+                19
+            ],
+            [
+                "NASSAU",
+                "Wilson City / N41 or N42",
+                23
+            ],
+            [
+                "",
+                "To Coach Track C or D (X)",
+                22
+            ]
+        ],
+        "terminus": {
+            "loc": "NA",
+            "track": null
+        }
+    },
+    "X98": {
+        "block": null,
+        "cutoff": false,
+        "desc": "Local Passenger Old",
+        "dir": "East",
+        "loco": null,
+        "normalloco": null,
+        "origin": {
+            "loc": "NA",
+            "track": "E"
+        },
+        "steps": [
+            [
+                "NASSAU",
+                "Wilson City E / track E",
+                24
+            ],
+            [
+                "Branch",
+                "Rocky Hill (S)",
+                2
+            ],
+            [
+                "Branch",
+                "Harpers Ferry",
+                7
+            ]
+        ],
+        "terminus": {
+            "loc": "HF",
+            "track": null
+        }
+    },
+    "X99": {
+        "block": null,
+        "cutoff": false,
+        "desc": "Local Passenger Old",
+        "dir": "East",
+        "loco": null,
+        "normalloco": null,
+        "origin": {
+            "loc": "HF",
+            "track": null
+        },
+        "steps": [
+            [
+                "Branch",
+                "Harpers Ferry",
+                7
+            ],
+            [
+                "Branch",
+                "Rocky Hill (S)",
+                2
+            ],
+            [
+                "NASSAU",
+                "Wilson City E / track E",
+                24
+            ]
+        ],
+        "terminus": {
+            "loc": "NA",
+            "track": "E"
         }
     },
     "YDHY": {
         "block": null,
+        "cutoff": false,
         "desc": "Unit Freight",
         "dir": "East",
         "loco": null,
         "normalloco": null,
         "origin": {
-            "loc": null,
+            "loc": "YD",
             "track": null
         },
         "steps": [
@@ -2390,8 +2405,8 @@
             ]
         ],
         "terminus": {
-            "loc": null,
-            "track": null
+            "loc": "HY",
+            "track": "H22"
         }
     }
 }

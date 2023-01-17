@@ -40,7 +40,7 @@ from sessionscheduledlg import SessionScheduleDlg
 # self.onDCCMessage(dummyDCCEvt("2216", "0"))
 
 DEVELOPMODE = False
-VERSIONDATE = "7-December-2022"
+VERSIONDATE = "16-January-2023"
 
 BTNSZ = (120, 46)
 
@@ -1722,7 +1722,9 @@ class TrainTrackerPanel(wx.Panel):
 				self.stStepStops[i].SetLabel("")
 			return
 
-		descr = "%s   %sbound %s" % (tid, tInfo["dir"], tInfo["desc"])		
+		descr = "%s   %sbound %s" % (tid, tInfo["dir"], tInfo["desc"])	
+		if tInfo["cutoff"]:
+			descr += " (via cutoff)"	
 		self.stDescription.SetLabel(descr)
 		i = 0
 		for step in tInfo["steps"]:

@@ -70,7 +70,7 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		sz = wx.BoxSizer(wx.VERTICAL)
 		
-		self.stDirection = wx.StaticText(self, wx.ID_ANY, "", size=(200, -1))
+		self.stDirection = wx.StaticText(self, wx.ID_ANY, "", size=(150, -1))
 		self.stDirection.SetFont(textFontBold)
 		self.stDescription = wx.StaticText(self, wx.ID_ANY, "", size=(200, -1))
 		self.stDescription.SetFont(textFontBold)
@@ -80,18 +80,29 @@ class ManageTrainsDlg(wx.Dialog):
 		labelTerminus.SetFont(textFont)
 		labelLoco = wx.StaticText(self, wx.ID_ANY, "Locomotive:", size=(100, -1))
 		labelLoco.SetFont(textFont)
+		labelCutoff = wx.StaticText(self, wx.ID_ANY, "Via Cutoff:", size=(100, -1))
+		labelCutoff.SetFont(textFont)
 		self.stOrigin = wx.StaticText(self, wx.ID_ANY, "", size=(100, -1))
 		self.stOrigin.SetFont(textFontBold)
 		self.stTerminus = wx.StaticText(self, wx.ID_ANY, "", size=(100, -1))
 		self.stTerminus.SetFont(textFontBold)
 		self.stStdLoco = wx.StaticText(self, wx.ID_ANY, "", size=(400, -1))
 		self.stStdLoco.SetFont(textFontBold)
+		self.stCutoff = wx.StaticText(self, wx.ID_ANY, "", size=(100, -1))
+		self.stCutoff.SetFont(textFontBold)
 		
 		sz.AddSpacer(5)
-		sz.Add(self.stDirection)
+		hsz = wx.BoxSizer(wx.HORIZONTAL)
+		hsz.Add(self.stDirection)
+		hsz.AddSpacer(5)
+		hsz.Add(labelCutoff)
+		hsz.Add(self.stCutoff)
+		sz.Add(hsz)
 		sz.AddSpacer(5)
 		sz.Add(self.stDescription)
 		sz.AddSpacer(5)
+		sz.AddSpacer(5)
+
 
 		hsz = wx.BoxSizer(wx.HORIZONTAL)
 		hsz.Add(labelOrigin)
@@ -126,6 +137,15 @@ class ManageTrainsDlg(wx.Dialog):
 		self.cbEast = wx.CheckBox(boxModify, wx.ID_ANY, "", style=wx.ALIGN_RIGHT)
 		self.cbEast.SetFont(textFont)
 		hsz.Add(self.cbEast)
+		
+		hsz.AddSpacer(30)
+		st = wx.StaticText(boxModify, wx.ID_ANY, "Via Cutoff:", size=(120, -1))
+		st.SetFont(textFont)
+		hsz.Add(st)
+		hsz.AddSpacer(5)
+		self.cbCutoff = wx.CheckBox(boxModify, wx.ID_ANY, "", style=wx.ALIGN_RIGHT)
+		self.cbCutoff.SetFont(textFont)
+		hsz.Add(self.cbCutoff)
 		
 		bsizer.Add(hsz)
 		bsizer.AddSpacer(5)
@@ -410,6 +430,7 @@ class ManageTrainsDlg(wx.Dialog):
 				"loco": ti["loco"],
 				"desc": ti["desc"],
 				"block": ti["block"],
+				"cutoff": ti["cutoff"],
 				"normalloco": ti["normalloco"],
 				"origin": {
 					"loc": ti["origin"]["loc"],
@@ -544,6 +565,7 @@ class ManageTrainsDlg(wx.Dialog):
 			'desc': self.teDesc.GetValue(),
 			'loco': None,
 			'normalloco': loco,
+			"cutoff": self.cbCutoff.IsChecked(),
 			'origin': {
 				'loc': oloc,
 				'track': otrk
@@ -610,6 +632,7 @@ class ManageTrainsDlg(wx.Dialog):
 			'desc': self.teDesc.GetValue(),
 			'loco': None,
 			'normalloco': loco,
+			"cutoff": self.cbCutoff.IsChecked(),
 			'origin': {
 				'loc': oloc,
 				'track': otrk
@@ -635,6 +658,9 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		self.selectedTrainInfo["dir"] = "East" if self.cbEast.IsChecked() else "West"
 		self.stDirection.SetLabel("%sbound" % self.selectedTrainInfo["dir"])
+		
+		self.selectedTrainInfo["cutoff"] = self.cbCutoff.IsChecked()
+		self.stCutoff.SetLabel(str(self.selectedTrainInfo["cutoff"]))
 		
 		self.selectedTrainInfo["desc"] = self.teDesc.GetValue()
 		self.stDescription.SetLabel(self.selectedTrainInfo["desc"])
@@ -812,6 +838,7 @@ class ManageTrainsDlg(wx.Dialog):
 			self.bModID.Enable(False)
 			self.bDel.Enable(False)
 			self.cbEast.SetValue(False)
+			self.cbCutoff.SetValue(False)
 			self.teDesc.SetValue("")
 			self.lcSteps.setData([])
 			return
@@ -825,6 +852,9 @@ class ManageTrainsDlg(wx.Dialog):
 		
 		self.cbEast.SetValue(self.selectedTrainInfo['dir'].lower() == 'east')
 		self.stDirection.SetLabel("%sbound" % self.selectedTrainInfo["dir"])
+		
+		self.cbCutoff.SetValue(self.selectedTrainInfo['cutoff'])
+		self.stCutoff.SetLabel(str(self.selectedTrainInfo['cutoff']))
 		
 		self.teDesc.SetValue(self.selectedTrainInfo["desc"])
 		self.stDescription.SetLabel(self.selectedTrainInfo["desc"])

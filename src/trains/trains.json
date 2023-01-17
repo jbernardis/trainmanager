@@ -1264,7 +1264,7 @@
         "block": null,
         "desc": "Empty Coal Hoppers",
         "dir": "East",
-        "loco": null,
+        "loco": "7600",
         "normalloco": "7600",
         "origin": {
             "loc": "HY",
@@ -1311,7 +1311,7 @@
         "block": null,
         "desc": "Loaded Coal Hoppers",
         "dir": "West",
-        "loco": null,
+        "loco": "3809",
         "normalloco": "3809",
         "origin": {
             "loc": "HY",
@@ -1710,7 +1710,7 @@
         "block": null,
         "desc": "Pate Brothers Circus",
         "dir": "West",
-        "loco": null,
+        "loco": "4023",
         "normalloco": "4023",
         "origin": {
             "loc": "HY",
