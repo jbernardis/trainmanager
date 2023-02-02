@@ -40,7 +40,7 @@ from sessionscheduledlg import SessionScheduleDlg
 # self.onDCCMessage(dummyDCCEvt("2216", "0"))
 
 DEVELOPMODE = False
-VERSIONDATE = "16-January-2023"
+VERSIONDATE = "2-February-2023"
 
 BTNSZ = (120, 46)
 
@@ -1039,8 +1039,8 @@ class TrainTrackerPanel(wx.Panel):
 	def loadTrainFile(self, fn):
 		self.roster = self.loadTrainRoster(fn)
 		self.parent.setTitle(train=os.path.basename(fn))
-		engRunning = self.atl.getEngineers()
-		self.idleEngineers += engRunning
+		engRunning = [x for x in self.atl.getEngineers() if x not in self.idleEngineers]
+		self.idleEngineers += engRunning 
 		self.chEngineer.SetItems(self.idleEngineers)
 		if len(self.idleEngineers) > 0:
 			self.chEngineer.SetSelection(0)
@@ -1251,8 +1251,9 @@ class TrainTrackerPanel(wx.Panel):
 		if len(self.pendingTrains) > 0:
 			self.setSelectedTrain(self.chTrain.GetString(0))
 
-		engRunning = self.atl.getEngineers()
-		self.idleEngineers += engRunning
+		if not preserveActive:
+			engRunning = [x for x in self.atl.getEngineers() if x not in self.idleEngineers]
+			self.idleEngineers += engRunning 
 		self.chEngineer.SetItems(self.idleEngineers)
 		if len(self.idleEngineers) > 0:
 			self.chEngineer.SetSelection(0)

@@ -7,8 +7,6 @@ class TrainRoster:
 		with open(fn, "r") as fp:	
 			self.trains = json.load(fp)
 			
-		print("loaded trains")
-			
 		for tid in self.trains:
 			trn = self.trains[tid]
 			if "cutoff" not in trn:

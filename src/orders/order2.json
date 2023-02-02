@@ -1,10 +1,6 @@
 {
     "extras": [
-        "JYP2",
-        "RXE1",
         "RXE2",
-        "RXW3",
-        "RXW4",
         "WX1",
         "WX2",
         "X51",
@@ -42,6 +38,14 @@
         "HWX",
         "92",
         "62",
-        "PBCX"
+        "PBCX",
+        "61",
+        "JYL2",
+        "JYP1",
+        "JYL1",
+        "RXE1",
+        "RXW3",
+        "JYP2",
+        "RXW4"
     ]
 }
